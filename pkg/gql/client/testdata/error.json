@@ -1,0 +1,23 @@
+{
+  "errors": [
+    {
+      "message": "Field 'names' doesn't exist on type 'Shop'",
+      "locations": [
+        {
+          "line": 3,
+          "column": 3
+        }
+      ],
+      "path": [
+        "query",
+        "shop",
+        "names"
+      ],
+      "extensions": {
+        "code": "undefinedField",
+        "typeName": "Shop",
+        "fieldName": "names"
+      }
+    }
+  ]
+}
