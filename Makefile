@@ -40,6 +40,11 @@ build: deps
 install:
 	go install -ldflags='$(LDFLAGS)' ./cmd/...
 
+.PHONY: schema
+schema:
+	SHOPIFY_ACCESS_TOKEN=${SHOPIFY_ACCESS_TOKEN} go run ./cmd/introspect -s ${SHOPIFY_STORE} -t Product -p schema > ./schema/product.go
+	gofmt -s -w ./schema/product.go
+
 .PHONY: lint
 lint:
 	@if ! command -v golangci-lint > /dev/null 2>&1; then \
