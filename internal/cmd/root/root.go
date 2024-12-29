@@ -4,8 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/auth"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
+
+var verbosity int
 
 // NewCmdRoot constructs a root command.
 func NewCmdRoot() *cobra.Command {
@@ -22,6 +25,11 @@ func NewCmdRoot() *cobra.Command {
 		"store", "s", "",
 		"Shopify store to look into",
 	)
+	cmd.PersistentFlags().CountVarP(
+		&verbosity,
+		"verbose", "v",
+		"Set the verbosity level (e.g., -v, -vv, -vvv)",
+	)
 
 	_ = cmd.MarkPersistentFlagRequired("store")
 	cmd.SetHelpFunc(helpFunc)
@@ -34,6 +42,7 @@ func NewCmdRoot() *cobra.Command {
 func addChildCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		auth.NewCmdAuth(),
+		backup.NewCmdBackup(),
 		version.NewCmdVersion(),
 	)
 }
