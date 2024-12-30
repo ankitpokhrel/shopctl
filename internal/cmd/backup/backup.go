@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	engine "github.com/ankitpokhrel/shopctl/engine/backup"
+	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
 )

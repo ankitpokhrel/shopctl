@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	engine "github.com/ankitpokhrel/shopctl/engine/backup"
+	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -140,7 +140,7 @@ func backupProduct(bkp *engine.Backup, client *api.GQLClient, limit int, after *
 		path := filepath.Join(fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
 		lgr.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, bkp.Dir(), path)
 
-		go bkp.Add(engine.Product, engine.NewResourceCollection(
+		bkp.Add(engine.Product, engine.NewResourceCollection(
 			pid, path,
 			engine.NewResource(engine.Product, productFn),
 			engine.NewResource(engine.ProductVariant, timeit(variantFn, "Product %s: fetching variants", pid)),
