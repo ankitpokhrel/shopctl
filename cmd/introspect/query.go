@@ -33,6 +33,18 @@ func getQuery(gqlType string) map[string]string {
 			defaultValue
 		  }
 		}
+        inputFields {
+          name
+          description
+          type {
+            name
+            kind
+            ofType {
+              name
+              kind
+            }
+          }
+        }
 		enumValues {
 		  name
 		  description
