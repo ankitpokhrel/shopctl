@@ -38,12 +38,14 @@ $ shopctl backup product --dry-run
 $ shopctl backup product --incremental`
 
 	batchSize = 100
+	modeDir   = 0o755
+	modeFile  = 0o644
 )
 
 var lgr *tlog.Logger
 
 // NewCmdProduct creates a new product backup command.
-func NewCmdProduct(bkp *engine.Backup) *cobra.Command {
+func NewCmdProduct(eng *engine.Engine) *cobra.Command {
 	return &cobra.Command{
 		Use:     "product",
 		Short:   "Product initiates product backup",
@@ -51,34 +53,35 @@ func NewCmdProduct(bkp *engine.Backup) *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Type assert enginer.doer with engine.Backup type.
+			bkpEng := eng.Doer().(*engine.Backup)
+
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 
 			v, _ := cmd.Flags().GetCount("verbose")
 			lgr = tlog.New(tlog.VerboseLevel(v))
 
-			return product(bkp, client)
+			return product(eng, bkpEng, client)
 		},
 	}
 }
 
-func product(bkp *engine.Backup, client *api.GQLClient) error {
-	bkp.Register(engine.Product)
-
+func product(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient) error {
+	eng.Register(engine.Product)
 	backupStart := time.Now()
-	go func() {
-		defer bkp.Done(engine.Product)
 
-		for res := range bkp.Do(engine.Product) {
-			if res.Err != nil {
-				lgr.Errorf("Failed to backup resource %s with id %s: %v\n", res.ResourceType, res.ResourceID, res.Err)
-			} else {
-				lgr.Infof("Resource %s with id %s backed up successfully\n", res.ResourceType, res.ResourceID)
-			}
-		}
+	go func() {
+		defer eng.Done(engine.Product)
+
+		// TODO: Handle/log error.
+		_ = backupProduct(eng, bkpEng, client, batchSize, nil)
 	}()
 
-	// TODO: Handle/log error.
-	_ = backupProduct(bkp, client, batchSize, nil)
+	for res := range eng.Run(engine.Product) {
+		if res.Err != nil {
+			lgr.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
+		}
+	}
 
 	lgr.V(tlog.VL3).Infof(
 		"Product backup complete in %v",
@@ -87,7 +90,7 @@ func product(bkp *engine.Backup, client *api.GQLClient) error {
 	return nil
 }
 
-func backupProduct(bkp *engine.Backup, client *api.GQLClient, limit int, after *string) error {
+func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient, limit int, after *string) error {
 	cursor := "<nil>"
 	if after != nil {
 		cursor = *after
@@ -138,18 +141,17 @@ func backupProduct(bkp *engine.Backup, client *api.GQLClient, limit int, after *
 			return err
 		}
 		path := filepath.Join(fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
-		lgr.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, bkp.Dir(), path)
+		lgr.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, bkpEng.Dir(), path)
 
-		bkp.Add(engine.Product, engine.NewResourceCollection(
-			pid, path,
-			engine.NewResource(engine.Product, productFn),
-			engine.NewResource(engine.ProductVariant, timeit(variantFn, "Product %s: fetching variants", pid)),
-			engine.NewResource(engine.ProductMedia, timeit(mediaFn, "Product %s: fetching media items", pid)),
-		))
+		eng.Add(engine.Product, engine.ResourceCollection{
+			engine.NewResource(engine.Product, path, productFn),
+			engine.NewResource(engine.ProductVariant, path, timeit(variantFn, "Product %s: fetching variants", pid)),
+			engine.NewResource(engine.ProductMedia, path, timeit(mediaFn, "Product %s: fetching media items", pid)),
+		})
 	}
 
 	if products.Data.Products.PageInfo.HasNextPage {
-		return backupProduct(bkp, client, limit, products.Data.Products.PageInfo.EndCursor)
+		return backupProduct(eng, bkpEng, client, limit, products.Data.Products.PageInfo.EndCursor)
 	}
 	return nil
 }

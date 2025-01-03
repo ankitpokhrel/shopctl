@@ -11,88 +11,83 @@ import (
 func TestBackup_Do(t *testing.T) {
 	path := "./testdata/.tmp/"
 
-	bkp := NewBackup(WithBackupDir(path + "test"))
-	bkp.Register(Product)
+	bkpEngine := New(NewBackup(WithBackupDir(path + "test")))
+	bkpEngine.Register(Product)
 
-	jobs := []*ResourceCollection{
+	jobs := []ResourceCollection{
 		{
-			RootID: "8737843216608",
-			Path:   "2024/11/6d/8737843216608",
-			Resources: []Resource{
-				NewResource(
-					Product,
-					func() (any, error) {
-						content, err := os.ReadFile("./testdata/product.json")
-						assert.NoError(t, err)
+			NewResource(
+				Product,
+				"2024/11/6d/8737843216608",
+				func() (any, error) {
+					content, err := os.ReadFile("./testdata/product.json")
+					assert.NoError(t, err)
 
-						var jsonContent map[string]any
-						err = json.Unmarshal(content, &jsonContent)
-						assert.NoError(t, err)
+					var jsonContent map[string]any
+					err = json.Unmarshal(content, &jsonContent)
+					assert.NoError(t, err)
 
-						return jsonContent, nil
-					},
-				),
-				NewResource(
-					ProductVariant,
-					func() (any, error) {
-						return "variants", nil
-					},
-				),
-				NewResource(
-					ProductMedia,
-					func() (any, error) {
-						return "media", nil
-					},
-				),
-			},
+					return jsonContent, nil
+				},
+			),
+			NewResource(
+				ProductVariant,
+				"2024/11/6d/8737843216608",
+				func() (any, error) {
+					return "variants", nil
+				},
+			),
+			NewResource(
+				ProductMedia,
+				"2024/11/6d/8737843216608",
+				func() (any, error) {
+					return "media", nil
+				},
+			),
 		},
 		{
-			RootID: "8737843347680",
-			Path:   "2024/11/6d/8737843347680",
-			Resources: []Resource{
-				NewResource(
-					Product,
-					func() (any, error) {
-						return "product", nil
-					},
-				),
-				NewResource(
-					ProductVariant,
-					func() (any, error) {
-						return "variants", nil
-					},
-				),
-				NewResource(
-					ProductMedia,
-					func() (any, error) {
-						return "media", nil
-					},
-				),
-			},
+			NewResource(
+				Product,
+				"2024/11/6d/8737843347680",
+				func() (any, error) {
+					return "product", nil
+				},
+			),
+			NewResource(
+				ProductVariant,
+				"2024/11/6d/8737843347680",
+				func() (any, error) {
+					return "variants", nil
+				},
+			),
+			NewResource(
+				ProductMedia,
+				"2024/11/6d/8737843347680",
+				func() (any, error) {
+					return "media", nil
+				},
+			),
 		},
 		{
-			RootID: "8773308023008",
-			Path:   "2024/12/ae/8773308023008",
-			Resources: []Resource{
-				NewResource(
-					ProductMedia,
-					func() (any, error) {
-						return "media", nil
-					},
-				),
-			},
+			NewResource(
+				ProductMedia,
+				"2024/12/ae/8773308023008",
+				func() (any, error) {
+					return "media", nil
+				},
+			),
 		},
-	}
-
-	for _, j := range jobs {
-		bkp.Add(Product, j)
 	}
 
 	go func() {
-		defer bkp.Done(Product)
+		defer bkpEngine.Done(Product)
+
+		for _, j := range jobs {
+			bkpEngine.Add(Product, j)
+		}
 	}()
 
-	for res := range bkp.Do(Product) {
+	for res := range bkpEngine.Run(Product) {
 		assert.NoError(t, res.Err)
 	}
 

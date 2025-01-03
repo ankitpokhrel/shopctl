@@ -22,37 +22,24 @@ func (r ResourceType) File() string {
 	panic("unknown backup data type")
 }
 
-// BackupFunc is defines how a resource is prepared.
-type BackupFunc func() (any, error)
+// ResourceHandler defines how a resource is prepared.
+type ResourceHandler func() (any, error)
 
 // Resource represents a backup resource.
 type Resource struct {
-	Type     ResourceType
-	BackupFn BackupFunc
+	Type    ResourceType
+	Path    string
+	Handler ResourceHandler
 }
 
 // NewResource constructs a new backup resource.
-func NewResource(rt ResourceType, bkpFn BackupFunc) Resource {
+func NewResource(rt ResourceType, path string, rh ResourceHandler) Resource {
 	return Resource{
-		Type:     rt,
-		BackupFn: bkpFn,
+		Type:    rt,
+		Path:    path,
+		Handler: rh,
 	}
 }
 
-// ResourceCollection represents a collection of backup resources.
-type ResourceCollection struct {
-	RootType  ResourceType
-	RootID    string
-	Path      string
-	Resources []Resource
-}
-
-// NewResourceCollection constructs a new collection of backup resources.
-func NewResourceCollection(id, path string, rsc ...Resource) *ResourceCollection {
-	rc := ResourceCollection{
-		RootID: id,
-		Path:   path,
-	}
-	rc.Resources = append(rc.Resources, rsc...)
-	return &rc
-}
+// ResourceCollection is a collection of resources.
+type ResourceCollection []Resource

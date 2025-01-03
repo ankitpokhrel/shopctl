@@ -38,7 +38,7 @@ func NewCmdBackup() *cobra.Command {
 		RunE: backup,
 	}
 
-	bkpEngine := engine.NewBackup()
+	bkpEngine := engine.New(engine.NewBackup())
 	cmd.AddCommand(
 		product.NewCmdProduct(bkpEngine),
 	)
