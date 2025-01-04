@@ -59,9 +59,7 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 	run := func(rc ResourceCollection, out chan<- Result) {
 		for _, r := range rc {
 			err := e.doer.Do(r)
-			if err != nil {
-				out <- Result{ResourceType: r.Type, Err: err}
-			}
+			out <- Result{ResourceType: r.Type, Err: err}
 		}
 	}
 
