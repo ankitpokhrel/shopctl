@@ -9,6 +9,13 @@ import (
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
+type ProductResponse struct {
+	Data struct {
+		Product schema.Product `json:"product"`
+	} `json:"data"`
+	Errors []Error `json:"errors"`
+}
+
 type ProductsResponse struct {
 	Data struct {
 		Products ProductData `json:"products"`
@@ -57,6 +64,58 @@ type ProductMediaData struct {
 			MediaWarnings    []any                    `json:"mediaWarnings"`
 		} `json:"node"`
 	} `json:"edges"`
+}
+
+type Error struct {
+	Message   string `json:"message"`
+	Locations []struct {
+		Line   int `json:"line"`
+		Column int `json:"column"`
+	} `json:"locations"`
+	Extensions struct {
+		Value any `json:"value"`
+	} `json:"extensions"`
+}
+
+type ProductCreateResponse struct {
+	Product    schema.Product     `json:"product"`
+	UserErrors []schema.UserError `json:"userErrors"`
+	Errors     []Error            `json:"errors"`
+}
+
+// GetProductByID fetches a product by ID.
+func (c GQLClient) GetProductByID(id string) (*ProductResponse, error) {
+	productsQuery := map[string]string{
+		"query": fmt.Sprintf(`{
+  product(id: "%s") {
+  	id
+  }
+}`, id),
+	}
+
+	query, err := json.Marshal(productsQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.Request(context.Background(), query, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var out *ProductResponse
+
+	err = json.NewDecoder(res.Body).Decode(&out)
+
+	return out, err
 }
 
 // GetProducts fetches n number of products after a cursor.
@@ -278,4 +337,56 @@ func (c GQLClient) GetProductMedias(productID string) (*ProductMediasResponse, e
 	err = json.NewDecoder(res.Body).Decode(&out)
 
 	return out, err
+}
+
+// CreateProduct creates a product.
+func (c GQLClient) CreateProduct(input schema.ProductCreateInput) (*ProductCreateResponse, error) {
+	createQuery := `
+	mutation productCreate($input: ProductInput!) {
+		productCreate(input: $input) {
+			product {
+				id
+				title
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	var out struct {
+		Data struct {
+			ProductCreate ProductCreateResponse `json:"productCreate"`
+		} `json:"data"`
+	}
+
+	err := c.executeGQLMutation(context.Background(), createQuery, map[string]any{"input": input}, &out)
+	return &out.Data.ProductCreate, err
+}
+
+// UpdateProduct updates a product.
+func (c GQLClient) UpdateProduct(input schema.ProductUpdateInput) (*ProductCreateResponse, error) {
+	updateQuery := `
+	mutation productUpdate($input: ProductInput!) {
+		productUpdate(input: $input) {
+			product {
+				id
+				title
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	var out struct {
+		Data struct {
+			ProductUpdate ProductCreateResponse `json:"productUpdate"`
+		} `json:"data"`
+	}
+
+	err := c.executeGQLMutation(context.Background(), updateQuery, map[string]any{"input": input}, &out)
+	return &out.Data.ProductUpdate, err
 }
