@@ -12,10 +12,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/pkg/gql/introspect"
-
-	"github.com/spf13/cobra"
 )
 
 // Flag wraps available command flags.

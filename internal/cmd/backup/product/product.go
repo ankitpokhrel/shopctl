@@ -53,7 +53,7 @@ func NewCmdProduct(eng *engine.Engine) *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Type assert enginer.doer with engine.Backup type.
+			// Type assert engine.doer with engine.Backup type.
 			bkpEng := eng.Doer().(*engine.Backup)
 
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)

@@ -16,9 +16,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ankitpokhrel/shopctl/pkg/browser"
-
 	"golang.org/x/oauth2"
+
+	"github.com/ankitpokhrel/shopctl/pkg/browser"
 )
 
 var (

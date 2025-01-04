@@ -34,7 +34,7 @@ func NewCmdProduct(eng *engine.Engine) *cobra.Command {
 		Aliases: []string{"products"},
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Type assert engine.doer with engine.Backup type
+			// Type assert engine.doer with engine.Restore type.
 			_ = eng.Doer().(*engine.Restore)
 
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
