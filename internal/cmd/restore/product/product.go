@@ -121,7 +121,7 @@ func handleProductRestore(client *api.GQLClient, f file.File) (*api.ProductCreat
 }
 
 func createOrUpdateProduct(product *schema.Product, client *api.GQLClient) (*api.ProductCreateResponse, error) {
-	res, err := client.GetProductByID(product.ID)
+	res, err := client.CheckProductByID(product.ID)
 	if err != nil {
 		return nil, err
 	}

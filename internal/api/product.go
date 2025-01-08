@@ -83,8 +83,8 @@ type ProductCreateResponse struct {
 	Errors     []Error            `json:"errors"`
 }
 
-// GetProductByID fetches a product by ID.
-func (c GQLClient) GetProductByID(id string) (*ProductResponse, error) {
+// CheckProductByID fetches a product by ID without additional details.
+func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 	productsQuery := map[string]string{
 		"query": fmt.Sprintf(`{
   product(id: "%s") {
