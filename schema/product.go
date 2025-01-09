@@ -33,7 +33,7 @@ type Product struct {
 	Metafields                              MetafieldConnection              `json:"metafields"`
 	OnlineStorePreviewURL                   *string                          `json:"onlineStorePreviewUrl,omitempty"`
 	OnlineStoreURL                          *string                          `json:"onlineStoreUrl,omitempty"`
-	Options                                 []any                            `json:"options"`
+	Options                                 []ProductOption                  `json:"options"`
 	PriceRangeV2                            ProductPriceRangeV2              `json:"priceRangeV2"`
 	ProductType                             string                           `json:"productType"`
 	PublishedAt                             *string                          `json:"publishedAt,omitempty"`
@@ -646,9 +646,9 @@ const (
 )
 
 type ProductVariantConnection struct {
-	Edges    []any    `json:"edges"`
-	Nodes    []any    `json:"nodes"`
-	PageInfo PageInfo `json:"pageInfo"`
+	Edges    []any            `json:"edges"`
+	Nodes    []ProductVariant `json:"nodes"`
+	PageInfo PageInfo         `json:"pageInfo"`
 }
 
 type ProductContextualPricing struct {
@@ -1268,4 +1268,66 @@ type RestrictedForResource struct {
 type SEO struct {
 	Description *string `json:"description,omitempty"`
 	Title       *string `json:"title,omitempty"`
+}
+
+type ProductOption struct {
+	ID              string               `json:"id"`
+	LinkedMetafield *LinkedMetafield     `json:"linkedMetafield,omitempty"`
+	Name            string               `json:"name"`
+	OptionValues    []ProductOptionValue `json:"optionValues"`
+	Position        int                  `json:"position"`
+	Translations    []any                `json:"translations"`
+	Values          []string             `json:"values"`
+}
+
+type LinkedMetafield struct {
+	Key       *string `json:"key,omitempty"`
+	Namespace *string `json:"namespace,omitempty"`
+}
+
+type ProductOptionValue struct {
+	HasVariants          bool                      `json:"hasVariants"`
+	ID                   string                    `json:"id"`
+	LinkedMetafieldValue *string                   `json:"linkedMetafieldValue,omitempty"`
+	Name                 string                    `json:"name"`
+	Swatch               *ProductOptionValueSwatch `json:"swatch"`
+	Translations         []any                     `json:"translations"`
+}
+
+type ProductOptionValueSwatch struct {
+	Color *string     `json:"color,omitempty"`
+	Image *MediaImage `json:"image"`
+}
+
+type MediaImage struct {
+	Alt              *string                   `json:"alt,omitempty"`
+	CreatedAt        string                    `json:"createdAt"`
+	FileErrors       []any                     `json:"fileErrors"`
+	FileStatus       FileStatus                `json:"fileStatus"`
+	ID               string                    `json:"id"`
+	Image            *Image                    `json:"image"`
+	MediaContentType MediaContentType          `json:"mediaContentType"`
+	MediaErrors      []any                     `json:"mediaErrors"`
+	MediaWarnings    []any                     `json:"mediaWarnings"`
+	Metafield        *Metafield                `json:"metafield"`
+	Metafields       MetafieldConnection       `json:"metafields"`
+	MimeType         *string                   `json:"mimeType,omitempty"`
+	OriginalSource   *MediaImageOriginalSource `json:"originalSource,omitempty"`
+	Preview          *MediaPreviewImage        `json:"preview"`
+	Status           MediaStatus               `json:"status"`
+	UpdatedAt        string                    `json:"updatedAt"`
+}
+
+type FileStatus string
+
+const (
+	FileStatusUploaded   FileStatus = "UPLOADED"
+	FileStatusProcessing FileStatus = "PROCESSING"
+	FileStatusReady      FileStatus = "READY"
+	FileStatusFailed     FileStatus = "FAILED"
+)
+
+type MediaImageOriginalSource struct {
+	FileSize *int    `json:"fileSize,omitempty"`
+	URL      *string `json:"url,omitempty"`
 }

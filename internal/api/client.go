@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	version = "2024-10"
+	version = "2025-01"
 )
 
 // GraphQLRequest is a GraphQL request.

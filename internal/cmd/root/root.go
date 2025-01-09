@@ -5,6 +5,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/auth"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/peek"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/restore"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
@@ -45,6 +46,7 @@ func addChildCommands(cmd *cobra.Command) {
 		auth.NewCmdAuth(),
 		backup.NewCmdBackup(),
 		restore.NewCmdRestore(),
+		peek.NewCmdPeek(),
 		version.NewCmdVersion(),
 	)
 }

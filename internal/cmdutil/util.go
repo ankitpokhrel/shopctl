@@ -3,6 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,6 +14,18 @@ func ExitOnErr(err error) {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
+}
+
+// ShopifyProductID formats Shopify product ID.
+func ShopifyProductID(id string) string {
+	prefix := "gid://shopify/Product"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return "" // Not an integer id.
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
 }
 
 // ExtractNumericID extracts numeric part of a Shopify ID.

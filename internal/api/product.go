@@ -5,15 +5,50 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/schema"
 )
+
+type Error struct {
+	Message   string `json:"message"`
+	Locations []struct {
+		Line   int `json:"line"`
+		Column int `json:"column"`
+	} `json:"locations"`
+	Extensions struct {
+		Value any `json:"value"`
+	} `json:"extensions"`
+}
+
+// Error implements the error interface.
+func (e *Error) Error() string {
+	return e.Message
+}
+
+type Errors []Error
+
+// Error implements the error interface.
+func (e Errors) Error() string {
+	errs := make([]string, 0, len(e))
+	for _, err := range e {
+		errs = append(errs, err.Error())
+	}
+	return strings.Join(errs, ", ")
+}
 
 type ProductResponse struct {
 	Data struct {
 		Product schema.Product `json:"product"`
 	} `json:"data"`
-	Errors []Error `json:"errors"`
+	Errors Errors `json:"errors"`
+}
+
+type ProductIdentifierResponse struct {
+	Data struct {
+		Product schema.Product `json:"productByIdentifier"`
+	} `json:"data"`
+	Errors Errors `json:"errors"`
 }
 
 type ProductsResponse struct {
@@ -66,21 +101,10 @@ type ProductMediaData struct {
 	} `json:"edges"`
 }
 
-type Error struct {
-	Message   string `json:"message"`
-	Locations []struct {
-		Line   int `json:"line"`
-		Column int `json:"column"`
-	} `json:"locations"`
-	Extensions struct {
-		Value any `json:"value"`
-	} `json:"extensions"`
-}
-
 type ProductCreateResponse struct {
 	Product    schema.Product     `json:"product"`
 	UserErrors []schema.UserError `json:"userErrors"`
-	Errors     []Error            `json:"errors"`
+	Errors     Errors             `json:"errors"`
 }
 
 // CheckProductByID fetches a product by ID without additional details.
@@ -115,6 +139,242 @@ func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&out)
 
+	return out, err
+}
+
+// GetProductByID fetches a product by ID.
+func (c GQLClient) GetProductByID(id string) (*ProductResponse, error) {
+	productsQuery := map[string]string{
+		"query": fmt.Sprintf(`{
+  product(id: "%s") {
+	  id
+	  title
+	  handle
+	  description
+	  descriptionHtml
+	  productType
+	  isGiftCard
+	  status
+	  category {
+		  id
+          name
+          fullName
+	  }
+	  tags
+	  totalInventory
+	  tracksInventory
+	  createdAt
+	  updatedAt
+	  publishedAt
+	  combinedListingRole
+	  defaultCursor
+	  giftCardTemplateSuffix
+	  hasOnlyDefaultVariant
+	  hasOutOfStockVariants
+	  hasVariantsThatRequiresComponents
+	  legacyResourceId
+	  onlineStorePreviewUrl
+	  onlineStoreUrl
+	  requiresSellingPlan
+	  templateSuffix
+	  vendor
+	  options {
+	    name
+	    values
+	    position
+	    optionValues {
+	      id
+	      name
+	      hasVariants
+	    }
+	  }
+	  variants(first: 100) {
+	    nodes {
+	      id
+	      title
+	      displayName
+	      price
+	      sku
+	      position
+	      availableForSale
+	      barcode
+	      compareAtPrice
+	      inventoryQuantity
+	      sellableOnlineQuantity
+	      requiresComponents
+	      taxable
+	      taxCode
+	      createdAt
+	      updatedAt
+	    }
+	  }
+	  media(first: 250) {
+		nodes {
+		  id
+		  alt
+		  status
+		  mediaContentType
+		  preview {
+		    image {
+		      url
+		    }
+		  }
+		}
+	  }
+	}
+}`, id),
+	}
+
+	query, err := json.Marshal(productsQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.Request(context.Background(), query, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var out *ProductResponse
+
+	err = json.NewDecoder(res.Body).Decode(&out)
+	if out.Data.Product.ID == "" {
+		return nil, fmt.Errorf("product not found")
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return out, err
+}
+
+func (c GQLClient) GetProductByHandle(handle string) (*ProductIdentifierResponse, error) {
+	productsQuery := `
+	query GetProductByHandle($identifier: ProductIdentifierInput!) {
+  productByIdentifier(identifier: $identifier) {
+    id
+    title
+    handle
+    description
+    descriptionHtml
+    productType
+    isGiftCard
+    status
+    category {
+      id
+      name
+      fullName
+    }
+    tags
+    totalInventory
+    tracksInventory
+    createdAt
+    updatedAt
+    publishedAt
+    combinedListingRole
+    defaultCursor
+    giftCardTemplateSuffix
+    hasOnlyDefaultVariant
+    hasOutOfStockVariants
+    hasVariantsThatRequiresComponents
+    legacyResourceId
+    onlineStorePreviewUrl
+    onlineStoreUrl
+    requiresSellingPlan
+    templateSuffix
+    vendor
+    options {
+      name
+      values
+      position
+      optionValues {
+        id
+        name
+        hasVariants
+      }
+    }
+    variants(first: 100) {
+      nodes {
+        id
+        title
+        displayName
+        price
+        sku
+        position
+        availableForSale
+        barcode
+        compareAtPrice
+        inventoryQuantity
+        sellableOnlineQuantity
+        requiresComponents
+        taxable
+        taxCode
+        createdAt
+        updatedAt
+      }
+    }
+    media(first: 250) {
+      nodes {
+        id
+        alt
+        status
+        mediaContentType
+        preview {
+          image {
+            url
+          }
+        }
+      }
+    }
+  }
+}`
+
+	variables := map[string]any{
+		"identifier": map[string]string{
+			"handle": handle,
+		},
+	}
+
+	// Create the request body
+	reqBody := GraphQLRequest{
+		Query:     productsQuery,
+		Variables: variables,
+	}
+
+	query, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.Request(context.Background(), query, nil)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, fmt.Errorf("response is nil")
+	}
+	defer func() { _ = res.Body.Close() }()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var out *ProductIdentifierResponse
+
+	err = json.NewDecoder(res.Body).Decode(&out)
+	if out.Data.Product.ID == "" {
+		return nil, fmt.Errorf("product not found")
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
 	return out, err
 }
 
