@@ -1,10 +1,7 @@
 package api
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/zalando/go-keyring"
@@ -17,12 +14,6 @@ import (
 const (
 	version = "2025-01"
 )
-
-// GraphQLRequest is a GraphQL request.
-type GraphQLRequest struct {
-	Query     string         `json:"query"`
-	Variables map[string]any `json:"variables,omitempty"`
-}
 
 // GQLClient is a GraphQL client.
 type GQLClient struct {
@@ -53,31 +44,4 @@ func NewGQLClient(store string) *GQLClient {
 	return &GQLClient{
 		Client: client.NewClient(server, token),
 	}
-}
-
-func (c GQLClient) executeGQLMutation(ctx context.Context, mutation string, variables map[string]any, output any) error {
-	payload := GraphQLRequest{
-		Query:     mutation,
-		Variables: variables,
-	}
-
-	query, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	res, err := c.Request(ctx, query, nil)
-	if err != nil {
-		return err
-	}
-	if res == nil {
-		return fmt.Errorf("response is nil")
-	}
-	defer func() { _ = res.Body.Close() }()
-
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
-	}
-
-	return json.NewDecoder(res.Body).Decode(output)
 }

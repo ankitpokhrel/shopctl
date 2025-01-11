@@ -90,27 +90,26 @@ func NewCmdProduct() *cobra.Command {
 }
 
 func peek(cmd *cobra.Command, client *api.GQLClient) error {
+	var (
+		product *schema.Product
+		err     error
+	)
+
 	flag := &flag{}
 	flag.parse(cmd)
-
-	var product schema.Product
 
 	if flag.from != "" {
 		// TODO: Set source to local backup.
 	}
 
 	if flag.id != "" {
-		productRes, err := client.GetProductByID(flag.id)
-		if err != nil {
-			return err
-		}
-		product = productRes.Data.Product
+		product, err = client.GetProductByID(flag.id)
 	} else {
-		productRes, err := client.GetProductByHandle(flag.handle)
-		if err != nil {
-			return err
-		}
-		product = productRes.Data.Product
+		product, err = client.GetProductByHandle(flag.handle)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	if flag.json {
@@ -121,7 +120,7 @@ func peek(cmd *cobra.Command, client *api.GQLClient) error {
 		return cmdutil.PagerOut(string(s))
 	}
 
-	// Convert to Markdown
-	r := NewFormatter(flag.store, &product)
+	// Convert to Markdown.
+	r := NewFormatter(flag.store, product)
 	return r.Render()
 }
