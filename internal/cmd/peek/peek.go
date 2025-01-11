@@ -9,7 +9,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/peek/product"
 )
 
-const helpText = `Peek lets you view data in the store
+const helpText = `Peek lets you view data in the store.
 
 You can quickly view data in the store, including products, customers and orders.`
 

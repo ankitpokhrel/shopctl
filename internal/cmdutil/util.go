@@ -56,7 +56,7 @@ func GetStoreSlug(store string) string {
 	return slug
 }
 
-// stripProtocol strips the protocol from a URL.
+// stripProtocol strips the http protocol from a URL.
 func stripProtocol(url string) string {
 	if len(url) < 8 /* Max protocol length */ { //nolint:mnd
 		return url

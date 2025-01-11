@@ -117,11 +117,13 @@ func PagerOut(out string) error {
 	return cmd.Run()
 }
 
+// ColoredOut decorates msg with color.
 func ColoredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {
 	c := color.New(clr).Add(attrs...)
 	return c.Sprint(msg)
 }
 
+// Gray returns gray colored msg.
 func Gray(msg string) string {
 	if xterm256() {
 		return gray256(msg)
