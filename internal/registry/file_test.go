@@ -1,4 +1,4 @@
-package file
+package registry
 
 import (
 	"os"
@@ -11,7 +11,6 @@ import (
 func TestFindFilesInDir(t *testing.T) {
 	path := "./testdata/.tmp/"
 
-	// Create a nested directory structure and test files
 	testFile := "testfile.txt"
 	testFiles := []string{
 		filepath.Join(path, testFile),
@@ -29,7 +28,7 @@ func TestFindFilesInDir(t *testing.T) {
 	}
 
 	locatedFiles, err := FindFilesInDir(path, testFile)
-	assert.NoError(t, err, "Unexpected error during function call")
+	assert.NoError(t, err)
 
 	results := make([]string, 0)
 	for file := range locatedFiles {
@@ -41,14 +40,22 @@ func TestFindFilesInDir(t *testing.T) {
 	for _, path := range testFiles {
 		expectedResults[path] = true
 	}
-	assert.Equal(t, len(expectedResults), len(results), "Mismatch in number of results")
+	assert.Equal(t, len(expectedResults), len(results))
 
 	for _, result := range results {
-		assert.True(t, expectedResults[result], "Unexpected file path in results: %s", result)
+		assert.True(t, expectedResults[result])
 		delete(expectedResults, result)
 	}
-	assert.Empty(t, expectedResults, "Missing expected results: %v", expectedResults)
+	assert.Empty(t, expectedResults)
 
 	// Clean up.
 	assert.NoError(t, os.RemoveAll(path))
+}
+
+func TestLookForDir(t *testing.T) {
+	path := "./testdata/bkp/"
+
+	loc, err := LookForDir("eg", path)
+	assert.NoError(t, err)
+	assert.Equal(t, "testdata/bkp/2025/01/eg", loc)
 }

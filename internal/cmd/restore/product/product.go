@@ -9,7 +9,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/pkg/file"
+	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
@@ -73,7 +73,7 @@ func restore(eng *engine.Engine, path string, client *api.GQLClient) error {
 }
 
 func restoreProduct(eng *engine.Engine, client *api.GQLClient, path string) error {
-	foundFiles, err := file.FindFilesInDir(path, fmt.Sprintf("%s.json", engine.Product))
+	foundFiles, err := registry.FindFilesInDir(path, fmt.Sprintf("%s.json", engine.Product))
 	if err != nil {
 		return err
 	}
@@ -96,8 +96,8 @@ func restoreProduct(eng *engine.Engine, client *api.GQLClient, path string) erro
 	return nil
 }
 
-func handleProductRestore(client *api.GQLClient, f file.File) (*api.ProductCreateResponse, error) {
-	product, err := file.ReadFileContents(f.Path)
+func handleProductRestore(client *api.GQLClient, f registry.File) (*api.ProductCreateResponse, error) {
+	product, err := registry.ReadFileContents(f.Path)
 	if err != nil {
 		lgr.Error("Unable to read contents", "file", f.Path, "error", err)
 		return nil, err

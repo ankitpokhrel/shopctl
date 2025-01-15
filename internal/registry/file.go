@@ -1,8 +1,9 @@
-package file
+package registry
 
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Exists checks if a file exists at the specified location.
@@ -37,6 +38,39 @@ func FindFilesInDir(dir, name string) (<-chan File, error) {
 	}()
 
 	return located, nil
+}
+
+// LookForDir searches for a directory within a specified path.
+func LookForDir(dir, in string) (string, error) {
+	var (
+		loc string
+
+		maxDepth  = 4
+		baseDepth = strings.Count(filepath.Clean(in), string(os.PathSeparator))
+	)
+
+	err := filepath.Walk(in, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		depth := strings.Count(filepath.Clean(path), string(os.PathSeparator)) - baseDepth
+
+		if !info.IsDir() {
+			return nil
+		}
+		if depth > maxDepth {
+			return filepath.SkipDir
+		}
+		if info.Name() == dir {
+			loc = path
+			return ErrTargetFound // Stop walking.
+		}
+		return nil
+	})
+	if err != nil && err != ErrTargetFound {
+		return "", err
+	}
+	return loc, nil
 }
 
 // ReadFileContents reads the contents of a file at a specified path.
