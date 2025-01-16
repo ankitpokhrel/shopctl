@@ -117,6 +117,36 @@ func PagerOut(out string) error {
 	return cmd.Run()
 }
 
+// DiffOut outputs result of a diff operation.
+func DiffOut(out string) error {
+	var diffTool string
+
+	diffTool = os.Getenv("SHOPIFY_DIFF_TOOL")
+	if diffTool == "" {
+		diffTool = os.Getenv("GIT_EXTERNAL_DIFF")
+	}
+	if diffTool == "" {
+		if IsDumbTerminal() || IsNotTTY() {
+			fmt.Print(out)
+			return nil
+		}
+		return PagerOut(out)
+	}
+
+	pa := strings.Split(diffTool, " ")
+	tool, args := pa[0], pa[1:]
+	if err := cmdExists(tool); err != nil {
+		return err
+	}
+
+	cmd := exec.Command(tool, args...)
+	cmd.Stdin = strings.NewReader(out)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
 // ColoredOut decorates msg with color.
 func ColoredOut(msg string, clr color.Attribute, attrs ...color.Attribute) string {
 	c := color.New(clr).Add(attrs...)
