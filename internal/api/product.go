@@ -31,84 +31,21 @@ func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 func (c GQLClient) GetProductByID(id string) (*schema.Product, error) {
 	var out *ProductResponse
 
-	query := `query GetProductByID($id: ID!) {
+	query := fmt.Sprintf(`query GetProductByID($id: ID!) {
   product(id: $id) {
-	  id
-	  title
-	  handle
-	  description
-	  descriptionHtml
-	  productType
-	  isGiftCard
-	  status
-	  category {
-		  id
-          name
-          fullName
+    %s
+    variants(first: 100) {
+      nodes {
+        %s
+      }
+    }
+    media(first: 250) {
+	  nodes {
+	    %s
 	  }
-	  tags
-	  totalInventory
-	  tracksInventory
-	  createdAt
-	  updatedAt
-	  publishedAt
-	  combinedListingRole
-	  defaultCursor
-	  giftCardTemplateSuffix
-	  hasOnlyDefaultVariant
-	  hasOutOfStockVariants
-	  hasVariantsThatRequiresComponents
-	  legacyResourceId
-	  onlineStorePreviewUrl
-	  onlineStoreUrl
-	  requiresSellingPlan
-	  templateSuffix
-	  vendor
-	  options {
-	    name
-	    values
-	    position
-	    optionValues {
-	      id
-	      name
-	      hasVariants
-	    }
-	  }
-	  variants(first: 100) {
-	    nodes {
-	      id
-	      title
-	      displayName
-	      price
-	      sku
-	      position
-	      availableForSale
-	      barcode
-	      compareAtPrice
-	      inventoryQuantity
-	      sellableOnlineQuantity
-	      requiresComponents
-	      taxable
-	      taxCode
-	      createdAt
-	      updatedAt
-	    }
-	  }
-	  media(first: 250) {
-		nodes {
-		  id
-		  alt
-		  status
-		  mediaContentType
-		  preview {
-		    image {
-		      url
-		    }
-		  }
-		}
-	  }
-	}
-}`
+    }
+  }
+}`, fieldsProduct, fieldsVariant, fieldsMedia)
 
 	req := client.GQLRequest{
 		Query:     query,
@@ -134,85 +71,22 @@ func (c GQLClient) GetProductByHandle(handle string) (*schema.Product, error) {
 		Errors Errors `json:"errors"`
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 	query GetProductByHandle($identifier: ProductIdentifierInput!) {
   productByIdentifier(identifier: $identifier) {
-    id
-    title
-    handle
-    description
-    descriptionHtml
-    productType
-    isGiftCard
-    status
-    category {
-      id
-      name
-      fullName
-    }
-    tags
-    totalInventory
-    tracksInventory
-    createdAt
-    updatedAt
-    publishedAt
-    combinedListingRole
-    defaultCursor
-    giftCardTemplateSuffix
-    hasOnlyDefaultVariant
-    hasOutOfStockVariants
-    hasVariantsThatRequiresComponents
-    legacyResourceId
-    onlineStorePreviewUrl
-    onlineStoreUrl
-    requiresSellingPlan
-    templateSuffix
-    vendor
-    options {
-      name
-      values
-      position
-      optionValues {
-        id
-        name
-        hasVariants
-      }
-    }
+    %s
     variants(first: 100) {
       nodes {
-        id
-        title
-        displayName
-        price
-        sku
-        position
-        availableForSale
-        barcode
-        compareAtPrice
-        inventoryQuantity
-        sellableOnlineQuantity
-        requiresComponents
-        taxable
-        taxCode
-        createdAt
-        updatedAt
+        %s
       }
     }
     media(first: 250) {
       nodes {
-        id
-        alt
-        status
-        mediaContentType
-        preview {
-          image {
-            url
-          }
-        }
+      	%s
       }
     }
   }
-}`
+}`, fieldsProduct, fieldsVariant, fieldsMedia)
 
 	req := client.GQLRequest{
 		Query: query,
@@ -237,40 +111,11 @@ func (c GQLClient) GetProductByHandle(handle string) (*schema.Product, error) {
 func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, error) {
 	var out *ProductsResponse
 
-	query := `query GetProducts($first: Int!, $after: String) {
+	query := fmt.Sprintf(`query GetProducts($first: Int!, $after: String) {
   products(first: $first, after: $after) {
     edges {
       node {
-      	id
-       	title
-       	handle
-        description
-        descriptionHtml
-        productType
-        isGiftCard
-        status
-        tags
-        totalInventory
-        tracksInventory
-        createdAt
-        updatedAt
-        publishedAt
-        combinedListingRole
-        defaultCursor
-        giftCardTemplateSuffix
-        hasOnlyDefaultVariant
-        hasOutOfStockVariants
-        hasVariantsThatRequiresComponents
-        legacyResourceId
-        onlineStorePreviewUrl
-        onlineStoreUrl
-        requiresSellingPlan
-        templateSuffix
-        vendor
-        options {
-          name
-          values
-        }
+      	%s
         variantsCount {
           count
         }
@@ -284,7 +129,7 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
      	endCursor
     }
   }
-}`
+}`, fieldsProduct)
 
 	req := client.GQLRequest{
 		Query: query,
@@ -307,18 +152,13 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsResponse, error) {
 	var out *ProductVariantsResponse
 
-	query := `query GetProductVariants($id: ID!) {
+	query := fmt.Sprintf(`query GetProductVariants($id: ID!) {
   product(id: $id) {
     id
     variants(first: 100) {
       edges {
         node {
-          id
-          displayName
-          availableForSale
-          barcode
-          compareAtPrice
-          createdAt
+          %s
           image {
             id
             altText
@@ -344,7 +184,7 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
       }
     }
   }
-}`
+}`, fieldsVariant)
 
 	req := client.GQLRequest{
 		Query:     query,
@@ -364,31 +204,18 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 func (c GQLClient) GetProductMedias(productID string) (*ProductMediasResponse, error) {
 	var out *ProductMediasResponse
 
-	query := `query GetProductMedias($id: ID!) {
+	query := fmt.Sprintf(`query GetProductMedias($id: ID!) {
   product(id: $id) {
 id
 media(first: 250) {
       edges {
         node {
-          id
-          status
-          preview {
-            image {
-              altText
-              url
-              height
-              width
-            }
-            status
-          }
-          mediaContentType
-          mediaErrors { details }
-          mediaWarnings { message }
+          %s
         }
       }
     }
   }
-}`
+}`, fieldsMedia)
 
 	req := client.GQLRequest{
 		Query:     query,
