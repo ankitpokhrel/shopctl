@@ -18,10 +18,14 @@ const (
 // GQLClient is a GraphQL client.
 type GQLClient struct {
 	*client.Client
+	throttle bool
 }
 
+// GQLClientFunc is a functional opt for GQLClient.
+type GQLClientFunc func(*GQLClient)
+
 // NewGQLClient constructs new GraphQL client for a store.
-func NewGQLClient(store string) *GQLClient {
+func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 	var (
 		token   string
 		err     error
@@ -41,7 +45,22 @@ func NewGQLClient(store string) *GQLClient {
 		}
 	}
 
-	return &GQLClient{
-		Client: client.NewClient(server, token),
+	c := GQLClient{}
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	if c.throttle {
+		c.Client = client.NewClient(server, token, client.WithTransport(DefaultShopifyTransport))
+	} else {
+		c.Client = client.NewClient(server, token)
+	}
+	return &c
+}
+
+// ThrottleRequest sets throttle for the client to true.
+func ThrottleRequest() GQLClientFunc {
+	return func(c *GQLClient) {
+		c.throttle = true
 	}
 }

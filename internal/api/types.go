@@ -15,6 +15,8 @@ type ProductsResponse struct {
 	Data struct {
 		Products ProductData `json:"products"`
 	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
 }
 
 type ProductData struct {
@@ -31,6 +33,8 @@ type ProductVariantsResponse struct {
 			Variants ProductVariantData `json:"variants"`
 		} `json:"product"`
 	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
 }
 
 type ProductVariantData struct {
@@ -46,6 +50,8 @@ type ProductMediasResponse struct {
 			Media ProductMediaData `json:"media"`
 		} `json:"product"`
 	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
 }
 
 type ProductMediaData struct {

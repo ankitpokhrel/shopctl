@@ -21,7 +21,7 @@ func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 		Query:     query,
 		Variables: client.QueryVars{"id": id},
 	}
-	if err = c.Execute(context.Background(), req, &out); err != nil {
+	if err = c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, err
@@ -51,7 +51,7 @@ func (c GQLClient) GetProductByID(id string) (*schema.Product, error) {
 		Query:     query,
 		Variables: client.QueryVars{"id": id},
 	}
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	if out.Data.Product.ID == "" {
@@ -95,7 +95,7 @@ func (c GQLClient) GetProductByHandle(handle string) (*schema.Product, error) {
 		},
 	}
 
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	if out.Data.Product.ID == "" {
@@ -138,8 +138,8 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 			"after": after,
 		},
 	}
-
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	headers := client.Header{HeaderShopifyGQLQueryCost: "56"}
+	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -190,7 +190,8 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	headers := client.Header{HeaderShopifyGQLQueryCost: "93"}
+	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -221,7 +222,8 @@ media(first: 250) {
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	headers := client.Header{HeaderShopifyGQLQueryCost: "58"}
+	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -253,7 +255,7 @@ func (c GQLClient) CreateProduct(input schema.ProductCreateInput) (*ProductCreat
 		Query:     query,
 		Variables: client.QueryVars{"input": input},
 	}
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out.Data.ProductCreate, nil
@@ -286,7 +288,7 @@ func (c GQLClient) UpdateProduct(input schema.ProductUpdateInput) (*ProductCreat
 		Variables: client.QueryVars{"input": input},
 	}
 
-	if err := c.Execute(context.Background(), req, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out.Data.ProductUpdate, nil

@@ -122,7 +122,7 @@ func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLCli
 				lgr.Error("error when fetching variants", "productId", pid, "error", err)
 				return nil, err
 			}
-			return variants.Data.Product.Variants.Edges, nil
+			return variants.Data.Product, nil
 		}
 
 		mediaFn := func() (any, error) {
@@ -133,7 +133,7 @@ func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLCli
 				lgr.Error("error when fetching media", "", pid, "error", err)
 				return nil, err
 			}
-			return medias.Data.Product.Media.Edges, err
+			return medias.Data.Product, err
 		}
 
 		created, err := time.Parse(time.RFC3339, product.Node.CreatedAt)

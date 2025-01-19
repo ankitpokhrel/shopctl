@@ -12,7 +12,27 @@ import (
 	"time"
 )
 
-const timeout = 15 * time.Second
+const (
+	maxIdleConns    = 100
+	connTimeout     = 15 * time.Second
+	idleConnTimeout = 90 * time.Second
+	handsakeTimeout = 10 * time.Second
+)
+
+// DefaultTransport is the default HTTP transport for the client.
+var DefaultTransport = &http.Transport{
+	Proxy: http.ProxyFromEnvironment,
+	TLSClientConfig: &tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: false,
+	},
+	DialContext:           (&net.Dialer{Timeout: connTimeout}).DialContext,
+	ForceAttemptHTTP2:     true,
+	MaxIdleConns:          maxIdleConns,
+	IdleConnTimeout:       idleConnTimeout,
+	TLSHandshakeTimeout:   handsakeTimeout,
+	ExpectContinueTimeout: 1 * time.Second,
+}
 
 // Header is a key, value pair for request headers.
 type Header map[string]string
@@ -33,24 +53,31 @@ type Client struct {
 	transport http.RoundTripper
 }
 
+// ClientFunc is a functional option for Client.
+type ClientFunc func(*Client)
+
 // NewClient creates a new GraphQL client.
-func NewClient(server, token string) *Client {
-	client := Client{
+func NewClient(server, token string, opts ...ClientFunc) *Client {
+	c := Client{
 		server: server,
 		token:  token,
-		transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS12,
-				InsecureSkipVerify: false,
-			},
-			DialContext: (&net.Dialer{
-				Timeout: timeout,
-			}).DialContext,
-		},
 	}
 
-	return &client
+	for _, opt := range opts {
+		opt(&c)
+	}
+
+	if c.transport == nil {
+		c.transport = DefaultTransport
+	}
+	return &c
+}
+
+// WithTransport sets custom transport for the client.
+func WithTransport(transport http.RoundTripper) ClientFunc {
+	return func(c *Client) {
+		c.transport = transport
+	}
 }
 
 // Request sends POST request to a GraphQL server.
@@ -78,13 +105,13 @@ func (c *Client) Request(ctx context.Context, body []byte, headers Header) (*htt
 }
 
 // Execute sends a GraphQL request and decodes the response to the given result.
-func (c Client) Execute(ctx context.Context, payload GQLRequest, result any) error {
+func (c Client) Execute(ctx context.Context, payload GQLRequest, headers Header, result any) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal GraphQL query: %w", err)
 	}
 
-	res, err := c.Request(ctx, data, nil)
+	res, err := c.Request(ctx, data, headers)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}

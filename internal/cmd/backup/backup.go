@@ -30,7 +30,7 @@ func NewCmdBackup() *cobra.Command {
 				return err
 			}
 
-			gqlClient := api.NewGQLClient(store)
+			gqlClient := api.NewGQLClient(store, api.ThrottleRequest())
 			cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
 
 			return nil
