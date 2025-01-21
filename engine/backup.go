@@ -59,7 +59,7 @@ func (b *Backup) Do(rs Resource) error {
 	}
 	dest := filepath.Join(dir, rs.Type.File())
 
-	data, err := rs.Handler()
+	data, err := rs.Handler.Handle()
 	if err != nil {
 		return err
 	}

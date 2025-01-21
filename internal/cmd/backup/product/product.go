@@ -9,6 +9,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product/provider"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
@@ -38,8 +39,6 @@ $ shopctl backup product --dry-run
 $ shopctl backup product --incremental`
 
 	batchSize = 100
-	modeDir   = 0o755
-	modeFile  = 0o644
 )
 
 var lgr *tlog.Logger
@@ -72,9 +71,7 @@ func product(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient) e
 
 	go func() {
 		defer eng.Done(engine.Product)
-
-		// TODO: Handle/log error.
-		_ = backupProduct(eng, bkpEng, client, batchSize, nil)
+		backupProduct(eng, bkpEng, client, batchSize, nil)
 	}()
 
 	for res := range eng.Run(engine.Product) {
@@ -90,81 +87,39 @@ func product(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient) e
 	return nil
 }
 
-func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient, limit int, after *string) error {
-	cursor := "<nil>"
-	if after != nil {
-		cursor = *after
-	}
+func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLClient, limit int, after *string) {
+	productsCh := make(chan *api.ProductsResponse, batchSize)
 
-	productsFn := func() (*api.ProductsResponse, error) {
-		return client.GetProducts(limit, after)
-	}
-	products, err := timeit(productsFn, "Request to fetch %d products after %v", limit, cursor)()
-	if err != nil {
-		lgr.Error("Unable to fetch products", "after", cursor, "error", err)
-		return err
-	}
+	go func() {
+		defer close(productsCh)
 
-	for _, product := range products.Data.Products.Edges {
-		pid := engine.ExtractNumericID(product.Node.ID)
-		hash := engine.GetHashDir(pid)
-
-		productFn := func() (any, error) {
-			lgr.Infof("Product %s: processing started", pid)
-			return product.Node, nil
+		if err := client.GetAllProducts(productsCh, limit, after); err != nil {
+			lgr.Error("error when fetching products", "limit", limit, "after", after, "error", err)
 		}
+	}()
 
-		variantFn := func() (any, error) {
-			lgr.V(tlog.VL1).Infof("Product %s: processing variants", pid)
+	for products := range productsCh {
+		for _, product := range products.Data.Products.Edges {
+			pid := engine.ExtractNumericID(product.Node.ID)
+			hash := engine.GetHashDir(pid)
 
-			variants, err := client.GetProductVariants(product.Node.ID)
+			created, err := time.Parse(time.RFC3339, product.Node.CreatedAt)
 			if err != nil {
-				lgr.Error("error when fetching variants", "productId", pid, "error", err)
-				return nil, err
+				lgr.Error("error when parsing created time", "productId", pid, "error", err)
+				continue
 			}
-			return variants.Data.Product, nil
+			path := filepath.Join(fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
+			lgr.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, bkpEng.Dir(), path)
+
+			productFn := &provider.Product{Product: &product.Node}
+			variantFn := &provider.Variant{Client: client, Logger: lgr, ProductID: product.Node.ID}
+			mediaFn := &provider.Media{Client: client, Logger: lgr, ProductID: product.Node.ID}
+
+			eng.Add(engine.Product, engine.ResourceCollection{
+				engine.NewResource(engine.Product, path, productFn),
+				engine.NewResource(engine.ProductVariant, path, variantFn),
+				engine.NewResource(engine.ProductMedia, path, mediaFn),
+			})
 		}
-
-		mediaFn := func() (any, error) {
-			lgr.V(tlog.VL1).Infof("Product %s: processing media items", pid)
-
-			medias, err := client.GetProductMedias(product.Node.ID)
-			if err != nil {
-				lgr.Error("error when fetching media", "", pid, "error", err)
-				return nil, err
-			}
-			return medias.Data.Product, err
-		}
-
-		created, err := time.Parse(time.RFC3339, product.Node.CreatedAt)
-		if err != nil {
-			return err
-		}
-		path := filepath.Join(fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
-		lgr.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, bkpEng.Dir(), path)
-
-		eng.Add(engine.Product, engine.ResourceCollection{
-			engine.NewResource(engine.Product, path, productFn),
-			engine.NewResource(engine.ProductVariant, path, timeit(variantFn, "Product %s: fetching variants", pid)),
-			engine.NewResource(engine.ProductMedia, path, timeit(mediaFn, "Product %s: fetching media items", pid)),
-		})
-	}
-
-	if products.Data.Products.PageInfo.HasNextPage {
-		return backupProduct(eng, bkpEng, client, limit, products.Data.Products.PageInfo.EndCursor)
-	}
-	return nil
-}
-
-// timeit is a higher-order function that wraps around a function and times its execution.
-func timeit[T any](fn func() (T, error), msg string, args ...any) func() (T, error) {
-	return func() (T, error) {
-		start := time.Now()
-		result, err := fn()
-
-		msg = fmt.Sprintf(msg, args...)
-		lgr.V(tlog.VL3).Infof("%s took %v", msg, time.Since(start))
-
-		return result, err
 	}
 }

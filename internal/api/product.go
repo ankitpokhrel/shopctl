@@ -145,6 +145,51 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 	return out, nil
 }
 
+// GetAllProducts fetches products in a batch and streams the response to a channel.
+func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *string) error {
+	var out *ProductsResponse
+
+	query := fmt.Sprintf(`query GetProducts($first: Int!, $after: String) {
+  products(first: $first, after: $after) {
+    edges {
+      node {
+      	%s
+        variantsCount {
+          count
+        }
+        mediaCount {
+          count
+        }
+      }
+    }
+    pageInfo {
+    	hasNextPage
+     	endCursor
+    }
+  }
+}`, fieldsProduct)
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"first": limit,
+			"after": after,
+		},
+	}
+	headers := client.Header{HeaderShopifyGQLQueryCost: "56"}
+	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
+		// TODO: Add retry logic.
+		return err
+	}
+
+	ch <- out
+
+	if out.Data.Products.PageInfo.HasNextPage {
+		return c.GetAllProducts(ch, limit, out.Data.Products.PageInfo.EndCursor)
+	}
+	return nil
+}
+
 // GetProductVariants fetches variants of a product.
 //
 // Shopify limits 100 variants per product so we should be good to fetch them all at once.

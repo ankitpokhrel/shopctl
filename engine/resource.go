@@ -22,8 +22,10 @@ func (r ResourceType) File() string {
 	panic("unknown backup data type")
 }
 
-// ResourceHandler defines how a resource is prepared.
-type ResourceHandler func() (any, error)
+// ResourceHandler is a handler for a resource.
+type ResourceHandler interface {
+	Handle() (any, error)
+}
 
 // Resource represents a backup resource.
 type Resource struct {

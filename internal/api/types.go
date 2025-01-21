@@ -41,6 +41,7 @@ type ProductVariantData struct {
 	Edges []struct {
 		Node schema.ProductVariant `json:"node"`
 	} `json:"edges"`
+	PageInfo schema.PageInfo `json:"pageInfo"`
 }
 
 type ProductMediasResponse struct {

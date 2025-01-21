@@ -8,6 +8,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type mockHandler struct {
+	dataFile string
+}
+
+func (m *mockHandler) Handle() (any, error) {
+	content, err := os.ReadFile(m.dataFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var jsonContent map[string]any
+	err = json.Unmarshal(content, &jsonContent)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonContent, nil
+}
+
 func TestBackup_Do(t *testing.T) {
 	path := "./testdata/.tmp/"
 
@@ -19,62 +38,41 @@ func TestBackup_Do(t *testing.T) {
 			NewResource(
 				Product,
 				"2024/11/6d/8737843216608",
-				func() (any, error) {
-					content, err := os.ReadFile("./testdata/product.json")
-					assert.NoError(t, err)
-
-					var jsonContent map[string]any
-					err = json.Unmarshal(content, &jsonContent)
-					assert.NoError(t, err)
-
-					return jsonContent, nil
-				},
+				&mockHandler{dataFile: "./testdata/product.json"},
 			),
 			NewResource(
 				ProductVariant,
 				"2024/11/6d/8737843216608",
-				func() (any, error) {
-					return "variants", nil
-				},
+				&mockHandler{dataFile: "./testdata/variants.json"},
 			),
 			NewResource(
 				ProductMedia,
 				"2024/11/6d/8737843216608",
-				func() (any, error) {
-					return "media", nil
-				},
+				&mockHandler{dataFile: "./testdata/media.json"},
 			),
 		},
 		{
 			NewResource(
 				Product,
 				"2024/11/6d/8737843347680",
-				func() (any, error) {
-					return "product", nil
-				},
+				&mockHandler{dataFile: "./testdata/empty.json"},
 			),
 			NewResource(
 				ProductVariant,
 				"2024/11/6d/8737843347680",
-				func() (any, error) {
-					return "variants", nil
-				},
+				&mockHandler{dataFile: "./testdata/empty.json"},
 			),
 			NewResource(
 				ProductMedia,
 				"2024/11/6d/8737843347680",
-				func() (any, error) {
-					return "media", nil
-				},
+				&mockHandler{dataFile: "./testdata/empty.json"},
 			),
 		},
 		{
 			NewResource(
 				ProductMedia,
 				"2024/12/ae/8773308023008",
-				func() (any, error) {
-					return "media", nil
-				},
+				&mockHandler{dataFile: "./testdata/empty.json"},
 			),
 		},
 	}
@@ -122,15 +120,22 @@ func TestBackup_Do(t *testing.T) {
 
 	content, err = os.ReadFile(path + "test/2024/11/6d/8737843216608/variants.json")
 	assert.NoError(t, err)
-	assert.Equal(t, "\"variants\"", string(content))
+	assert.Equal(
+		t,
+		`{"id":"gid://shopify/Product/8737843216608","variants":{"edges":[{"node":{"availableForSale":true,"createdAt":"2024-04-12T18:27:08Z","displayName":"Test Product"}}]}}`,
+		string(content))
 
 	content, err = os.ReadFile(path + "test/2024/11/6d/8737843216608/media.json")
 	assert.NoError(t, err)
-	assert.Equal(t, "\"media\"", string(content))
+	assert.Equal(
+		t,
+		`{"id":"gid://shopify/Product/8737843216608","media":{"edges":[{"node":{"id":"gid://shopify/MediaImage/33201292214520","mediaContentType":"IMAGE","mediaErrors":[],"mediaWarnings":[],"preview":{"image":{"altText":"test","height":1600,"metafield":null,"metafields":{"edges":null,"nodes":null,"pageInfo":{"hasNextPage":false,"hasPreviousPage":false}},"url":"https://cdn.shopify.com/s/files/1/0695/7373/8744/files/Main_b13ad453-477c-4ed1-9b43-81f3345adfd6.jpg?v=1712946428","width":1600},"status":"READY"},"status":"READY"}}]}}`,
+		string(content),
+	)
 
 	content, err = os.ReadFile(path + "test/2024/12/ae/8773308023008/media.json")
 	assert.NoError(t, err)
-	assert.Equal(t, "\"media\"", string(content))
+	assert.Equal(t, "{}", string(content))
 
 	// Clean up.
 	assert.NoError(t, os.RemoveAll(path))
