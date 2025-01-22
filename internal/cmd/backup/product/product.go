@@ -56,9 +56,7 @@ func NewCmdProduct(eng *engine.Engine) *cobra.Command {
 			bkpEng := eng.Doer().(*engine.Backup)
 
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-
-			v, _ := cmd.Flags().GetCount("verbose")
-			lgr = tlog.New(tlog.VerboseLevel(v))
+			lgr = cmd.Context().Value("logger").(*tlog.Logger)
 
 			return product(eng, bkpEng, client)
 		},

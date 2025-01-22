@@ -9,6 +9,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
+	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 type GQLClient struct {
 	*client.Client
 	throttle bool
+	logger   *tlog.Logger
 }
 
 // GQLClientFunc is a functional opt for GQLClient.
@@ -51,7 +53,11 @@ func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 	}
 
 	if c.throttle {
-		c.Client = client.NewClient(server, token, client.WithTransport(DefaultShopifyTransport))
+		c.Client = client.NewClient(
+			server, token,
+			client.WithTransport(DefaultShopifyTransport),
+			client.WithLogger(c.logger),
+		)
 	} else {
 		c.Client = client.NewClient(server, token)
 	}
@@ -62,5 +68,12 @@ func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 func ThrottleRequest() GQLClientFunc {
 	return func(c *GQLClient) {
 		c.throttle = true
+	}
+}
+
+// LogRequest sets custom logger for the client.
+func LogRequest(lgr *tlog.Logger) GQLClientFunc {
+	return func(c *GQLClient) {
+		c.logger = lgr
 	}
 }

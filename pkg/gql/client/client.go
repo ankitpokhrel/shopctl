@@ -51,6 +51,7 @@ type Client struct {
 	server    string
 	token     string
 	transport http.RoundTripper
+	logger    any
 }
 
 // ClientFunc is a functional option for Client.
@@ -70,6 +71,8 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 	if c.transport == nil {
 		c.transport = DefaultTransport
 	}
+
+	c.http.Logger = c.logger
 	return &c
 }
 
@@ -77,6 +80,13 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 func WithTransport(transport http.RoundTripper) ClientFunc {
 	return func(c *Client) {
 		c.transport = transport
+	}
+}
+
+// WithLogger sets custom logger for the client.
+func WithLogger(logger any) ClientFunc {
+	return func(c *Client) {
+		c.logger = logger
 	}
 }
 

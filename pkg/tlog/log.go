@@ -118,9 +118,12 @@ func (l *Logger) Errorf(msg string, args ...any) {
 	l.writer.Error(fmt.Sprintf(msg, args...))
 }
 
-// Debug logs debug messages based on verbosity level.
-func (l *Logger) Debug(level VerboseLevel, message string, args ...any) {
-	if l.verbosity >= level {
-		l.V(level).Info(message, args...)
-	}
+// Debug logs debug messages for verbosity level >= VL3.
+func (l *Logger) Debug(msg string, args ...any) {
+	l.V(VL3).writer.Debug(msg, args...)
+}
+
+// Debugf logs formated debug messages for verbosity level >= VL3.
+func (l *Logger) Debugf(msg string, args ...any) {
+	l.V(VL3).writer.Debug(fmt.Sprintf(msg, args...))
 }

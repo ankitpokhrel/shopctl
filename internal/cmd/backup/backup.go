@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
+	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
 const helpText = `Backup initiates backup process for a Shopify store.
@@ -30,8 +31,12 @@ func NewCmdBackup() *cobra.Command {
 				return err
 			}
 
-			gqlClient := api.NewGQLClient(store, api.ThrottleRequest())
+			v, _ := cmd.Flags().GetCount("verbose")
+			lgr := tlog.New(tlog.VerboseLevel(v))
+
+			gqlClient := api.NewGQLClient(store, api.ThrottleRequest(), api.LogRequest(lgr))
 			cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
+			cmd.SetContext(context.WithValue(cmd.Context(), "logger", lgr))
 
 			return nil
 		},
