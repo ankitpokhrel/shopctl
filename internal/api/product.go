@@ -138,8 +138,7 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 			"after": after,
 		},
 	}
-	headers := client.Header{HeaderShopifyGQLQueryCost: "56"}
-	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -176,10 +175,11 @@ func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *s
 			"after": after,
 		},
 	}
-	headers := client.Header{HeaderShopifyGQLQueryCost: "56"}
-	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
-		// TODO: Add retry logic.
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return err
+	}
+	if len(out.Errors) > 0 {
+		return fmt.Errorf("%s", out.Errors)
 	}
 
 	ch <- out
@@ -235,8 +235,7 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	headers := client.Header{HeaderShopifyGQLQueryCost: "93"}
-	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -267,8 +266,7 @@ media(first: 250) {
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	headers := client.Header{HeaderShopifyGQLQueryCost: "58"}
-	if err := c.Execute(context.Background(), req, headers, &out); err != nil {
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
 	return out, nil

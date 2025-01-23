@@ -54,11 +54,10 @@ type GQLRequest struct {
 
 // Client is a GraphQL client.
 type Client struct {
-	server    string
-	token     string
-	http      *retryablehttp.Client
-	transport http.RoundTripper
-	logger    retryablehttp.LeveledLogger
+	server string
+	token  string
+	http   *retryablehttp.Client
+	logger retryablehttp.LeveledLogger
 }
 
 // ClientFunc is a functional option for Client.
@@ -76,16 +75,11 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 		opt(&c)
 	}
 
-	if c.transport == nil {
-		c.http.HTTPClient.Transport = DefaultTransport
-	} else {
-		c.http.HTTPClient.Transport = c.transport
-	}
-
 	c.http.Logger = c.logger
+	c.http.HTTPClient.Transport = DefaultTransport
 	c.http.RequestLogHook = func(l retryablehttp.Logger, r *http.Request, n int) {
 		if n > 0 {
-			l.Printf("Retrying as request was throttled or server didn't respond in time, attempt #%d", n)
+			l.Printf("Retrying as the request was either throttled or server sent unexpected response: attempt #%d", n)
 		}
 	}
 	c.http.ResponseLogHook = func(l retryablehttp.Logger, r *http.Response) {
@@ -98,13 +92,6 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 	c.http.RetryWaitMin = minWait
 	c.http.RetryWaitMax = maxWait
 	return &c
-}
-
-// WithTransport sets custom transport for the client.
-func WithTransport(transport http.RoundTripper) ClientFunc {
-	return func(c *Client) {
-		c.transport = transport
-	}
 }
 
 // WithLogger sets custom logger for the client.

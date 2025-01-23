@@ -19,8 +19,7 @@ const (
 // GQLClient is a GraphQL client.
 type GQLClient struct {
 	*client.Client
-	throttle bool
-	logger   *tlog.Logger
+	logger *tlog.Logger
 }
 
 // GQLClientFunc is a functional opt for GQLClient.
@@ -51,24 +50,12 @@ func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 	for _, opt := range opts {
 		opt(&c)
 	}
-
-	if c.throttle {
-		c.Client = client.NewClient(
-			server, token,
-			client.WithTransport(DefaultShopifyTransport),
-			client.WithLogger(c.logger),
-		)
-	} else {
-		c.Client = client.NewClient(server, token)
+	if c.logger == nil {
+		c.logger = tlog.New(tlog.VerboseLevel(tlog.VL2))
 	}
+	c.Client = client.NewClient(server, token, client.WithLogger(c.logger))
+
 	return &c
-}
-
-// ThrottleRequest sets throttle for the client to true.
-func ThrottleRequest() GQLClientFunc {
-	return func(c *GQLClient) {
-		c.throttle = true
-	}
 }
 
 // LogRequest sets custom logger for the client.

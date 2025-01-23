@@ -34,7 +34,7 @@ func NewCmdBackup() *cobra.Command {
 			v, _ := cmd.Flags().GetCount("verbose")
 			lgr := tlog.New(tlog.VerboseLevel(v))
 
-			gqlClient := api.NewGQLClient(store, api.ThrottleRequest(), api.LogRequest(lgr))
+			gqlClient := api.NewGQLClient(store, api.LogRequest(lgr))
 			cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
 			cmd.SetContext(context.WithValue(cmd.Context(), "logger", lgr))
 
