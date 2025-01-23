@@ -10,6 +10,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 const (
@@ -17,6 +19,10 @@ const (
 	connTimeout     = 15 * time.Second
 	idleConnTimeout = 90 * time.Second
 	handsakeTimeout = 10 * time.Second
+
+	minWait  = 1 * time.Second
+	maxWait  = 60 * time.Second
+	retryMax = 5
 )
 
 // DefaultTransport is the default HTTP transport for the client.
@@ -50,8 +56,9 @@ type GQLRequest struct {
 type Client struct {
 	server    string
 	token     string
+	http      *retryablehttp.Client
 	transport http.RoundTripper
-	logger    any
+	logger    retryablehttp.LeveledLogger
 }
 
 // ClientFunc is a functional option for Client.
@@ -62,6 +69,7 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 	c := Client{
 		server: server,
 		token:  token,
+		http:   retryablehttp.NewClient(),
 	}
 
 	for _, opt := range opts {
@@ -69,10 +77,26 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 	}
 
 	if c.transport == nil {
-		c.transport = DefaultTransport
+		c.http.HTTPClient.Transport = DefaultTransport
+	} else {
+		c.http.HTTPClient.Transport = c.transport
 	}
 
 	c.http.Logger = c.logger
+	c.http.RequestLogHook = func(l retryablehttp.Logger, r *http.Request, n int) {
+		if n > 0 {
+			l.Printf("Retrying as request was throttled or server didn't respond in time, attempt #%d", n)
+		}
+	}
+	c.http.ResponseLogHook = func(l retryablehttp.Logger, r *http.Response) {
+		if r.StatusCode == http.StatusTooManyRequests {
+			retryAfter := r.Header.Get("Retry-After")
+			l.Printf("Request was throttled by the server, will retry after %s seconds", retryAfter)
+		}
+	}
+	c.http.RetryMax = retryMax
+	c.http.RetryWaitMin = minWait
+	c.http.RetryWaitMax = maxWait
 	return &c
 }
 
@@ -84,7 +108,7 @@ func WithTransport(transport http.RoundTripper) ClientFunc {
 }
 
 // WithLogger sets custom logger for the client.
-func WithLogger(logger any) ClientFunc {
+func WithLogger(logger retryablehttp.LeveledLogger) ClientFunc {
 	return func(c *Client) {
 		c.logger = logger
 	}
@@ -92,7 +116,7 @@ func WithLogger(logger any) ClientFunc {
 
 // Request sends POST request to a GraphQL server.
 func (c *Client) Request(ctx context.Context, body []byte, headers Header) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodPost, c.server, bytes.NewReader(body))
+	req, err := retryablehttp.NewRequest(http.MethodPost, c.server, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -109,9 +133,7 @@ func (c *Client) Request(ctx context.Context, body []byte, headers Header) (*htt
 	for k, v := range reqHeaders {
 		req.Header.Set(k, v)
 	}
-	httpClient := &http.Client{Transport: c.transport}
-
-	return httpClient.Do(req.WithContext(ctx))
+	return c.http.Do(req.WithContext(ctx))
 }
 
 // Execute sends a GraphQL request and decodes the response to the given result.
