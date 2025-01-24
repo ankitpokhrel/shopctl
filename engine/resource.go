@@ -1,9 +1,10 @@
 package engine
 
 const (
-	Product        ResourceType = "product"
-	ProductVariant ResourceType = "product_variant"
-	ProductMedia   ResourceType = "product_media"
+	Product          ResourceType = "product"
+	ProductVariant   ResourceType = "product_variant"
+	ProductMedia     ResourceType = "product_media"
+	ProductMetaField ResourceType = "product_metafield"
 )
 
 // ResourceType represents a type of a resource to backup.
@@ -18,6 +19,8 @@ func (r ResourceType) File() string {
 		return "variants"
 	case ProductMedia:
 		return "media"
+	case ProductMetaField:
+		return "metafields"
 	}
 	panic("unknown backup data type")
 }

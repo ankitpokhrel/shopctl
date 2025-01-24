@@ -408,7 +408,7 @@ type Metafield struct {
 	Definition       *MetafieldDefinition          `json:"definition"`
 	Description      *string                       `json:"description,omitempty"`
 	ID               string                        `json:"id"`
-	JsonValue        string                        `json:"jsonValue"`
+	JsonValue        any                           `json:"jsonValue"`
 	Key              string                        `json:"key"`
 	LegacyResourceID string                        `json:"legacyResourceId"`
 	Namespace        string                        `json:"namespace"`

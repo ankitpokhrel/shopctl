@@ -44,6 +44,23 @@ type ProductVariantData struct {
 	PageInfo schema.PageInfo `json:"pageInfo"`
 }
 
+type ProductMetaFieldsResponse struct {
+	Data struct {
+		Product struct {
+			ID         string                `json:"id"`
+			MetaFields ProductMetaFieldsData `json:"metafields"`
+		} `json:"product"`
+	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
+}
+
+type ProductMetaFieldsData struct {
+	Edges []struct {
+		Node schema.Metafield `json:"node"`
+	} `json:"edges"`
+}
+
 type ProductMediasResponse struct {
 	Data struct {
 		Product struct {

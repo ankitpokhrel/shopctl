@@ -241,6 +241,37 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 	return out, nil
 }
 
+// GetProductMetaFields fetches medias of a product.
+//
+// Shopify limits 200 metafields per product and the response size seems ok.
+// We'll fetch them all at once for now. We will revisit this if we run
+// into any issue due to the response size.
+func (c GQLClient) GetProductMetaFields(productID string) (*ProductMetaFieldsResponse, error) {
+	var out *ProductMetaFieldsResponse
+
+	query := fmt.Sprintf(`query GetProductMetaFields($id: ID!) {
+  product(id: $id) {
+id
+metafields(first: 200) {
+      edges {
+        node {
+          %s
+        }
+      }
+    }
+  }
+}`, fieldsMetaFields)
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": productID},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GetProductMedias fetches medias of a product.
 //
 // Shopify limits 250 medias per product and the response size seems ok.

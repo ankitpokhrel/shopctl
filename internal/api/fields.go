@@ -79,4 +79,14 @@ preview {
 mediaContentType
 mediaErrors { details }
 mediaWarnings { message }`
+
+	fieldsMetaFields = `id
+namespace
+key
+jsonValue
+description
+type
+ownerType
+createdAt
+updatedAt`
 )

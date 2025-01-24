@@ -38,7 +38,7 @@ $ shopctl backup product --dry-run
 # Perform an incremental backup (only new or updated products)
 $ shopctl backup product --incremental`
 
-	batchSize = 100
+	batchSize = 250
 )
 
 var lgr *tlog.Logger
@@ -112,11 +112,13 @@ func backupProduct(eng *engine.Engine, bkpEng *engine.Backup, client *api.GQLCli
 			productFn := &provider.Product{Product: &product.Node}
 			variantFn := &provider.Variant{Client: client, Logger: lgr, ProductID: product.Node.ID}
 			mediaFn := &provider.Media{Client: client, Logger: lgr, ProductID: product.Node.ID}
+			metafieldFn := &provider.MetaField{Client: client, Logger: lgr, ProductID: product.Node.ID}
 
 			eng.Add(engine.Product, engine.ResourceCollection{
 				engine.NewResource(engine.Product, path, productFn),
 				engine.NewResource(engine.ProductVariant, path, variantFn),
 				engine.NewResource(engine.ProductMedia, path, mediaFn),
+				engine.NewResource(engine.ProductMetaField, path, metafieldFn),
 			})
 		}
 	}
