@@ -1,6 +1,7 @@
 package config
 
 import (
+	"io/fs"
 	"path/filepath"
 )
 
@@ -53,4 +54,41 @@ func (c *PresetConfig) writeAll() error {
 	c.writer.Set(keyResources, c.data.Resources)
 
 	return c.writer.WriteConfig()
+}
+
+// ListPresets returns available presets for the store.
+func ListPresets(store string) ([]string, error) {
+	var out []string
+
+	root := filepath.Join(home(), store, presetConfigDir)
+	err := filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		out = append(out, path)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, err
+}
+
+// ReadAllPreset reads preset config for a store.
+func ReadAllPreset(store string, file string) (*PresetItems, error) {
+	root := filepath.Join(home(), store, presetConfigDir)
+
+	w := makeWriter(root, file)
+	if err := w.ReadInConfig(); err != nil {
+		return nil, err
+	}
+	return &PresetItems{
+		Alias:     w.GetString(keyAlias),
+		Kind:      w.GetString(keyKind),
+		BkpDir:    w.GetString(keyBkpDir),
+		Resources: w.GetStringSlice(keyResources),
+	}, nil
 }
