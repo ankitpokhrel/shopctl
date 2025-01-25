@@ -19,6 +19,7 @@ type PresetItems struct {
 	Kind      string
 	BkpDir    string
 	Resources []string
+	Force     bool
 }
 
 // StoreConfig is a Shopify store config.
@@ -39,7 +40,7 @@ func NewPresetConfig(store string, items PresetItems) *PresetConfig {
 
 // Save saves the config of a store to the file.
 func (c *PresetConfig) Save() error {
-	if err := ensureConfigFile(c.dir, c.data.Alias); err != nil {
+	if err := ensureConfigFile(c.dir, c.data.Alias, c.data.Force); err != nil {
 		return err
 	}
 	return c.writeAll()

@@ -49,6 +49,16 @@ func ShortenAndPad(msg string, limit int) string {
 	return Pad(msg, limit)
 }
 
+// Success prints success message in stdout.
+func Success(msg string, args ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stdout, fmt.Sprintf("\u001B[0;32m✔\u001B[0m %s\n", msg), args...)
+}
+
+// Fail prints failure message in stderr.
+func Fail(msg string, args ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("\u001B[0;31m✗\u001B[0m %s\n", msg), args...)
+}
+
 // IsDumbTerminal checks TERM/WT_SESSION environment variable and returns true if they indicate a dumb terminal.
 //
 // Dumb terminal indicates terminal with limited capability. It may not provide support

@@ -129,7 +129,7 @@ func TestBackup_Do(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		`{"id":"gid://shopify/Product/8737843216608","media":{"edges":[{"node":{"id":"gid://shopify/MediaImage/33201292214520","mediaContentType":"IMAGE","mediaErrors":[],"mediaWarnings":[],"preview":{"image":{"altText":"test","height":1600,"metafield":null,"metafields":{"edges":null,"nodes":null,"pageInfo":{"hasNextPage":false,"hasPreviousPage":false}},"url":"https://cdn.shopify.com/s/files/1/0695/7373/8744/files/Main_b13ad453-477c-4ed1-9b43-81f3345adfd6.jpg?v=1712946428","width":1600},"status":"READY"},"status":"READY"}}]}}`,
+		`{"id":"gid://shopify/Product/8737843216608","media":{"edges":[{"node":{"id":"gid://shopify/MediaImage/33201292214520","mediaContentType":"IMAGE","mediaErrors":[],"mediaWarnings":[],"preview":{"image":{"altText":"Test Media","height":1600,"metafield":null,"metafields":{"edges":null,"nodes":null,"pageInfo":{"hasNextPage":false,"hasPreviousPage":false}},"url":"https://cdn.shopify.com/s/files/1/0695/7373/8744/files/Main_b13ad453-477c-4ed1-9b43-81f3345adfd6.jpg?v=1712946428","width":1600},"status":"READY"},"status":"READY"}}]}}`,
 		string(content),
 	)
 

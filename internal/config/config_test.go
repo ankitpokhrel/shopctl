@@ -52,6 +52,7 @@ func TestConfigSave(t *testing.T) {
 		Kind:      "full",
 		BkpDir:    "./testdata/",
 		Resources: []string{"product"},
+		Force:     true,
 	})
 	assert.NotNil(t, p)
 	assert.NoError(t, p.Save())

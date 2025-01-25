@@ -17,6 +17,9 @@ const (
 	modeOwner = 0o700
 )
 
+// ErrConfigExist is thrown if the config file already exist.
+var ErrConfigExist = fmt.Errorf("config already exist")
+
 type config struct {
 	writer *viper.Viper
 	dir    string
@@ -54,17 +57,19 @@ func makeWriter(dir, name string) *viper.Viper {
 	return w
 }
 
-func exists(dir string) bool {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+func exists(file string) bool {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return false
 	}
 	return true
 }
 
-func ensureConfigFile(dir, file string) error {
+func ensureConfigFile(dir, file string, force bool) error {
+	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", file, fileType))
+
 	// Bail early if config already exists.
-	if exists(dir) {
-		return nil
+	if !force && exists(cfgFile) {
+		return ErrConfigExist
 	}
 
 	// Create top-level dir.
@@ -73,7 +78,6 @@ func ensureConfigFile(dir, file string) error {
 			return err
 		}
 	}
-	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", file, fileType))
 
 	// Create config file.
 	f, err := os.Create(cfgFile)

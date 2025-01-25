@@ -7,6 +7,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -45,6 +46,7 @@ func NewCmdBackup() *cobra.Command {
 
 	bkpEngine := engine.New(engine.NewBackup())
 	cmd.AddCommand(
+		config.NewCmdConfig(),
 		product.NewCmdProduct(bkpEngine),
 	)
 

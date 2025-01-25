@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"path/filepath"
 )
 
@@ -45,7 +46,7 @@ func (c *StoreConfig) SetToken(token string) {
 
 // Save saves the config of a store to the file.
 func (c *StoreConfig) Save() error {
-	if err := ensureConfigFile(c.dir, storeConfigFile); err != nil {
+	if err := ensureConfigFile(c.dir, storeConfigFile, false); err != nil && !errors.Is(err, ErrConfigExist) {
 		return err
 	}
 	return c.writeAll()

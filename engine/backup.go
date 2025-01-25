@@ -9,9 +9,15 @@ import (
 )
 
 const (
+	BackupTypeFull        BackupType = "full"
+	BackupTypeIncremental BackupType = "incremental"
+
 	modeDir  = 0o755
 	modeFile = 0o644
 )
+
+// BackupType represents the type of a backup.
+type BackupType string
 
 // Backup is a backup engine.
 type Backup struct {
