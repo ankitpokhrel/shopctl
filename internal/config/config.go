@@ -17,8 +17,14 @@ const (
 	modeOwner = 0o700
 )
 
-// ErrConfigExist is thrown if the config file already exist.
-var ErrConfigExist = fmt.Errorf("config already exist")
+var (
+	// ErrConfigExist is thrown if the config file already exist.
+	ErrConfigExist = fmt.Errorf("config already exist")
+	// ErrNoConfig is thrown if a config file couldn't be found.
+	ErrNoConfig = fmt.Errorf("config doesn't exist")
+	// ErrActionAborted is thrown if a user cancels an action.
+	ErrActionAborted = fmt.Errorf("action aborted")
+)
 
 type config struct {
 	writer *viper.Viper

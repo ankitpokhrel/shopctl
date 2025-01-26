@@ -1,8 +1,12 @@
 package config
 
 import (
+	"bufio"
+	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -91,4 +95,28 @@ func ReadAllPreset(store string, file string) (*PresetItems, error) {
 		BkpDir:    w.GetString(keyBkpDir),
 		Resources: w.GetStringSlice(keyResources),
 	}, nil
+}
+
+// DeletePreset deletes preset for a store if it exist.
+func DeletePreset(store string, preset string, force bool) error {
+	root := filepath.Join(home(), store, presetConfigDir)
+	file := filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileType))
+
+	if !exists(file) {
+		return ErrNoConfig
+	}
+	if force {
+		return os.Remove(file)
+	}
+
+	fmt.Printf("You are about to delete preset '%s' for store '%s'. Are you sure? (y/N): ", preset, store)
+
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(strings.ToLower(input))
+
+	if input == "y" || input == "yes" {
+		return os.Remove(file)
+	}
+	return ErrActionAborted
 }

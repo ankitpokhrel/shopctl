@@ -5,6 +5,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config/add"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config/list"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config/remove"
 )
 
 const helpText = `Config helps you manage backup configuration.`
@@ -22,6 +23,7 @@ func NewCmdConfig() *cobra.Command {
 	cmd.AddCommand(
 		add.NewCmdAdd(),
 		list.NewCmdList(),
+		remove.NewCmdRemove(),
 	)
 
 	return &cmd
