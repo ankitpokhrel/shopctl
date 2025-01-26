@@ -9,6 +9,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/run"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
@@ -27,6 +28,13 @@ func NewCmdBackup() *cobra.Command {
 		Aliases:     []string{"bkp", "dump"},
 		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Parent().Name() != "backup" {
+				return nil
+			}
+			if cmd.Name() == "config" {
+				return nil
+			}
+
 			store, err := cmd.Flags().GetString("store")
 			if err != nil {
 				return err
@@ -47,6 +55,7 @@ func NewCmdBackup() *cobra.Command {
 	bkpEngine := engine.New(engine.NewBackup())
 	cmd.AddCommand(
 		config.NewCmdConfig(),
+		run.NewCmdRun(),
 		product.NewCmdProduct(bkpEngine),
 	)
 

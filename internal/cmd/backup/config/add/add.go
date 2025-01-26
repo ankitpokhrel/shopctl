@@ -21,6 +21,7 @@ type flag struct {
 	alias     string
 	kind      string
 	bkpDir    string
+	bkpPrefix string
 	resources []string
 	force     bool
 }
@@ -39,7 +40,10 @@ func (f *flag) parse(cmd *cobra.Command) {
 		kind = string(engine.BackupTypeIncremental)
 	}
 
-	bkpDir, err := cmd.Flags().GetString("dir")
+	dir, err := cmd.Flags().GetString("dir")
+	cmdutil.ExitOnErr(err)
+
+	prefix, err := cmd.Flags().GetString("prefix")
 	cmdutil.ExitOnErr(err)
 
 	resource, err := cmd.Flags().GetString("resource")
@@ -58,7 +62,8 @@ func (f *flag) parse(cmd *cobra.Command) {
 	f.store = store
 	f.alias = alias
 	f.kind = kind
-	f.bkpDir = bkpDir
+	f.bkpDir = dir
+	f.bkpPrefix = prefix
 	f.resources = resources
 	f.force = force
 }
@@ -74,6 +79,7 @@ func NewCmdAdd() *cobra.Command {
 	}
 	cmd.Flags().StringP("alias", "a", "", "Unique alias for the config")
 	cmd.Flags().StringP("dir", "d", "", "Root directory to save backups to")
+	cmd.Flags().StringP("prefix", "p", "", "Prefix for the main backup directory")
 	cmd.Flags().StringP("resource", "r", "", "Resource types to backup (comma separated)")
 	cmd.Flags().StringP("type", "t", "", "Backup time (full or incremental)")
 	cmd.Flags().Bool("force", false, "Replace config if it already exist")
@@ -91,6 +97,7 @@ func add(cmd *cobra.Command, _ []string) error {
 		Alias:     flag.alias,
 		Kind:      flag.kind,
 		BkpDir:    flag.bkpDir,
+		BkpPrefix: flag.bkpPrefix,
 		Resources: flag.resources,
 		Force:     flag.force,
 	})

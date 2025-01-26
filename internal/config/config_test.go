@@ -48,6 +48,7 @@ func TestConfigSave(t *testing.T) {
 		Alias:     "daily",
 		Kind:      "full",
 		BkpDir:    "./testdata/",
+		BkpPrefix: "test",
 		Resources: []string{"product"},
 		Force:     true,
 	})
@@ -58,7 +59,8 @@ func TestConfigSave(t *testing.T) {
 	assert.FileExists(t, fmt.Sprintf("%s/%s/preset/daily.yml", root, store))
 	assert.Equal(t, "daily", p.writer.GetString("alias"))
 	assert.Equal(t, "full", p.writer.GetString("type"))
-	assert.Equal(t, "./testdata/", p.writer.GetString("backup_dir"))
+	assert.Equal(t, "./testdata/", p.writer.GetString("backup.dir"))
+	assert.Equal(t, "test", p.writer.GetString("backup.prefix"))
 	assert.Equal(t, []string{"product"}, p.writer.GetStringSlice("resources"))
 
 	assert.NoError(t, os.RemoveAll("./testdata/.tmp/"))

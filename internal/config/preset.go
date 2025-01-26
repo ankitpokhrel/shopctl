@@ -12,7 +12,8 @@ import (
 const (
 	keyAlias     = "alias"
 	keyKind      = "type"
-	keyBkpDir    = "backup_dir"
+	keyBkpDir    = "backup.dir"
+	keyBkpPrefix = "backup.prefix"
 	keyResources = "resources"
 
 	presetConfigDir = "preset"
@@ -23,6 +24,7 @@ type PresetItems struct {
 	Alias     string
 	Kind      string
 	BkpDir    string
+	BkpPrefix string
 	Resources []string
 	Force     bool
 }
@@ -55,6 +57,7 @@ func (c *PresetConfig) writeAll() error {
 	c.writer.Set(keyAlias, c.data.Alias)
 	c.writer.Set(keyKind, c.data.Kind)
 	c.writer.Set(keyBkpDir, c.data.BkpDir)
+	c.writer.Set(keyBkpPrefix, c.data.BkpPrefix)
 	c.writer.Set(keyResources, c.data.Resources)
 
 	return c.writer.WriteConfig()
@@ -93,10 +96,10 @@ func ListPresets(store string) ([]string, error) {
 }
 
 // ReadAllPreset reads preset config for a store.
-func ReadAllPreset(store string, file string) (*PresetItems, error) {
+func ReadAllPreset(store string, preset string) (*PresetItems, error) {
 	root := filepath.Join(home(), store, presetConfigDir)
 
-	w := makeWriter(root, file)
+	w := makeWriter(root, preset)
 	if err := w.ReadInConfig(); err != nil {
 		return nil, err
 	}
@@ -104,6 +107,7 @@ func ReadAllPreset(store string, file string) (*PresetItems, error) {
 		Alias:     w.GetString(keyAlias),
 		Kind:      w.GetString(keyKind),
 		BkpDir:    w.GetString(keyBkpDir),
+		BkpPrefix: w.GetString(keyBkpPrefix),
 		Resources: w.GetStringSlice(keyResources),
 	}, nil
 }

@@ -2,8 +2,10 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,9 +30,11 @@ func (m *mockHandler) Handle() (any, error) {
 }
 
 func TestBackup_Do(t *testing.T) {
-	path := "./testdata/.tmp/"
+	path := "./testdata/.tmp"
+	now := time.Now().Format("2006_01_02_15_04_05")
+	root := fmt.Sprintf("%s/test/bkp_%s", path, now)
 
-	bkpEngine := New(NewBackup(WithBackupDir(path + "test")))
+	bkpEngine := New(NewBackup(WithBackupDir(path+"/test"), WithBackupPrefix("bkp")))
 	bkpEngine.Register(Product)
 
 	jobs := []ResourceCollection{
@@ -90,27 +94,27 @@ func TestBackup_Do(t *testing.T) {
 	}
 
 	// Assert that folder and files were created.
-	assert.DirExists(t, path+"test")
-	assert.DirExists(t, path+"test/2024/11")
-	assert.DirExists(t, path+"test/2024/11/6d")
-	assert.DirExists(t, path+"test/2024/11/6d/8737843216608")
-	assert.DirExists(t, path+"test/2024/11/6d/8737843347680")
-	assert.DirExists(t, path+"test/2024/12")
-	assert.DirExists(t, path+"test/2024/12/ae")
-	assert.DirExists(t, path+"test/2024/12/ae/8773308023008")
+	assert.DirExists(t, path+"/test")
+	assert.DirExists(t, root+"/2024/11")
+	assert.DirExists(t, root+"/2024/11/6d")
+	assert.DirExists(t, root+"/2024/11/6d/8737843216608")
+	assert.DirExists(t, root+"/2024/11/6d/8737843347680")
+	assert.DirExists(t, root+"/2024/12")
+	assert.DirExists(t, root+"/2024/12/ae")
+	assert.DirExists(t, root+"/2024/12/ae/8773308023008")
 
-	assert.FileExists(t, path+"test/2024/11/6d/8737843216608/product.json")
-	assert.FileExists(t, path+"test/2024/11/6d/8737843216608/variants.json")
-	assert.FileExists(t, path+"test/2024/11/6d/8737843216608/media.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843216608/variants.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843216608/media.json")
 
-	assert.FileExists(t, path+"test/2024/11/6d/8737843347680/product.json")
-	assert.FileExists(t, path+"test/2024/11/6d/8737843347680/variants.json")
-	assert.FileExists(t, path+"test/2024/11/6d/8737843347680/media.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843347680/variants.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843347680/media.json")
 
-	assert.FileExists(t, path+"test/2024/12/ae/8773308023008/media.json")
+	assert.FileExists(t, root+"/2024/12/ae/8773308023008/media.json")
 
 	// Assert file contents.
-	content, err := os.ReadFile(path + "test/2024/11/6d/8737843216608/product.json")
+	content, err := os.ReadFile(root + "/2024/11/6d/8737843216608/product.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -118,14 +122,14 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(path + "test/2024/11/6d/8737843216608/variants.json")
+	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/variants.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
 		`{"id":"gid://shopify/Product/8737843216608","variants":{"edges":[{"node":{"availableForSale":true,"createdAt":"2024-04-12T18:27:08Z","displayName":"Test Product"}}]}}`,
 		string(content))
 
-	content, err = os.ReadFile(path + "test/2024/11/6d/8737843216608/media.json")
+	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/media.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -133,7 +137,7 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(path + "test/2024/12/ae/8773308023008/media.json")
+	content, err = os.ReadFile(root + "/2024/12/ae/8773308023008/media.json")
 	assert.NoError(t, err)
 	assert.Equal(t, "{}", string(content))
 

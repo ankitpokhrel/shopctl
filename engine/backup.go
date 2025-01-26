@@ -21,7 +21,8 @@ type BackupType string
 
 // Backup is a backup engine.
 type Backup struct {
-	dir       string
+	root      string
+	prefix    string
 	timestamp time.Time
 }
 
@@ -38,28 +39,39 @@ func NewBackup(opts ...Option) *Backup {
 		opt(&bkp)
 	}
 
-	if bkp.dir == "" {
-		bkp.dir = fmt.Sprintf("backup_%s", bkp.timestamp.Format("2006_01_02_15_04_05"))
+	if bkp.prefix == "" {
+		bkp.prefix = "backup"
 	}
+
+	dir := fmt.Sprintf("%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"))
+	bkp.root = filepath.Join(bkp.root, dir)
+
 	return &bkp
 }
 
-// WithBackupDir sets backup dir.
+// WithBackupDir sets root backup dir.
 func WithBackupDir(dir string) Option {
 	return func(b *Backup) {
-		b.dir = dir
+		b.root = dir
 	}
 }
 
-// Dir returns backup directory.
+// WithBackupPrefix sets prefix for backup dir name.
+func WithBackupPrefix(prefix string) Option {
+	return func(b *Backup) {
+		b.prefix = prefix
+	}
+}
+
+// Dir returns root backup directory.
 func (b *Backup) Dir() string {
-	return b.dir
+	return b.root
 }
 
 // Do starts the backup process.
 // Implements `engine.Doer` interface.
 func (b *Backup) Do(rs Resource) error {
-	dir := filepath.Join(b.dir, rs.Path)
+	dir := filepath.Join(b.root, rs.Path)
 	if err := os.MkdirAll(dir, modeDir); err != nil {
 		return err
 	}
