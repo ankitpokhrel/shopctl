@@ -59,7 +59,7 @@ func list(cmd *cobra.Command, _ []string) error {
 	b := new(bytes.Buffer)
 	w := tabwriter.NewWriter(b, 0, tabWidth, 1, '\t', 0)
 
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "Alias", "Type", "Backup Location", "Resources")
+	_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "Alias", "Type", "Backup Location", "Resources")
 	for _, f := range files {
 		base := path.Base(f)
 		name := strings.TrimSuffix(base, path.Ext(base))
@@ -68,7 +68,7 @@ func list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			w, "%s\t%s\t%s\t%s\n",
 			item.Alias, item.Kind, item.BkpDir, strings.Join(item.Resources, ", "),
 		)

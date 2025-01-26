@@ -43,9 +43,8 @@ func TestRender(t *testing.T) {
 		},
 	}
 
-	// Set environment variable
-	_ = os.Setenv("SHOPIFY_DIFF_TOOL", "cat")
-	defer func() { _ = os.Unsetenv("SHOPIFY_DIFF_TOOL") }()
+	// Set environment variable.
+	t.Setenv("SHOPIFY_DIFF_TOOL", "cat")
 
 	stdout := os.Stdout
 	defer func() { os.Stdout = stdout }()

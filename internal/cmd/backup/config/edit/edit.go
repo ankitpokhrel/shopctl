@@ -1,6 +1,7 @@
 package edit
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -27,6 +28,17 @@ func (f *flag) parse(cmd *cobra.Command) {
 	alias, err := cmd.Flags().GetString("alias")
 	cmdutil.ExitOnErr(err)
 
+	if alias == "" {
+		cmdutil.ExitOnErr(
+			fmt.Errorf(`Error: config alias is required.
+
+Usage:
+  $ shopctl backup config edit -s <store> -a <alias>
+
+See 'shopctl backup config edit --help' for more info.`),
+		)
+	}
+
 	f.store = store
 	f.alias = alias
 }
@@ -40,7 +52,7 @@ func NewCmdEdit() *cobra.Command {
 		Aliases: []string{"udpate", "modify"},
 		RunE:    edit,
 	}
-	cmd.Flags().StringP("alias", "a", "", "Alias of the config to delete")
+	cmd.Flags().StringP("alias", "a", "", "Alias of the config to edit")
 
 	return &cmd
 }

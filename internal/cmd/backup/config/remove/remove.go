@@ -2,6 +2,7 @@ package remove
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,6 +27,17 @@ func (f *flag) parse(cmd *cobra.Command) {
 
 	alias, err := cmd.Flags().GetString("alias")
 	cmdutil.ExitOnErr(err)
+
+	if alias == "" {
+		cmdutil.ExitOnErr(
+			fmt.Errorf(`Error: config alias is required.
+
+Usage:
+  $ shopctl backup config remove -s <store> -a <alias>
+
+See 'shopctl backup config remove --help' for more info.`),
+		)
+	}
 
 	force, err := cmd.Flags().GetBool("force")
 	cmdutil.ExitOnErr(err)
@@ -67,6 +79,6 @@ func remove(cmd *cobra.Command, _ []string) error {
 		}
 		return err
 	}
-	cmdutil.Success("Config '%s' for store '%s' was deleted successfully", flag.alias, flag.store)
+	cmdutil.Success("Config with alias '%s' for store '%s' was deleted successfully", flag.alias, flag.store)
 	return nil
 }

@@ -16,7 +16,7 @@ func TestConfigHome(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, userHome+"/.config/shopctl", home())
 
-	assert.NoError(t, os.Setenv("XDG_CONFIG_HOME", "./testdata"))
+	t.Setenv("XDG_CONFIG_HOME", "./testdata")
 	assert.Equal(t, "testdata/shopctl", home())
 }
 
@@ -24,10 +24,7 @@ func TestConfigSave(t *testing.T) {
 	store := "store.myshopify.com"
 	root := "./testdata/.tmp/shopctl"
 
-	assert.NoError(t, os.Setenv("SHOPIFY_CONFIG_HOME", "./testdata/.tmp/"))
-	defer func() {
-		assert.NoError(t, os.Unsetenv("SHOPIFY_CONFIG_HOME"))
-	}()
+	t.Setenv("SHOPIFY_CONFIG_HOME", "./testdata/.tmp/")
 
 	c := NewStoreConfig(store)
 	assert.NotNil(t, c)

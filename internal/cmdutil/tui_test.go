@@ -1,7 +1,6 @@
 package cmdutil
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -72,23 +71,25 @@ func TestShortenAndPad(t *testing.T) {
 }
 
 func TestIsDumbTerminal(t *testing.T) {
-	// Store initial values & cleanup
-	t.Setenv("TERM", "")
-	t.Setenv("WT_SESSION", "")
+	{
+		t.Setenv("TERM", "")
+		assert.True(t, IsDumbTerminal())
+	}
 
-	empty := ""
-	foo := "foo"
-	setTermEnv(&empty, nil)
-	assert.True(t, IsDumbTerminal())
+	{
+		t.Setenv("TERM", "dumb")
+		assert.True(t, IsDumbTerminal())
+	}
 
-	setTermEnv(nil, nil)
-	assert.True(t, IsDumbTerminal())
+	{
+		t.Setenv("TERM", "foo")
+		assert.False(t, IsDumbTerminal())
+	}
 
-	setTermEnv(&foo, nil)
-	assert.False(t, IsDumbTerminal())
-
-	setTermEnv(nil, &foo)
-	assert.False(t, IsDumbTerminal())
+	{
+		t.Setenv("WT_SESSION", "foo")
+		assert.False(t, IsDumbTerminal())
+	}
 }
 
 func TestGetEditor(t *testing.T) {
@@ -189,18 +190,5 @@ func TestGetPager(t *testing.T) {
 		t.Setenv("PAGER", "more")
 		t.Setenv("TERM", "xterm")
 		assert.Equal(t, "more", GetPager())
-	}
-}
-
-func setTermEnv(term *string, wtSession *string) {
-	if term != nil {
-		_ = os.Setenv("TERM", *term)
-	} else {
-		_ = os.Unsetenv("TERM")
-	}
-	if wtSession != nil {
-		_ = os.Setenv("WT_SESSION", *wtSession)
-	} else {
-		_ = os.Unsetenv("WT_SESSION")
 	}
 }
