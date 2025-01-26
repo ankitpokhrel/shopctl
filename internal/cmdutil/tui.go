@@ -163,6 +163,42 @@ func ColoredOut(msg string, clr color.Attribute, attrs ...color.Attribute) strin
 	return c.Sprint(msg)
 }
 
+// GetEditor returns the default editor configured in the system.
+func GetEditor() (string, []string) {
+	envCheck := func() string {
+		editor := os.Getenv("SHOPIFY_EDITOR")
+		if editor != "" {
+			return editor
+		}
+		editor = os.Getenv("VISUAL")
+		if editor != "" {
+			return editor
+		}
+		editor = os.Getenv("EDITOR")
+		if editor != "" {
+			return editor
+		}
+
+		if runtime.GOOS == "windows" {
+			return "notepad"
+		}
+
+		for _, e := range []string{"vim", "vi", "nano"} {
+			if path, err := exec.LookPath(e); err == nil {
+				return path
+			}
+		}
+		return ""
+	}
+	editor := envCheck()
+
+	parts := strings.Fields(editor)
+	if len(parts) > 1 {
+		return parts[0], parts[1:]
+	}
+	return editor, nil
+}
+
 // Gray returns gray colored msg.
 func Gray(msg string) string {
 	if xterm256() {

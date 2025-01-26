@@ -60,6 +60,17 @@ func (c *PresetConfig) writeAll() error {
 	return c.writer.WriteConfig()
 }
 
+// GetPresetLoc returns the location of the preset if it exist.
+func GetPresetLoc(store string, preset string) (string, error) {
+	root := filepath.Join(home(), store, presetConfigDir)
+	file := filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileType))
+
+	if !exists(file) {
+		return "", ErrNoConfig
+	}
+	return file, nil
+}
+
 // ListPresets returns available presets for the store.
 func ListPresets(store string) ([]string, error) {
 	var out []string
@@ -99,11 +110,9 @@ func ReadAllPreset(store string, file string) (*PresetItems, error) {
 
 // DeletePreset deletes preset for a store if it exist.
 func DeletePreset(store string, preset string, force bool) error {
-	root := filepath.Join(home(), store, presetConfigDir)
-	file := filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileType))
-
-	if !exists(file) {
-		return ErrNoConfig
+	file, err := GetPresetLoc(store, preset)
+	if err != nil {
+		return err
 	}
 	if force {
 		return os.Remove(file)

@@ -91,6 +91,50 @@ func TestIsDumbTerminal(t *testing.T) {
 	assert.False(t, IsDumbTerminal())
 }
 
+func TestGetEditor(t *testing.T) {
+	// SHOPIFY_EDITOR and VISUAL is set.
+	{
+		t.Setenv("SHOPIFY_EDITOR", "nvim")
+		t.Setenv("VISUAL", "nano")
+
+		editor, args := GetEditor()
+		assert.Equal(t, "nvim", editor)
+		assert.Empty(t, args)
+
+		t.Setenv("SHOPIFY_EDITOR", "")
+		t.Setenv("VISUAL", "")
+	}
+
+	// VISUAL is set.
+	{
+		t.Setenv("VISUAL", "nvim -n")
+
+		editor, args := GetEditor()
+		assert.Equal(t, "nvim", editor)
+		assert.Equal(t, []string{"-n"}, args)
+
+		t.Setenv("VISUAL", "")
+	}
+
+	// EDITOR is set.
+	{
+		t.Setenv("EDITOR", "nano")
+
+		editor, args := GetEditor()
+		assert.Equal(t, "nano", editor)
+		assert.Empty(t, args)
+
+		t.Setenv("EDITOR", "")
+	}
+
+	// Env not set.
+	{
+		editor, args := GetEditor()
+		assert.Equal(t, "/usr/bin/vim", editor)
+		assert.Empty(t, args)
+	}
+}
+
 func TestGetPager(t *testing.T) {
 	// TERM is xterm, SHOPIFY_PAGER is not set, PAGER is set.
 	{
