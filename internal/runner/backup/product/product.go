@@ -77,7 +77,7 @@ func (r *Runner) backup(limit int, after *string) {
 				r.logger.Error("error when parsing created time", "productId", pid, "error", err)
 				continue
 			}
-			path := filepath.Join(fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
+			path := filepath.Join(engine.Product.RootDir(), fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, pid)
 			r.logger.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, r.bkpEng.Dir(), path)
 
 			productFn := &provider.Product{Product: &product.Node}

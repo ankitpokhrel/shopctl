@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/shopctl/engine"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
@@ -21,6 +20,11 @@ Supports advanced options for incremental backups and output customization.`
 
 // NewCmdBackup creates a new backup command.
 func NewCmdBackup() *cobra.Command {
+	var (
+		store string
+		err   error
+	)
+
 	cmd := cobra.Command{
 		Use:         "backup",
 		Short:       "Backup initiates backup process for a shopify store",
@@ -35,7 +39,7 @@ func NewCmdBackup() *cobra.Command {
 				return nil
 			}
 
-			store, err := cmd.Flags().GetString("store")
+			store, err = cmd.Flags().GetString("store")
 			if err != nil {
 				return err
 			}
@@ -52,11 +56,10 @@ func NewCmdBackup() *cobra.Command {
 		RunE: backup,
 	}
 
-	bkpEngine := engine.New(engine.NewBackup())
 	cmd.AddCommand(
 		config.NewCmdConfig(),
 		run.NewCmdRun(),
-		product.NewCmdProduct(bkpEngine),
+		product.NewCmdProduct(store),
 	)
 
 	return &cmd

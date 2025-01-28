@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,6 +13,11 @@ const (
 	BackupTypeFull        BackupType = "full"
 	BackupTypeIncremental BackupType = "incremental"
 
+	BackupStatusPending  BackupStatus = "pending"
+	BackupStatusRunning  BackupStatus = "running"
+	BackupStatusComplete BackupStatus = "complete"
+	BackupStatusFailed   BackupStatus = "failed"
+
 	modeDir  = 0o755
 	modeFile = 0o644
 )
@@ -19,8 +25,13 @@ const (
 // BackupType represents the type of a backup.
 type BackupType string
 
+// BackupStatus is a current status of the initiated backup.
+type BackupStatus string
+
 // Backup is a backup engine.
 type Backup struct {
+	id        string
+	store     string
 	root      string
 	prefix    string
 	timestamp time.Time
@@ -30,9 +41,12 @@ type Backup struct {
 type Option func(*Backup)
 
 // NewBackup creates a new backup engine.
-func NewBackup(opts ...Option) *Backup {
+func NewBackup(store string, opts ...Option) *Backup {
+	now := time.Now()
 	bkp := Backup{
-		timestamp: time.Now(),
+		id:        genBackupID(store, now.Unix()),
+		store:     store,
+		timestamp: now,
 	}
 
 	for _, opt := range opts {
@@ -63,9 +77,24 @@ func WithBackupPrefix(prefix string) Option {
 	}
 }
 
+// ID returns the backup ID.
+func (b *Backup) ID() string {
+	return b.id
+}
+
+// Store returns the store this backup will run for.
+func (b *Backup) Store() string {
+	return b.store
+}
+
 // Dir returns root backup directory.
 func (b *Backup) Dir() string {
 	return b.root
+}
+
+// Timestamp returns backup timestamp.
+func (b *Backup) Timestamp() time.Time {
+	return b.timestamp
 }
 
 // Do starts the backup process.
@@ -105,4 +134,10 @@ func (b *Backup) saveJSON(path string, data any) error {
 	}
 
 	return nil
+}
+
+func genBackupID(store string, timestamp int64) string {
+	data := []byte(fmt.Sprintf("%s-%d", store, timestamp))
+	hash := sha256.Sum256(data)
+	return fmt.Sprintf("bkp-%x", hash[:5])
 }

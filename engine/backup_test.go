@@ -34,7 +34,7 @@ func TestBackup_Do(t *testing.T) {
 	now := time.Now().Format("2006_01_02_15_04_05")
 	root := fmt.Sprintf("%s/test/bkp_%s", path, now)
 
-	bkpEngine := New(NewBackup(WithBackupDir(path+"/test"), WithBackupPrefix("bkp")))
+	bkpEngine := New(NewBackup("teststore.example.com", WithBackupDir(path+"/test"), WithBackupPrefix("bkp")))
 	bkpEngine.Register(Product)
 
 	jobs := []ResourceCollection{

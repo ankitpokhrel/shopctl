@@ -10,10 +10,13 @@ import (
 )
 
 const (
-	version  = 1 // Current config version.
-	rootDir  = "shopctl"
-	fileType = "yml"
+	version      = 1 // Current config version.
+	rootDir      = "shopctl"
+	fileTypeYaml = "yml"
+	fileTypeJson = "json"
 
+	modeDir   = 0o755
+	modeFile  = 0o644
 	modeOwner = 0o700
 )
 
@@ -28,12 +31,14 @@ var (
 
 type config struct {
 	writer *viper.Viper
+	kind   string
 	dir    string
 }
 
-func newConfig(dir, name string) *config {
+func newConfig(dir, name, kind string) *config {
 	return &config{
-		writer: makeWriter(dir, name),
+		writer: makeWriter(dir, name, kind),
+		kind:   kind,
 		dir:    dir,
 	}
 }
@@ -54,13 +59,17 @@ func home() string {
 	return filepath.Join(home, ".config", rootDir)
 }
 
-func makeWriter(dir, name string) *viper.Viper {
+func makeWriter(dir, name, kind string) *viper.Viper {
 	w := viper.New()
-	w.SetConfigType(fileType)
+	w.SetConfigType(kind)
 	w.AddConfigPath(dir)
 	w.SetConfigName(name)
 
 	return w
+}
+
+func makeYamlWriter(dir, name string) *viper.Viper {
+	return makeWriter(dir, name, fileTypeYaml)
 }
 
 func exists(file string) bool {
@@ -70,8 +79,8 @@ func exists(file string) bool {
 	return true
 }
 
-func ensureConfigFile(dir, file string, force bool) error {
-	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", file, fileType))
+func ensureConfigFile(dir, file, kind string, force bool) error {
+	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", file, kind))
 
 	// Bail early if config already exists.
 	if !force && exists(cfgFile) {

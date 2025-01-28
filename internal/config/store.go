@@ -31,7 +31,7 @@ func NewStoreConfig(store string) *StoreConfig {
 	dir := filepath.Join(home(), store)
 
 	return &StoreConfig{
-		config: newConfig(dir, storeConfigFile),
+		config: newConfig(dir, storeConfigFile, fileTypeYaml),
 		data: storeItems{
 			version: version,
 			store:   store,
@@ -46,7 +46,7 @@ func (c *StoreConfig) SetToken(token string) {
 
 // Save saves the config of a store to the file.
 func (c *StoreConfig) Save() error {
-	if err := ensureConfigFile(c.dir, storeConfigFile, false); err != nil && !errors.Is(err, ErrConfigExist) {
+	if err := ensureConfigFile(c.dir, storeConfigFile, c.kind, false); err != nil && !errors.Is(err, ErrConfigExist) {
 		return err
 	}
 	return c.writeAll()
@@ -67,7 +67,7 @@ func (c *StoreConfig) writeAll() error {
 func GetToken(store string) string {
 	root := filepath.Join(home(), store)
 
-	w := makeWriter(root, storeConfigFile)
+	w := makeYamlWriter(root, storeConfigFile)
 	if err := w.ReadInConfig(); err != nil {
 		return ""
 	}

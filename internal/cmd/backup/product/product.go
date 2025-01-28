@@ -36,19 +36,21 @@ $ shopctl backup product --incremental`
 )
 
 // NewCmdProduct creates a new product backup command.
-func NewCmdProduct(eng *engine.Engine) *cobra.Command {
+func NewCmdProduct(store string) *cobra.Command {
 	return &cobra.Command{
 		Use:     "product",
 		Short:   "Product initiates product backup",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"products"},
-		RunE:    product,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return product(store, cmd, args)
+		},
 	}
 }
 
-func product(cmd *cobra.Command, _ []string) error {
-	eng := engine.New(engine.NewBackup())
+func product(store string, cmd *cobra.Command, _ []string) error {
+	eng := engine.New(engine.NewBackup(store))
 	client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 	logger := cmd.Context().Value("logger").(*tlog.Logger)
 

@@ -22,7 +22,18 @@ func (r ResourceType) File() string {
 	case ProductMetaField:
 		return "metafields"
 	}
-	panic("unknown backup data type")
+	panic("unknown resource type")
+}
+
+// RootDir returns a root level dir for the resource type.
+//
+//nolint:gocritic
+func (r ResourceType) RootDir() string {
+	switch r {
+	case Product:
+		return "products"
+	}
+	panic("unknown root resource type")
 }
 
 // ResourceHandler is a handler for a resource.

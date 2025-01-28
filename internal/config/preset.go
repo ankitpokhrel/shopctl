@@ -40,14 +40,14 @@ func NewPresetConfig(store string, items PresetItems) *PresetConfig {
 	dir := filepath.Join(home(), store, presetConfigDir)
 
 	return &PresetConfig{
-		config: newConfig(dir, items.Alias),
+		config: newConfig(dir, items.Alias, fileTypeYaml),
 		data:   items,
 	}
 }
 
 // Save saves the config of a store to the file.
 func (c *PresetConfig) Save() error {
-	if err := ensureConfigFile(c.dir, c.data.Alias, c.data.Force); err != nil {
+	if err := ensureConfigFile(c.dir, c.data.Alias, c.kind, c.data.Force); err != nil {
 		return err
 	}
 	return c.writeAll()
@@ -66,7 +66,7 @@ func (c *PresetConfig) writeAll() error {
 // GetPresetLoc returns the location of the preset if it exist.
 func GetPresetLoc(store string, preset string) (string, error) {
 	root := filepath.Join(home(), store, presetConfigDir)
-	file := filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileType))
+	file := filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileTypeYaml))
 
 	if !exists(file) {
 		return "", ErrNoConfig
@@ -99,7 +99,7 @@ func ListPresets(store string) ([]string, error) {
 func ReadAllPreset(store string, preset string) (*PresetItems, error) {
 	root := filepath.Join(home(), store, presetConfigDir)
 
-	w := makeWriter(root, preset)
+	w := makeYamlWriter(root, preset)
 	if err := w.ReadInConfig(); err != nil {
 		return nil, err
 	}
