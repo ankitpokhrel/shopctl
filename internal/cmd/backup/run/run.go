@@ -13,6 +13,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
+	"github.com/ankitpokhrel/shopctl/internal/runner/backup/customer"
 	"github.com/ankitpokhrel/shopctl/internal/runner/backup/product"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -108,6 +109,17 @@ func run(cmd *cobra.Command, _ []string) error {
 
 				if err := pr.Run(); err != nil {
 					logger.Errorf("Product runner exited with err: %s", err.Error())
+				}
+			}()
+		case engine.Customer:
+			wg.Add(1)
+			cr := customer.NewRunner(eng, client, logger)
+
+			go func() {
+				defer wg.Done()
+
+				if err := cr.Run(); err != nil {
+					logger.Errorf("Customer runner exited with err: %s", err.Error())
 				}
 			}()
 		default:

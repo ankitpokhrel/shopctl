@@ -1,10 +1,12 @@
 package engine
 
 const (
-	Product          ResourceType = "product"
-	ProductVariant   ResourceType = "product_variant"
-	ProductMedia     ResourceType = "product_media"
-	ProductMetaField ResourceType = "product_metafield"
+	Product           ResourceType = "product"
+	ProductVariant    ResourceType = "product_variant"
+	ProductMedia      ResourceType = "product_media"
+	ProductMetaField  ResourceType = "product_metafield"
+	Customer          ResourceType = "customer"
+	CustomerMetaField ResourceType = "customer_metafield"
 )
 
 // ResourceType represents a type of a resource to backup.
@@ -21,17 +23,21 @@ func (r ResourceType) File() string {
 		return "media"
 	case ProductMetaField:
 		return "metafields"
+	case Customer:
+		return "customer"
+	case CustomerMetaField:
+		return "metafields"
 	}
 	panic("unknown resource type")
 }
 
 // RootDir returns a root level dir for the resource type.
-//
-//nolint:gocritic
 func (r ResourceType) RootDir() string {
 	switch r {
 	case Product:
 		return "products"
+	case Customer:
+		return "customers"
 	}
 	panic("unknown root resource type")
 }

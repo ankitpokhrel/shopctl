@@ -89,4 +89,51 @@ type
 ownerType
 createdAt
 updatedAt`
+
+	fieldsCustomer = `id
+firstName
+lastName
+displayName
+email
+verifiedEmail
+validEmailAddress
+phone
+tags
+taxExempt
+state
+note
+numberOfOrders
+emailMarketingConsent {
+  consentUpdatedAt
+  marketingOptInLevel
+  marketingState
+}
+smsMarketingConsent {
+  consentUpdatedAt
+  marketingOptInLevel
+  marketingState
+  consentCollectedFrom
+}
+addressesV2(first: 100) {
+  nodes {
+    id
+    address1
+    address2
+    zip
+    city
+    country
+    countryCodeV2
+    firstName
+    lastName
+    company
+    province
+    provinceCode
+  }
+}
+amountSpent {
+  amount
+  currencyCode
+}
+createdAt
+updatedAt`
 )

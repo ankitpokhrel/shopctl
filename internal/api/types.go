@@ -47,15 +47,15 @@ type ProductVariantData struct {
 type ProductMetaFieldsResponse struct {
 	Data struct {
 		Product struct {
-			ID         string                `json:"id"`
-			MetaFields ProductMetaFieldsData `json:"metafields"`
+			ID         string         `json:"id"`
+			MetaFields MetaFieldsData `json:"metafields"`
 		} `json:"product"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`
 }
 
-type ProductMetaFieldsData struct {
+type MetaFieldsData struct {
 	Edges []struct {
 		Node schema.Metafield `json:"node"`
 	} `json:"edges"`
@@ -89,4 +89,30 @@ type ProductCreateResponse struct {
 	Product    schema.Product     `json:"product"`
 	UserErrors []schema.UserError `json:"userErrors"`
 	Errors     Errors             `json:"errors"`
+}
+
+type CustomersResponse struct {
+	Data struct {
+		Customers CustomerData `json:"customers"`
+	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
+}
+
+type CustomerData struct {
+	Edges []struct {
+		Node schema.Customer `json:"node"`
+	} `json:"edges"`
+	PageInfo schema.PageInfo `json:"pageInfo"`
+}
+
+type CustomerMetaFieldsResponse struct {
+	Data struct {
+		Customer struct {
+			ID         string         `json:"id"`
+			MetaFields MetaFieldsData `json:"metafields"`
+		} `json:"customer"`
+	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
 }
