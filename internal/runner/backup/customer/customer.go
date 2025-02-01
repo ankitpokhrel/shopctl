@@ -33,7 +33,12 @@ func NewRunner(eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *
 	}
 }
 
-// Run implements `runner.Runner` interface.
+// Kind returns runner type; implements `runner.Runner` interface.
+func (r *Runner) Kind() engine.ResourceType {
+	return engine.Customer
+}
+
+// Run executes customer backup; implements `runner.Runner` interface.
 func (r *Runner) Run() error {
 	r.eng.Register(engine.Customer)
 	backupStart := time.Now()

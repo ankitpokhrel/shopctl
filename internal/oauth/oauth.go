@@ -39,6 +39,9 @@ var (
 
 		// Product, ProductVariant, Collection, ResourceFeedback.
 		"read_products",
+
+		// Customer data.
+		"read_customers",
 	}
 )
 
