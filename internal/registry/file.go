@@ -40,8 +40,26 @@ func FindFilesInDir(dir, name string) (<-chan File, error) {
 	return located, nil
 }
 
+// ReadFileContents reads the contents of a file at a specified path.
+func ReadFileContents(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
 // LookForDir searches for a directory within a specified path.
 func LookForDir(dir, in string) (string, error) {
+	return lookForDir(in, func(info os.FileInfo) bool {
+		return info.Name() == dir
+	})
+}
+
+// LookForDirWithSuffix searches for a directory with a give suffix in a specified path.
+func LookForDirWithSuffix(suffix, in string) (string, error) {
+	return lookForDir(in, func(info os.FileInfo) bool {
+		return strings.HasSuffix(info.Name(), suffix)
+	})
+}
+
+func lookForDir(in string, cmpFn func(os.FileInfo) bool) (string, error) {
 	var (
 		loc string
 
@@ -61,7 +79,7 @@ func LookForDir(dir, in string) (string, error) {
 		if depth > maxDepth {
 			return filepath.SkipDir
 		}
-		if info.Name() == dir {
+		if cmpFn(info) {
 			loc = path
 			return ErrTargetFound // Stop walking.
 		}
@@ -70,10 +88,8 @@ func LookForDir(dir, in string) (string, error) {
 	if err != nil && err != ErrTargetFound {
 		return "", err
 	}
+	if loc == "" {
+		return "", ErrNoTargetFound
+	}
 	return loc, nil
-}
-
-// ReadFileContents reads the contents of a file at a specified path.
-func ReadFileContents(path string) ([]byte, error) {
-	return os.ReadFile(path)
 }

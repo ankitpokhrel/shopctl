@@ -9,8 +9,12 @@ import (
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
-// ErrTargetFound is returned when target is found.
-var ErrTargetFound = fmt.Errorf("target found")
+var (
+	// ErrTargetFound is returned when target is found.
+	ErrTargetFound = fmt.Errorf("target found")
+	// ErrNoTargetFound is returned if a target is not found.
+	ErrNoTargetFound = fmt.Errorf("no target found")
+)
 
 // Registry is a backup registry.
 type Registry struct {

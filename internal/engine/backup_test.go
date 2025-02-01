@@ -32,10 +32,12 @@ func (m *mockHandler) Handle() (any, error) {
 func TestBackup_Do(t *testing.T) {
 	path := "./testdata/.tmp"
 	now := time.Now().Format("2006_01_02_15_04_05")
-	root := fmt.Sprintf("%s/test/bkp_%s", path, now)
 
-	bkpEngine := New(NewBackup("teststore.example.com", WithBackupDir(path+"/test"), WithBackupPrefix("bkp")))
-	bkpEngine.Register(Product)
+	bkpEng := NewBackup("teststore.example.com", WithBackupDir(path+"/test"), WithBackupPrefix("bkp"))
+	root := fmt.Sprintf("%s/test/bkp_%s_%s", path, now, bkpEng.id)
+
+	eng := New(bkpEng)
+	eng.Register(Product)
 
 	jobs := []ResourceCollection{
 		{
@@ -82,14 +84,14 @@ func TestBackup_Do(t *testing.T) {
 	}
 
 	go func() {
-		defer bkpEngine.Done(Product)
+		defer eng.Done(Product)
 
 		for _, j := range jobs {
-			bkpEngine.Add(Product, j)
+			eng.Add(Product, j)
 		}
 	}()
 
-	for res := range bkpEngine.Run(Product) {
+	for res := range eng.Run(Product) {
 		assert.NoError(t, res.Err)
 	}
 

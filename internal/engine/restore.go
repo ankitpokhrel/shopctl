@@ -6,12 +6,14 @@ import (
 
 // Restore is a restore engine.
 type Restore struct {
+	store     string
 	timestamp time.Time
 }
 
 // NewRestore creates a new restore engine.
-func NewRestore() *Restore {
+func NewRestore(store string) *Restore {
 	return &Restore{
+		store:     store,
 		timestamp: time.Now(),
 	}
 }

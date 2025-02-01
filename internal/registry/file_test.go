@@ -59,3 +59,11 @@ func TestLookForDir(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "testdata/bkp/2025/01/eg", loc)
 }
+
+func TestLookForDirWithSuffix(t *testing.T) {
+	path := "./testdata/bkp/"
+
+	loc, err := LookForDirWithSuffix("1", path)
+	assert.NoError(t, err)
+	assert.Equal(t, "testdata/bkp/2025/01", loc)
+}

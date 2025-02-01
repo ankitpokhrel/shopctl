@@ -43,8 +43,9 @@ type Option func(*Backup)
 // NewBackup creates a new backup engine.
 func NewBackup(store string, opts ...Option) *Backup {
 	now := time.Now()
+	id := genBackupID(store, now.Unix())
 	bkp := Backup{
-		id:        genBackupID(store, now.Unix()),
+		id:        id,
 		store:     store,
 		timestamp: now,
 	}
@@ -57,7 +58,7 @@ func NewBackup(store string, opts ...Option) *Backup {
 		bkp.prefix = "backup"
 	}
 
-	dir := fmt.Sprintf("%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"))
+	dir := fmt.Sprintf("%s_%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"), id)
 	bkp.root = filepath.Join(bkp.root, dir)
 
 	return &bkp
@@ -139,5 +140,5 @@ func (b *Backup) saveJSON(path string, data any) error {
 func genBackupID(store string, timestamp int64) string {
 	data := []byte(fmt.Sprintf("%s-%d", store, timestamp))
 	hash := sha256.Sum256(data)
-	return fmt.Sprintf("bkp-%x", hash[:5])
+	return fmt.Sprintf("%x", hash[:5])
 }

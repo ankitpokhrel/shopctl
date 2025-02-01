@@ -6,29 +6,31 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 type productHandler struct {
 	client *api.GQLClient
+	logger *tlog.Logger
 	file   registry.File
 }
 
 func (h *productHandler) Handle() (any, error) {
 	product, err := registry.ReadFileContents(h.file.Path)
 	if err != nil {
-		lgr.Error("Unable to read contents", "file", h.file.Path, "error", err)
+		h.logger.Error("Unable to read contents", "file", h.file.Path, "error", err)
 		return nil, err
 	}
 
 	var prod schema.Product
 	if err = json.Unmarshal(product, &prod); err != nil {
-		lgr.Error("Unable to marshal contents", "file", h.file.Path, "error", err)
+		h.logger.Error("Unable to marshal contents", "file", h.file.Path, "error", err)
 		return nil, err
 	}
 
 	// TODO: Handle/log error.
-	res, err := createOrUpdateProduct(&prod, h.client)
+	res, err := createOrUpdateProduct(&prod, h.client, h.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +40,7 @@ func (h *productHandler) Handle() (any, error) {
 	return res, nil
 }
 
-func createOrUpdateProduct(product *schema.Product, client *api.GQLClient) (*api.ProductCreateResponse, error) {
+func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *tlog.Logger) (*api.ProductCreateResponse, error) {
 	res, err := client.CheckProductByID(product.ID)
 	if err != nil {
 		return nil, err
