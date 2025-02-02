@@ -1,6 +1,10 @@
 package api
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/ankitpokhrel/shopctl/schema"
+)
 
 // Error represents an error response from the Shopify API.
 type Error struct {
@@ -16,7 +20,7 @@ type Error struct {
 
 // Error implements the error interface.
 func (e *Error) Error() string {
-	return e.Message
+	return clean(e.Message)
 }
 
 // Errors is a list of errors.
@@ -27,6 +31,18 @@ func (e Errors) Error() string {
 	errs := make([]string, 0, len(e))
 	for _, err := range e {
 		errs = append(errs, err.Error())
+	}
+	return strings.Join(errs, ", ")
+}
+
+// UserErrors is a list of user errors.
+type UserErrors []schema.UserError
+
+// Err implements the error interface.
+func (e UserErrors) Error() string {
+	errs := make([]string, 0, len(e))
+	for _, err := range e {
+		errs = append(errs, clean(err.Message))
 	}
 	return strings.Join(errs, ", ")
 }
@@ -48,4 +64,10 @@ type ThrottleStatus struct {
 	MaximumAvailable   float64 `json:"maximumAvailable"`
 	CurrentlyAvailable float64 `json:"currentlyAvailable"`
 	RestoreRate        float64 `json:"restoreRate"`
+}
+
+func clean(input string) string {
+	input = strings.ReplaceAll(input, "\n", " ")
+	input = strings.ReplaceAll(input, "\r", " ")
+	return input
 }

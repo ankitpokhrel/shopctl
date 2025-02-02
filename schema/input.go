@@ -51,3 +51,32 @@ type SEOInput struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
+
+type CustomerInput struct {
+	Addresses             []any                               `json:"addresses"`
+	Email                 *string                             `json:"email,omitempty"`
+	FirstName             *string                             `json:"firstName,omitempty"`
+	ID                    *string                             `json:"id,omitempty"`
+	LastName              *string                             `json:"lastName,omitempty"`
+	Locale                *string                             `json:"locale,omitempty"`
+	Metafields            []any                               `json:"metafields"`
+	Note                  *string                             `json:"note,omitempty"`
+	Phone                 *string                             `json:"phone,omitempty"`
+	Tags                  []any                               `json:"tags"`
+	EmailMarketingConsent *CustomerEmailMarketingConsentInput `json:"emailMarketingConsent,omitempty"`
+	SmsMarketingConsent   *CustomerSmsMarketingConsentInput   `json:"smsMarketingConsent,omitempty"`
+	TaxExempt             *bool                               `json:"taxExempt,omitempty"`
+	TaxExemptions         []any                               `json:"taxExemptions"`
+}
+
+type CustomerEmailMarketingConsentInput struct {
+	MarketingOptInLevel *CustomerMarketingOptInLevel `json:"marketingOptInLevel,omitempty"`
+	MarketingState      CustomerEmailMarketingState  `json:"marketingState"`
+	ConsentUpdatedAt    *string                      `json:"consentUpdatedAt,omitempty"`
+}
+
+type CustomerSmsMarketingConsentInput struct {
+	MarketingOptInLevel *CustomerMarketingOptInLevel `json:"marketingOptInLevel,omitempty"`
+	MarketingState      CustomerSmsMarketingState    `json:"marketingState"`
+	ConsentUpdatedAt    *string                      `json:"consentUpdatedAt,omitempty"`
+}

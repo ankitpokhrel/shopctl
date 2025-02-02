@@ -91,6 +91,19 @@ type ProductCreateResponse struct {
 	Errors     Errors             `json:"errors"`
 }
 
+type CustomerCreateResponse struct {
+	Customer   schema.Customer `json:"customer"`
+	UserErrors UserErrors      `json:"userErrors"`
+	Errors     Errors          `json:"errors"`
+}
+
+type CustomerResponse struct {
+	Data struct {
+		Customer schema.Customer `json:"customer"`
+	} `json:"data"`
+	Errors Errors `json:"errors"`
+}
+
 type CustomersResponse struct {
 	Data struct {
 		Customers CustomerData `json:"customers"`

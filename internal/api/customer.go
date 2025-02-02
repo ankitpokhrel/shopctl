@@ -5,7 +5,27 @@ import (
 	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
+	"github.com/ankitpokhrel/shopctl/schema"
 )
+
+// CheckCustomerByID fetches a customer by ID without additional details.
+func (c GQLClient) CheckCustomerByID(id string) (*CustomerResponse, error) {
+	var (
+		query = `query CheckCustomerByID($id: ID!) { customer(id: $id) { id } }`
+
+		out *CustomerResponse
+		err error
+	)
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": id},
+	}
+	if err = c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	return out, err
+}
 
 // GetAllCustomers fetches customers in a batch and streams the response to a channel.
 func (c GQLClient) GetAllCustomers(ch chan *CustomersResponse, limit int, after *string) error {
@@ -76,4 +96,78 @@ metafields(first: 200) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// CreateCustomer creates a customer.
+func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerCreate CustomerCreateResponse `json:"customerCreate"`
+		} `json:"data"`
+	}
+
+	query := `
+	mutation customerCreate($input: CustomerInput!) {
+		customerCreate(input: $input) {
+			customer {
+				id
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"input": input},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Data.CustomerCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
+	}
+	if len(out.Data.CustomerCreate.Errors) > 0 {
+		return nil, fmt.Errorf("The operation failed with error: %s", out.Data.CustomerCreate.Errors.Error())
+	}
+	return &out.Data.CustomerCreate, nil
+}
+
+// UpdateCustomer updates a customer.
+func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerUpdate CustomerCreateResponse `json:"customerUpdate"`
+		} `json:"data"`
+	}
+
+	query := `
+	mutation customerUpdate($input: CustomerInput!) {
+		customerUpdate(input: $input) {
+			customer {
+				id
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"input": input},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Data.CustomerUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("The operation failed with user error: %s", out.Data.CustomerUpdate.UserErrors.Error())
+	}
+	if len(out.Data.CustomerUpdate.Errors) > 0 {
+		return nil, fmt.Errorf("The operation failed with error: %s", out.Data.CustomerUpdate.Errors.Error())
+	}
+	return &out.Data.CustomerUpdate, nil
 }
