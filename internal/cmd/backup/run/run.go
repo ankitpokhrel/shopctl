@@ -117,6 +117,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		runners = append(runners, rnr)
 	}
 
+	start := time.Now()
 	for _, rnr := range runners {
 		wg.Add(1)
 
@@ -130,6 +131,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	wg.Wait()
+	logger.Infof("Backup complete in %s", time.Since(start))
 	return nil
 }
 

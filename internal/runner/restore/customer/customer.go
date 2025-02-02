@@ -56,7 +56,7 @@ func (r *Runner) Run() error {
 	}
 
 	r.logger.V(tlog.VL3).Infof(
-		"Customer restoration complete in %v",
+		"Customer restore complete in %s",
 		time.Since(restoreStart),
 	)
 	return nil

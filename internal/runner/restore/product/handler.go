@@ -2,7 +2,6 @@ package product
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -34,9 +33,6 @@ func (h *productHandler) Handle() (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(res.Errors) > 0 {
-		return res, fmt.Errorf("errors occurred while restoring product: %+v", res.Errors)
-	}
 	return res, nil
 }
 
@@ -50,47 +46,47 @@ func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *
 
 	var category *string
 	if product.Category != nil {
-		category = &product.Category.Name
+		category = &product.Category.ID
 	}
 
 	if res.Data.Product.ID != "" {
 		// Product exists, execute update mutation.
-		input := schema.ProductUpdateInput{
+		input := schema.ProductInput{
 			ID:                     &product.ID,
-			DescriptionHtml:        &product.DescriptionHtml,
 			Handle:                 &product.Handle,
-			Seo:                    &schema.SEOInput{Title: product.Seo.Title, Description: product.Seo.Description},
+			Title:                  &product.Title,
+			DescriptionHtml:        &product.DescriptionHtml,
 			ProductType:            &product.ProductType,
 			Category:               category,
 			Tags:                   product.Tags,
+			Vendor:                 &product.Vendor,
+			Seo:                    &schema.SEOInput{Title: product.Seo.Title, Description: product.Seo.Description},
+			Status:                 &product.Status,
 			TemplateSuffix:         product.TemplateSuffix,
 			GiftCardTemplateSuffix: product.GiftCardTemplateSuffix,
-			Title:                  &product.Title,
-			Vendor:                 &product.Vendor,
 			CollectionsToJoin:      nil,
-			Status:                 &product.Status,
 			RequiresSellingPlan:    &product.RequiresSellingPlan,
 		}
 		lgr.Warn("Product already exists, updating", "id", product.ID)
 		return client.UpdateProduct(input)
 	}
 
-	// Product does not exist, execute create mutation.
-	input := schema.ProductCreateInput{
-		DescriptionHtml:        &product.DescriptionHtml,
+	//	Product does not exist, execute create mutation.
+	input := schema.ProductInput{
 		Handle:                 &product.Handle,
-		Seo:                    &schema.SEOInput{Title: product.Seo.Title, Description: product.Seo.Description},
+		Title:                  &product.Title,
+		DescriptionHtml:        &product.DescriptionHtml,
 		ProductType:            &product.ProductType,
 		Category:               category,
 		Tags:                   product.Tags,
+		Vendor:                 &product.Vendor,
+		Seo:                    &schema.SEOInput{Title: product.Seo.Title, Description: product.Seo.Description},
+		Status:                 &product.Status,
 		TemplateSuffix:         product.TemplateSuffix,
 		GiftCardTemplateSuffix: product.GiftCardTemplateSuffix,
-		Title:                  &product.Title,
-		Vendor:                 &product.Vendor,
 		GiftCard:               &product.IsGiftCard,
 		CollectionsToJoin:      nil,
 		CombinedListingRole:    product.CombinedListingRole,
-		Status:                 &product.Status,
 		RequiresSellingPlan:    &product.RequiresSellingPlan,
 	}
 	lgr.Info("Creating product", "id", product.ID)

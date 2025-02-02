@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -138,6 +139,10 @@ See 'shopctl restore run --help' for more info.`),
 		os.Exit(1)
 	}
 
+	// TODO:
+	// We need to maintain the order in which products, customers and orders are restored.
+	// The order should always be Product -> Customer -> Order.
+
 	for _, resource := range resources {
 		switch engine.ResourceType(resource) {
 		case engine.Product:
@@ -151,6 +156,7 @@ See 'shopctl restore run --help' for more info.`),
 		runners = append(runners, rnr)
 	}
 
+	start := time.Now()
 	for _, rnr := range runners {
 		wg.Add(1)
 
@@ -164,5 +170,6 @@ See 'shopctl restore run --help' for more info.`),
 	}
 
 	wg.Wait()
+	logger.Infof("Restore complete in %s", time.Since(start))
 	return nil
 }

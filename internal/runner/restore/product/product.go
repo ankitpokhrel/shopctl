@@ -19,7 +19,7 @@ type Runner struct {
 	logger *tlog.Logger
 }
 
-// NewRunner constructs a new backup runner.
+// NewRunner constructs a new restore runner.
 func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
 	rstEng := eng.Doer().(*engine.Restore)
 
@@ -56,7 +56,7 @@ func (r *Runner) Run() error {
 	}
 
 	r.logger.V(tlog.VL3).Infof(
-		"Product restoration complete in %v",
+		"Product restore complete in %s",
 		time.Since(restoreStart),
 	)
 	return nil

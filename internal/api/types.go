@@ -86,15 +86,13 @@ type ProductMediaData struct {
 }
 
 type ProductCreateResponse struct {
-	Product    schema.Product     `json:"product"`
-	UserErrors []schema.UserError `json:"userErrors"`
-	Errors     Errors             `json:"errors"`
+	Product    schema.Product `json:"product"`
+	UserErrors UserErrors     `json:"userErrors"`
 }
 
 type CustomerCreateResponse struct {
 	Customer   schema.Customer `json:"customer"`
 	UserErrors UserErrors      `json:"userErrors"`
-	Errors     Errors          `json:"errors"`
 }
 
 type CustomerResponse struct {

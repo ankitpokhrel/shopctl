@@ -104,6 +104,7 @@ func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		Data struct {
 			CustomerCreate CustomerCreateResponse `json:"customerCreate"`
 		} `json:"data"`
+		Errors Errors `json:"errors"`
 	}
 
 	query := `
@@ -126,11 +127,11 @@ func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
-	if len(out.Data.CustomerCreate.UserErrors) > 0 {
-		return nil, fmt.Errorf("The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
 	}
-	if len(out.Data.CustomerCreate.Errors) > 0 {
-		return nil, fmt.Errorf("The operation failed with error: %s", out.Data.CustomerCreate.Errors.Error())
+	if len(out.Data.CustomerCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerCreate.UserErrors.Error())
 	}
 	return &out.Data.CustomerCreate, nil
 }
@@ -141,6 +142,7 @@ func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		Data struct {
 			CustomerUpdate CustomerCreateResponse `json:"customerUpdate"`
 		} `json:"data"`
+		Errors Errors `json:"errors"`
 	}
 
 	query := `
@@ -163,11 +165,11 @@ func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
-	if len(out.Data.CustomerUpdate.UserErrors) > 0 {
-		return nil, fmt.Errorf("The operation failed with user error: %s", out.Data.CustomerUpdate.UserErrors.Error())
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
 	}
-	if len(out.Data.CustomerUpdate.Errors) > 0 {
-		return nil, fmt.Errorf("The operation failed with error: %s", out.Data.CustomerUpdate.Errors.Error())
+	if len(out.Data.CustomerUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerUpdate.UserErrors.Error())
 	}
 	return &out.Data.CustomerUpdate, nil
 }

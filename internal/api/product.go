@@ -304,11 +304,12 @@ media(first: 250) {
 }
 
 // CreateProduct creates a product.
-func (c GQLClient) CreateProduct(input schema.ProductCreateInput) (*ProductCreateResponse, error) {
+func (c GQLClient) CreateProduct(input schema.ProductInput) (*ProductCreateResponse, error) {
 	var out struct {
 		Data struct {
 			ProductCreate ProductCreateResponse `json:"productCreate"`
 		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
 	}
 
 	query := `
@@ -332,15 +333,22 @@ func (c GQLClient) CreateProduct(input schema.ProductCreateInput) (*ProductCreat
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("Product %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+	}
+	if len(out.Data.ProductCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("Product %s: The operation failed with user error: %s", *input.ID, out.Data.ProductCreate.UserErrors.Error())
+	}
 	return &out.Data.ProductCreate, nil
 }
 
 // UpdateProduct updates a product.
-func (c GQLClient) UpdateProduct(input schema.ProductUpdateInput) (*ProductCreateResponse, error) {
+func (c GQLClient) UpdateProduct(input schema.ProductInput) (*ProductCreateResponse, error) {
 	var out struct {
 		Data struct {
 			ProductUpdate ProductCreateResponse `json:"productUpdate"`
 		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
 	}
 
 	query := `
@@ -364,6 +372,12 @@ func (c GQLClient) UpdateProduct(input schema.ProductUpdateInput) (*ProductCreat
 
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("Product %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+	}
+	if len(out.Data.ProductUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("Product %s: The operation failed with user error: %s", *input.ID, out.Data.ProductUpdate.UserErrors.Error())
 	}
 	return &out.Data.ProductUpdate, nil
 }

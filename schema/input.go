@@ -2,7 +2,7 @@
 
 package schema
 
-type ProductCreateInput struct {
+type ProductInput struct {
 	DescriptionHtml        *string                     `json:"descriptionHtml,omitempty"`
 	Handle                 *string                     `json:"handle,omitempty"`
 	Seo                    *SEOInput                   `json:"seo,omitempty"`
@@ -14,33 +14,16 @@ type ProductCreateInput struct {
 	Title                  *string                     `json:"title,omitempty"`
 	Vendor                 *string                     `json:"vendor,omitempty"`
 	GiftCard               *bool                       `json:"giftCard,omitempty"`
+	RedirectNewHandle      *bool                       `json:"redirectNewHandle,omitempty"`
 	CollectionsToJoin      []any                       `json:"collectionsToJoin"`
+	CollectionsToLeave     []any                       `json:"collectionsToLeave"`
 	CombinedListingRole    *CombinedListingsRole       `json:"combinedListingRole,omitempty"`
+	ID                     *string                     `json:"id,omitempty"`
 	Metafields             []any                       `json:"metafields"`
 	ProductOptions         []any                       `json:"productOptions"`
 	Status                 *ProductStatus              `json:"status,omitempty"`
 	RequiresSellingPlan    *bool                       `json:"requiresSellingPlan,omitempty"`
 	ClaimOwnership         *ProductClaimOwnershipInput `json:"claimOwnership,omitempty"`
-}
-
-type ProductUpdateInput struct {
-	DescriptionHtml        *string        `json:"descriptionHtml,omitempty"`
-	Handle                 *string        `json:"handle,omitempty"`
-	Seo                    *SEOInput      `json:"seo,omitempty"`
-	ProductType            *string        `json:"productType,omitempty"`
-	Category               *string        `json:"category,omitempty"`
-	Tags                   []any          `json:"tags"`
-	TemplateSuffix         *string        `json:"templateSuffix,omitempty"`
-	GiftCardTemplateSuffix *string        `json:"giftCardTemplateSuffix,omitempty"`
-	Title                  *string        `json:"title,omitempty"`
-	Vendor                 *string        `json:"vendor,omitempty"`
-	RedirectNewHandle      *bool          `json:"redirectNewHandle,omitempty"`
-	ID                     *string        `json:"id,omitempty"`
-	CollectionsToJoin      []any          `json:"collectionsToJoin"`
-	CollectionsToLeave     []any          `json:"collectionsToLeave"`
-	Metafields             []any          `json:"metafields"`
-	Status                 *ProductStatus `json:"status,omitempty"`
-	RequiresSellingPlan    *bool          `json:"requiresSellingPlan,omitempty"`
 }
 
 type ProductClaimOwnershipInput struct {
