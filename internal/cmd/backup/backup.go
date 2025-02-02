@@ -7,7 +7,6 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/config"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/product"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/run"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -59,7 +58,6 @@ func NewCmdBackup() *cobra.Command {
 	cmd.AddCommand(
 		config.NewCmdConfig(),
 		run.NewCmdRun(),
-		product.NewCmdProduct(store),
 	)
 
 	return &cmd

@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/restore/product"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/restore/run"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -51,7 +50,6 @@ func NewCmdRestore() *cobra.Command {
 
 	cmd.AddCommand(
 		run.NewCmdRun(),
-		product.NewCmdProduct(store),
 	)
 
 	return &cmd
