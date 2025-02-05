@@ -18,7 +18,7 @@ const (
 
 // NewCmdLogin is a login command.
 func NewCmdLogin() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:         "login",
 		Short:       "Login to a Shopify account",
 		Long:        helpText,
@@ -26,6 +26,10 @@ func NewCmdLogin() *cobra.Command {
 		Annotations: map[string]string{"cmd:main": "true"},
 		RunE:        login,
 	}
+
+	cmd.Flags().StringP("alias", "a", "", "Store alias")
+
+	return &cmd
 }
 
 func login(cmd *cobra.Command, _ []string) error {
@@ -34,23 +38,41 @@ func login(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("please pass in the store you want to operate on")
 	}
 
+	alias, err := cmd.Flags().GetString("alias")
+	if err != nil || alias == "" {
+		return fmt.Errorf("please add a unique alias for the store")
+	}
+
 	authFlow := oauth.NewFlow(store)
 	if err := authFlow.Initiate(); err != nil {
 		fmt.Printf("\n! Failed to authenticate with Shopify: %s\n", err)
 		return err
 	}
 
+	shopCfg, err := config.NewShopConfig()
+	if err != nil {
+		return err
+	}
+	storeCfg := config.NewStoreConfig(store, alias)
+	storeCtx := config.StoreContext{
+		Alias: alias,
+		Store: store,
+	}
 	service := fmt.Sprintf("shopctl:%s", cmdutil.GetStoreSlug(store))
-	storeCfg := config.NewStoreConfig(store)
 
 	if err := keyring.Set(service, store, authFlow.Token.AccessToken); err != nil {
 		fmt.Printf("\n! Failed to save token to a secure storage")
 		fmt.Printf("\n! Using insecure plain text storage\n")
 
-		storeCfg.SetToken(authFlow.Token.AccessToken)
+		storeCtx.Token = &authFlow.Token.AccessToken
 	}
 
 	if err := storeCfg.Save(); err != nil {
+		return err
+	}
+
+	shopCfg.SetStoreContext(&storeCtx)
+	if err := shopCfg.Save(); err != nil {
 		return err
 	}
 

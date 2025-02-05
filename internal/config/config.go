@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	version      = 1 // Current config version.
-	rootDir      = "shopctl"
+	rootDir = "shopctl"
+
 	fileTypeYaml = "yml"
 	fileTypeJson = "json"
 
@@ -33,6 +33,7 @@ type config struct {
 	writer *viper.Viper
 	kind   string
 	dir    string
+	name   string
 }
 
 func newConfig(dir, name, kind string) *config {
@@ -40,6 +41,7 @@ func newConfig(dir, name, kind string) *config {
 		writer: makeWriter(dir, name, kind),
 		kind:   kind,
 		dir:    dir,
+		name:   name,
 	}
 }
 
