@@ -7,26 +7,23 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/knadh/koanf/parsers/yaml"
 )
 
 const (
-	keyAlias     = "alias"
-	keyKind      = "type"
-	keyBkpDir    = "backup.dir"
-	keyBkpPrefix = "backup.prefix"
-	keyResources = "resources"
-
 	presetConfigDir = "preset"
 )
 
 // PresetItems defines item in a config file.
 type PresetItems struct {
-	Alias     string
-	Kind      string
-	BkpDir    string
-	BkpPrefix string
-	Resources []string
-	Force     bool
+	Alias     string   `koanf:"alias"`
+	Kind      string   `koanf:"type"`
+	BkpDir    string   `koanf:"backup.dir"`
+	BkpPrefix string   `koanf:"backup.prefix"`
+	Resources []string `koanf:"resources"`
+
+	Force bool
 }
 
 // StoreConfig is a Shopify store config.
@@ -36,31 +33,31 @@ type PresetConfig struct {
 }
 
 // NewPresetConfig builds a new backup config for a given store.
-func NewPresetConfig(store string, items PresetItems) *PresetConfig {
+func NewPresetConfig(store string, items PresetItems) (*PresetConfig, error) {
 	dir := filepath.Join(home(), store, presetConfigDir)
 
-	return &PresetConfig{
-		config: newConfig(dir, items.Alias, fileTypeYaml),
-		data:   items,
+	cfg, err := newConfig(dir, items.Alias, fileTypeYaml)
+	if err != nil {
+		return nil, err
 	}
+
+	return &PresetConfig{
+		config: cfg,
+		data:   items,
+	}, nil
 }
 
 // Save saves the config of a store to the file.
 func (c *PresetConfig) Save() error {
-	if err := ensureConfigFile(c.dir, c.data.Alias, c.kind, c.data.Force); err != nil {
-		return err
-	}
 	return c.writeAll()
 }
 
 func (c *PresetConfig) writeAll() error {
-	c.writer.Set(keyAlias, c.data.Alias)
-	c.writer.Set(keyKind, c.data.Kind)
-	c.writer.Set(keyBkpDir, c.data.BkpDir)
-	c.writer.Set(keyBkpPrefix, c.data.BkpPrefix)
-	c.writer.Set(keyResources, c.data.Resources)
-
-	return c.writer.WriteConfig()
+	data, err := yaml.Parser().Marshal(c.config.writer.All())
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(c.path, data, modeFile)
 }
 
 // GetPresetLoc returns the location of the preset if it exist.
@@ -99,17 +96,16 @@ func ListPresets(store string) ([]string, error) {
 func ReadAllPreset(store string, preset string) (*PresetItems, error) {
 	root := filepath.Join(home(), store, presetConfigDir)
 
-	w := makeYamlWriter(root, preset)
-	if err := w.ReadInConfig(); err != nil {
+	w, err := loadConfig(filepath.Join(root, fmt.Sprintf("%s.%s", preset, fileTypeYaml)))
+	if err != nil {
 		return nil, err
 	}
-	return &PresetItems{
-		Alias:     w.GetString(keyAlias),
-		Kind:      w.GetString(keyKind),
-		BkpDir:    w.GetString(keyBkpDir),
-		BkpPrefix: w.GetString(keyBkpPrefix),
-		Resources: w.GetStringSlice(keyResources),
-	}, nil
+
+	var item PresetItems
+	if err := w.Unmarshal("", &item); err != nil {
+		return nil, err
+	}
+	return &item, nil
 }
 
 // DeletePreset deletes preset for a store if it exist.

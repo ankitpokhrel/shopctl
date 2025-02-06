@@ -1,43 +1,30 @@
 package config
 
 import (
-	"errors"
+	"fmt"
+	"path/filepath"
+
+	"github.com/knadh/koanf/providers/structs"
+	"github.com/knadh/koanf/v2"
 
 	"github.com/ankitpokhrel/shopctl"
 )
 
 const (
 	shopConfig = ".shopconfig"
-
-	keyVersion    = "_ver"
-	keyToken      = "token"
-	keyContexts   = "contexts"
-	keyCurrentCtx = "currentContext"
 )
 
 // StoreContext stores shopify store .
 type StoreContext struct {
-	Alias string  `mapstructure:"alias"`
-	Store string  `mapstructure:"store"`
-	Token *string `mapstructure:"token"`
-}
-
-// MarshalYAML is a custom YAML Marshaler for StoreContext.
-func (sc StoreContext) MarshalYAML() (interface{}, error) {
-	m := map[string]string{
-		"alias": sc.Alias,
-		"store": sc.Store,
-	}
-	if sc.Token != nil && *sc.Token != "" {
-		m["token"] = *sc.Token
-	}
-	return m, nil
+	Alias string  `koanf:"alias" yaml:"alias"`
+	Store string  `koanf:"store" yaml:"store"`
+	Token *string `koanf:"token" yaml:"token,omitempty"`
 }
 
 type shopItems struct {
-	Version    string         `mapstructure:"_ver"`
-	Contexts   []StoreContext `mapstructure:"contexts"`
-	CurrentCtx string         `mapstructure:"currentContext"`
+	Version    string         `koanf:"ver" yaml:"ver"`
+	Contexts   []StoreContext `koanf:"contexts" yaml:"contexts"`
+	CurrentCtx string         `koanf:"currentContext" yaml:"currentContext"`
 }
 
 // ShopConfig is a Shopify store config.
@@ -48,29 +35,31 @@ type ShopConfig struct {
 
 // NewShopConfig constructs a new config for a given store.
 func NewShopConfig() (*ShopConfig, error) {
-	config := newConfig(home(), shopConfig, fileTypeYaml)
-
-	shopCfg := ShopConfig{
-		config: config,
-		data: shopItems{
-			Version: shopctl.AppConfigVersion,
-		},
+	cfg, err := newConfig(home(), shopConfig, fileTypeYaml)
+	if err != nil {
+		return nil, err
 	}
 
 	// Load the existing config if it exists.
-	if err := config.writer.ReadInConfig(); err == nil {
-		var items shopItems
-		if err := config.writer.Unmarshal(&items); err != nil {
-			return nil, err
-		}
-		shopCfg.data = items
+	var item shopItems
+	if err := cfg.writer.Unmarshal("", &item); err != nil {
+		return nil, err
 	}
 
+	ver := shopctl.AppConfigVersion
+	if item.Version == "" {
+		item.Version = ver
+	}
+
+	shopCfg := ShopConfig{
+		config: cfg,
+		data:   item,
+	}
 	return &shopCfg, nil
 }
 
-// SetStoreContext adds a store context to the shop config
-// It will update the config if the context already exist.
+// SetStoreContext adds a store context to the shop config.
+// It will update the context if it already exist.
 func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
 	for i, x := range c.data.Contexts {
 		if x.Store != ctx.Store {
@@ -87,29 +76,26 @@ func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
 
 // Save saves the config of a store to the file.
 func (c *ShopConfig) Save() error {
-	if err := ensureConfigFile(c.dir, c.name, c.kind, false); err != nil && !errors.Is(err, ErrConfigExist) {
+	k := koanf.New(".")
+
+	if err := k.Load(structs.Provider(c.data, "yaml"), nil); err != nil {
 		return err
 	}
-	return c.writeAll()
-}
-
-func (c *ShopConfig) writeAll() error {
-	c.writer.Set(keyVersion, c.data.Version)
-	c.writer.Set(keyContexts, c.data.Contexts)
-	c.writer.Set(keyCurrentCtx, c.data.CurrentCtx)
-
-	return c.writer.WriteConfig()
+	if err := c.writer.Merge(k); err != nil {
+		return err
+	}
+	return writeConfig(c.path, c.data)
 }
 
 // GetToken retrieves token of a store from the config.
 func GetToken(alias string) string {
-	w := makeYamlWriter(home(), alias)
-	if err := w.ReadInConfig(); err != nil {
+	w, err := loadConfig(filepath.Join(home(), fmt.Sprintf("%s.yml", alias)))
+	if err != nil {
 		return ""
 	}
 
 	var item shopItems
-	if err := w.Unmarshal(&item); err != nil {
+	if err := w.Unmarshal("", &item); err != nil {
 		return ""
 	}
 

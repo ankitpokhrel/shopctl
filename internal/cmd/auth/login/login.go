@@ -53,7 +53,10 @@ func login(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	storeCfg := config.NewStoreConfig(store, alias)
+	storeCfg, err := config.NewStoreConfig(store, alias)
+	if err != nil {
+		return err
+	}
 	storeCtx := config.StoreContext{
 		Alias: alias,
 		Store: store,

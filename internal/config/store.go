@@ -1,20 +1,15 @@
 package config
 
 import (
-	"errors"
+	"github.com/knadh/koanf/providers/structs"
+	"github.com/knadh/koanf/v2"
 
 	"github.com/ankitpokhrel/shopctl"
 )
 
-// Config keys.
-const (
-	keyApiVer = "_apiVer"
-	keyStore  = "store"
-)
-
 type storeItems struct {
-	apiVer string
-	store  string
+	ApiVer string `koanf:"apiVer" yaml:"apiVer"`
+	Store  string `koanf:"store" yaml:"store"`
 }
 
 // StoreConfig is a Shopify store config.
@@ -24,27 +19,30 @@ type StoreConfig struct {
 }
 
 // NewStoreConfig constructs a new config for a given store.
-func NewStoreConfig(store string, alias string) *StoreConfig {
-	return &StoreConfig{
-		config: newConfig(home(), alias, fileTypeYaml),
-		data: storeItems{
-			apiVer: shopctl.ShopifyApiVersion,
-			store:  store,
-		},
+func NewStoreConfig(store string, alias string) (*StoreConfig, error) {
+	cfg, err := newConfig(home(), alias, fileTypeYaml)
+	if err != nil {
+		return nil, err
 	}
+
+	return &StoreConfig{
+		config: cfg,
+		data: storeItems{
+			ApiVer: shopctl.ShopifyApiVersion,
+			Store:  store,
+		},
+	}, nil
 }
 
 // Save saves the config of a store to the file.
 func (c *StoreConfig) Save() error {
-	if err := ensureConfigFile(c.dir, c.name, c.kind, false); err != nil && !errors.Is(err, ErrConfigExist) {
+	k := koanf.New(".")
+
+	if err := k.Load(structs.Provider(c.data, "yaml"), nil); err != nil {
 		return err
 	}
-	return c.writeAll()
-}
-
-func (c *StoreConfig) writeAll() error {
-	c.writer.Set(keyApiVer, c.data.apiVer)
-	c.writer.Set(keyStore, c.data.store)
-
-	return c.writer.WriteConfig()
+	if err := c.writer.Merge(k); err != nil {
+		return err
+	}
+	return writeConfig(c.path, c.data)
 }

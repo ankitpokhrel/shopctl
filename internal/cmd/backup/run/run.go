@@ -138,7 +138,7 @@ func run(cmd *cobra.Command, _ []string) error {
 func saveRootMeta(bkpEng *engine.Backup, preset *config.PresetItems) (*config.RootMeta, error) {
 	u, _ := user.Current()
 
-	meta := config.NewRootMeta(bkpEng.Dir(), config.RootMetaItems{
+	meta, err := config.NewRootMeta(bkpEng.Dir(), config.RootMetaItems{
 		ID:        bkpEng.ID(),
 		Store:     bkpEng.Store(),
 		TimeInit:  bkpEng.Timestamp().Unix(),
@@ -148,6 +148,9 @@ func saveRootMeta(bkpEng *engine.Backup, preset *config.PresetItems) (*config.Ro
 		Kind:      preset.Kind,
 		User:      u.Username,
 	})
+	if err != nil {
+		return nil, err
+	}
 	if err := meta.Save(); err != nil {
 		return nil, err
 	}

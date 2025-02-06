@@ -93,7 +93,7 @@ func add(cmd *cobra.Command, _ []string) error {
 	flag := &flag{}
 	flag.parse(cmd)
 
-	presetCfg := config.NewPresetConfig(flag.store, config.PresetItems{
+	presetCfg, err := config.NewPresetConfig(flag.store, config.PresetItems{
 		Alias:     flag.alias,
 		Kind:      flag.kind,
 		BkpDir:    flag.bkpDir,
@@ -101,6 +101,9 @@ func add(cmd *cobra.Command, _ []string) error {
 		Resources: flag.resources,
 		Force:     flag.force,
 	})
+	if err != nil {
+		return err
+	}
 
 	if err := presetCfg.Save(); err != nil {
 		if errors.Is(err, config.ErrConfigExist) {

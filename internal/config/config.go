@@ -1,12 +1,16 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 
-	"github.com/spf13/viper"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
+	yamlv3 "gopkg.in/yaml.v3"
 )
 
 const (
@@ -30,19 +34,35 @@ var (
 )
 
 type config struct {
-	writer *viper.Viper
+	writer *koanf.Koanf
 	kind   string
 	dir    string
 	name   string
+	path   string
 }
 
-func newConfig(dir, name, kind string) *config {
-	return &config{
-		writer: makeWriter(dir, name, kind),
-		kind:   kind,
-		dir:    dir,
-		name:   name,
+//nolint:unparam
+func newConfig(dir, name, kind string) (*config, error) {
+	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", name, kind))
+
+	if err := ensureConfigFile(dir, cfgFile, false); err != nil && !errors.Is(err, ErrConfigExist) {
+		return nil, err
 	}
+
+	cfg := config{
+		kind: kind,
+		dir:  dir,
+		name: name,
+		path: cfgFile,
+	}
+
+	w, err := loadConfig(cfgFile)
+	if err != nil {
+		return nil, err
+	}
+	cfg.writer = w
+
+	return &cfg, nil
 }
 
 // home returns dir for the config.
@@ -61,17 +81,22 @@ func home() string {
 	return filepath.Join(home, ".config", rootDir)
 }
 
-func makeWriter(dir, name, kind string) *viper.Viper {
-	w := viper.New()
-	w.SetConfigType(kind)
-	w.AddConfigPath(dir)
-	w.SetConfigName(name)
+func loadConfig(cfgFile string) (*koanf.Koanf, error) {
+	k := koanf.New(".")
+	f := file.Provider(cfgFile)
 
-	return w
+	if err := k.Load(f, yaml.Parser()); err != nil {
+		return nil, err
+	}
+	return k, nil
 }
 
-func makeYamlWriter(dir, name string) *viper.Viper {
-	return makeWriter(dir, name, fileTypeYaml)
+func writeConfig(cfgFile string, data any) error {
+	bytes, err := yamlv3.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(cfgFile, bytes, modeFile)
 }
 
 func exists(file string) bool {
@@ -81,9 +106,7 @@ func exists(file string) bool {
 	return true
 }
 
-func ensureConfigFile(dir, file, kind string, force bool) error {
-	cfgFile := filepath.Join(dir, fmt.Sprintf("%s.%s", file, kind))
-
+func ensureConfigFile(dir string, cfgFile string, force bool) error {
 	// Bail early if config already exists.
 	if !force && exists(cfgFile) {
 		return ErrConfigExist

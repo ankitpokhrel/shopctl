@@ -35,15 +35,15 @@ func TestConfigSave(t *testing.T) {
 	assert.FileExists(t, fmt.Sprintf("%s/.shopconfig.yml", root))
 	assert.Equal(t, "v0", c.data.Version)
 	assert.Equal(t, "", c.data.CurrentCtx)
-	assert.Equal(t, "v0", c.writer.GetString("_ver"))
-	assert.Equal(t, "", c.writer.GetString("currentContext"))
+	assert.Equal(t, "v0", c.writer.Get("ver"))
+	assert.Equal(t, "", c.writer.Get("currentContext"))
 	assert.Empty(t, GetToken(alias))
 
-	sc := NewStoreConfig(store, alias)
+	sc, _ := NewStoreConfig(store, alias)
 	assert.NoError(t, sc.Save())
 	assert.FileExists(t, fmt.Sprintf("%s/%s.yml", root, alias))
-	assert.Equal(t, "2025-01", sc.writer.GetString("_apiVer"))
-	assert.Equal(t, store, sc.writer.GetString("store"))
+	assert.Equal(t, "2025-01", sc.writer.Get("apiVer"))
+	assert.Equal(t, store, sc.writer.Get("store"))
 
 	assert.NoError(t, os.RemoveAll("./testdata/.tmp/"))
 }
