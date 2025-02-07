@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usecontext"
 )
 
 const helpText = `Config helps you manage shopctl configuration.`
@@ -20,6 +21,7 @@ func NewCmdConfig() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		usecontext.NewCmdUseContext(),
 		setstrategy.NewCmdSetStrategy(),
 	)
 

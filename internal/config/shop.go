@@ -74,6 +74,24 @@ func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
 	c.data.Contexts = append(c.data.Contexts, *ctx)
 }
 
+// SetCurrentContext updates current active context.
+func (c *ShopConfig) SetCurrentContext(ctx string) error {
+	found := false
+	for _, x := range c.data.Contexts {
+		if x.Alias == ctx {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("no context exists with the name: %q", ctx)
+	}
+
+	c.data.CurrentCtx = ctx
+	return nil
+}
+
 // Save saves the config of a store to the file.
 func (c *ShopConfig) Save() error {
 	k := koanf.New(".")
