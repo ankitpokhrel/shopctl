@@ -7,9 +7,18 @@ import (
 	"github.com/ankitpokhrel/shopctl"
 )
 
+type BackupStrategy struct {
+	Name      string   `koanf:"name" yaml:"name"`
+	Kind      string   `koanf:"type" yaml:"type"`
+	BkpDir    string   `koanf:"dir" yaml:"dir"`
+	BkpPrefix string   `koanf:"prefix" yaml:"prefix"`
+	Resources []string `koanf:"resources" yaml:"resources"`
+}
+
 type storeItems struct {
-	ApiVer string `koanf:"apiVer" yaml:"apiVer"`
-	Store  string `koanf:"store" yaml:"store"`
+	ApiVer     string           `koanf:"apiVer" yaml:"apiVer"`
+	Store      string           `koanf:"store" yaml:"store"`
+	Strategies []BackupStrategy `koanf:"strategies" yaml:"strategies"`
 }
 
 // StoreConfig is a Shopify store config.
@@ -25,13 +34,38 @@ func NewStoreConfig(store string, alias string) (*StoreConfig, error) {
 		return nil, err
 	}
 
-	return &StoreConfig{
+	// Load the existing config if it exists.
+	var item storeItems
+	if err := cfg.writer.Unmarshal("", &item); err != nil {
+		return nil, err
+	}
+
+	ver := shopctl.ShopifyApiVersion
+	if item.ApiVer == "" {
+		item.ApiVer = ver
+	}
+	if item.Store == "" {
+		item.Store = store
+	}
+
+	storeCfg := StoreConfig{
 		config: cfg,
-		data: storeItems{
-			ApiVer: shopctl.ShopifyApiVersion,
-			Store:  store,
-		},
-	}, nil
+		data:   item,
+	}
+	return &storeCfg, nil
+}
+
+// SetStoreBackupStrategy adds a store context to the shop config.
+// It will update the context if it already exist.
+func (c *StoreConfig) SetStoreBackupStrategy(bst *BackupStrategy) {
+	for i, s := range c.data.Strategies {
+		if s.Name != bst.Name {
+			continue
+		}
+		c.data.Strategies[i] = *bst
+		return
+	}
+	c.data.Strategies = append(c.data.Strategies, *bst)
 }
 
 // Save saves the config of a store to the file.
