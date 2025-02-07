@@ -58,6 +58,16 @@ func NewShopConfig() (*ShopConfig, error) {
 	return &shopCfg, nil
 }
 
+// HasContext checks if the given context exists.
+func (c *ShopConfig) HasContext(ctx string) bool {
+	for _, x := range c.data.Contexts {
+		if x.Alias == ctx {
+			return true
+		}
+	}
+	return false
+}
+
 // SetStoreContext adds a store context to the shop config.
 // It will update the context if it already exist.
 func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
@@ -76,18 +86,9 @@ func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
 
 // SetCurrentContext updates current active context.
 func (c *ShopConfig) SetCurrentContext(ctx string) error {
-	found := false
-	for _, x := range c.data.Contexts {
-		if x.Alias == ctx {
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	if !c.HasContext(ctx) {
 		return fmt.Errorf("no context exists with the name: %q", ctx)
 	}
-
 	c.data.CurrentCtx = ctx
 	return nil
 }
@@ -95,6 +96,21 @@ func (c *ShopConfig) SetCurrentContext(ctx string) error {
 // CurrentContext returns current context.
 func (c *ShopConfig) CurrentContext() string {
 	return c.data.CurrentCtx
+}
+
+// UnsetCurrentContext unsets current context.
+func (c *ShopConfig) UnsetCurrentContext() {
+	c.data.CurrentCtx = ""
+}
+
+// DeleteContext returns current context.
+func (c *ShopConfig) DeleteContext(ctx string) {
+	for i, x := range c.data.Contexts {
+		if x.Alias == ctx {
+			c.data.Contexts = append(c.data.Contexts[:i], c.data.Contexts[i+1:]...)
+			break
+		}
+	}
 }
 
 // Save saves the config of a store to the file.

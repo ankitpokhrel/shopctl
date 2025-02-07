@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/knadh/koanf/providers/structs"
 	"github.com/knadh/koanf/v2"
 
@@ -79,4 +81,9 @@ func (c *StoreConfig) Save() error {
 		return err
 	}
 	return writeConfig(c.path, c.data)
+}
+
+// Delete removes the config file.
+func (c *StoreConfig) Delete() error {
+	return os.Remove(c.Path())
 }

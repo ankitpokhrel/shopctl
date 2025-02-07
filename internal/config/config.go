@@ -65,6 +65,11 @@ func newConfig(dir, name, kind string) (*config, error) {
 	return &cfg, nil
 }
 
+// Path is a config file path.
+func (c config) Path() string {
+	return c.path
+}
+
 // home returns dir for the config.
 func home() string {
 	if home := os.Getenv("SHOPIFY_CONFIG_HOME"); home != "" {
