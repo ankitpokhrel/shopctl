@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentcontext"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usecontext"
 )
@@ -21,6 +22,7 @@ func NewCmdConfig() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		currentcontext.NewCmdCurrentContext(),
 		usecontext.NewCmdUseContext(),
 		setstrategy.NewCmdSetStrategy(),
 	)

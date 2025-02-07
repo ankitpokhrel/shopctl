@@ -92,6 +92,11 @@ func (c *ShopConfig) SetCurrentContext(ctx string) error {
 	return nil
 }
 
+// CurrentContext returns current context.
+func (c *ShopConfig) CurrentContext() string {
+	return c.data.CurrentCtx
+}
+
 // Save saves the config of a store to the file.
 func (c *ShopConfig) Save() error {
 	k := koanf.New(".")
