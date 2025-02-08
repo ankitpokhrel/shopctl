@@ -91,6 +91,16 @@ func (c *StoreConfig) UnsetStrategy(strategy string) {
 	}
 }
 
+// RenameStrategy sets the new strategy name.
+func (c *StoreConfig) RenameStrategy(oldname string, newname string) {
+	for i, s := range c.data.Strategies {
+		if s.Name == oldname {
+			c.data.Strategies[i].Name = newname
+			break
+		}
+	}
+}
+
 // Strategies returns all available backup strategies.
 func (c *StoreConfig) Strategies() []BackupStrategy {
 	return c.data.Strategies
