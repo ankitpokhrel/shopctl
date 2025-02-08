@@ -9,20 +9,23 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Sets the current-strategy for the context in a shopconfig file.`
+const helpText = `Set current-strategy for a context in the shopconfig file.`
 
 // NewCmdUseStrategy is a cmd to update current strategy for the context.
 func NewCmdUseStrategy() *cobra.Command {
 	return &cobra.Command{
 		Use:   "use-strategy STRATEGY_NAME",
-		Short: "Sets the current-strategy in a shopconfig file",
+		Short: "Set current-strategy in the shopconfig file",
 		Long:  helpText,
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  useStrategy,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func useStrategy(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err

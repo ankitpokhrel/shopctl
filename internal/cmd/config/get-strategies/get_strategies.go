@@ -8,11 +8,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
 const (
-	helpText = `Displays one or many strategies for current context from the shopconfig file.`
+	helpText = `Display one or many backup strategies defined for current context.`
 	tabWidth = 8
 )
 
@@ -20,14 +21,17 @@ const (
 func NewCmdGetStrategies() *cobra.Command {
 	return &cobra.Command{
 		Use:     "get-strategies",
-		Short:   "Displays one or many strategies for current context from the shopconfig file",
+		Short:   "Display one or many backup strategies defined for current context",
 		Long:    helpText,
 		Aliases: []string{"get-strategy"},
-		RunE:    getStrategies,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func getStrategies(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err

@@ -12,7 +12,11 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Delete the specified context from the shopconfig.`
+const (
+	helpText = `Delete the specified context from the shopconfig file.`
+	example  = `# Delete a context called 'mystore'
+$ shopctl delete-context mystore`
+)
 
 type flag struct {
 	name  string
@@ -32,11 +36,15 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 // NewCmdDeleteContext cmd allows you to delete a context.
 func NewCmdDeleteContext() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "delete-context CONTEXT_NAME",
-		Short: "Delete the specified context from the shopconfig",
-		Long:  helpText,
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  deleteContext,
+		Use:     "delete-context CONTEXT_NAME",
+		Short:   "Delete the specified context from the shopconfig file",
+		Long:    helpText,
+		Example: example,
+		Args:    cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 
 	cmd.Flags().Bool("force", false, "Delete without confirmation")
@@ -44,7 +52,7 @@ func NewCmdDeleteContext() *cobra.Command {
 	return &cmd
 }
 
-func deleteContext(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
 

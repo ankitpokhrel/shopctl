@@ -9,19 +9,22 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Displays the current-context.`
+const helpText = `Display the current-context.`
 
 // NewCmdCurrentContext is a cmd to display current context.
 func NewCmdCurrentContext() *cobra.Command {
 	return &cobra.Command{
 		Use:   "current-context",
-		Short: "Displays the current-context",
+		Short: "Display the current-context",
 		Long:  helpText,
-		RunE:  currentContext,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func currentContext(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, _ []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err
@@ -29,7 +32,7 @@ func currentContext(cmd *cobra.Command, args []string) error {
 
 	ctx := cfg.CurrentContext()
 	if ctx == "" {
-		cmdutil.ExitOnErr(fmt.Errorf("current-context is not set"))
+		return fmt.Errorf("current-context is not set")
 	}
 
 	fmt.Println(ctx)

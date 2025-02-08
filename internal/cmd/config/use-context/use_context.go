@@ -9,21 +9,24 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Sets the current-context in a shopconfig file.`
+const helpText = `Set current-context in the shopconfig file.`
 
 // NewCmdUseContext is a cmd to update current context.
 func NewCmdUseContext() *cobra.Command {
 	return &cobra.Command{
 		Use:     "use-context CONTEXT_NAME",
-		Short:   "Sets the current-context in a shopconfig file",
+		Short:   "Set current-context in the shopconfig file",
 		Long:    helpText,
 		Aliases: []string{"use"},
 		Args:    cobra.MinimumNArgs(1),
-		RunE:    useContext,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func useContext(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err

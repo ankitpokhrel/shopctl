@@ -12,7 +12,11 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Delete the specified strategy from the shopconfig.`
+const (
+	helpText = `Delete the specified strategy from the shopconfig file.`
+	example  = `# Delete a strategy called 'weekly'
+$ shopctl config delete-strategy weekly`
+)
 
 type flag struct {
 	name  string
@@ -32,11 +36,15 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 // NewCmdDeleteStrategy cmd allows you to delete a context.
 func NewCmdDeleteStrategy() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "delete-strategy STRATEGY_NAME",
-		Short: "Delete the specified strategy from the shopconfig",
-		Long:  helpText,
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  deleteStrategy,
+		Use:     "delete-strategy STRATEGY_NAME",
+		Short:   "Delete the specified strategy from the shopconfig file",
+		Long:    helpText,
+		Example: example,
+		Args:    cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 
 	cmd.Flags().Bool("force", false, "Delete without confirmation")
@@ -44,7 +52,7 @@ func NewCmdDeleteStrategy() *cobra.Command {
 	return &cmd
 }
 
-func deleteStrategy(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
 
@@ -55,6 +63,9 @@ func deleteStrategy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	ctx := shopCfg.CurrentContext()
+	if ctx == "" {
+		return fmt.Errorf("current-context is not set")
+	}
 
 	if flag.force {
 		return del(shopCfg, ctx, strategy)
@@ -69,9 +80,7 @@ func deleteStrategy(cmd *cobra.Command, args []string) error {
 	if input == "y" || input == "yes" {
 		return del(shopCfg, ctx, strategy)
 	}
-
-	cmdutil.ExitOnErr(config.ErrActionAborted)
-	return nil
+	return config.ErrActionAborted
 }
 
 func del(shopCfg *config.ShopConfig, ctx string, strategy string) error {
@@ -93,6 +102,6 @@ func del(shopCfg *config.ShopConfig, ctx string, strategy string) error {
 		return err
 	}
 
-	cmdutil.Success("Deleted strategy %q for the context %q in path %s", strategy, ctx, storeCfg.Path())
+	cmdutil.Success("Deleted strategy %q for the context %q from %s", strategy, ctx, storeCfg.Path())
 	return nil
 }

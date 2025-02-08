@@ -7,11 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
 const (
-	helpText = `Displays one or many contexts from the shopconfig file.`
+	helpText = `Display one or many contexts defined in the shopconfig file.`
 	tabWidth = 8
 )
 
@@ -19,14 +20,17 @@ const (
 func NewCmdGetContexts() *cobra.Command {
 	return &cobra.Command{
 		Use:     "get-contexts",
-		Short:   "Displays one or many contexts from the shopconfig file",
+		Short:   "Display one or many contexts defined in the shopconfig file",
 		Long:    helpText,
 		Aliases: []string{"get-context"},
-		RunE:    getContexts,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func getContexts(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err

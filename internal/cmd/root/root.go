@@ -35,7 +35,6 @@ func NewCmdRoot() *cobra.Command {
 		"Set the verbosity level (e.g., -v, -vv, -vvv)",
 	)
 
-	_ = cmd.MarkPersistentFlagRequired("store")
 	cmd.SetHelpFunc(helpFunc)
 
 	addChildCommands(&cmd)

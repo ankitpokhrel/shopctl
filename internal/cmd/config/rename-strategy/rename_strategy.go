@@ -9,7 +9,14 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `RenameStrategy renames a backup strategy.`
+const (
+	helpText = `Rename a backup strategy for current-context.
+
+    OLD_STRATEGY_NAME is the strategy name that you wish to change
+    NEW_STRATEGY_NAME is the new name for the strategy
+
+If the strategy being renamed is the 'current-strategy', it will get updated too.`
+)
 
 type flag struct {
 	oldName string
@@ -25,14 +32,17 @@ func (f *flag) parse(_ *cobra.Command, args []string) {
 func NewCmdRenameStrategy() *cobra.Command {
 	return &cobra.Command{
 		Use:   "rename-strategy OLD_STRATEGY_NAME NEW_STRATEGY_NAME",
-		Short: "Rename a backup strategy",
+		Short: "Rename a backup strategy for current-context",
 		Long:  helpText,
 		Args:  cobra.MinimumNArgs(2),
-		RunE:  renameStrategy,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func renameStrategy(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
 
@@ -70,6 +80,6 @@ func renameStrategy(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	cmdutil.Success("context %q renamed to %q", flag.oldName, flag.newName)
+	cmdutil.Success("Context %q renamed to %q", flag.oldName, flag.newName)
 	return nil
 }

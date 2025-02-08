@@ -9,19 +9,22 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Displays the current-strategy for a context.`
+const helpText = `Display the current-strategy for a context.`
 
 // NewCmdCurrentStrategy is a cmd to display current strategy.
 func NewCmdCurrentStrategy() *cobra.Command {
 	return &cobra.Command{
 		Use:   "current-strategy",
-		Short: "Displays the current-strategy",
+		Short: "Display the current-strategy",
 		Long:  helpText,
-		RunE:  currentStrategy,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func currentStrategy(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, _ []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err
@@ -29,7 +32,7 @@ func currentStrategy(cmd *cobra.Command, args []string) error {
 
 	strategy := cfg.CurrentStrategy()
 	if strategy == "" {
-		cmdutil.ExitOnErr(fmt.Errorf("current-strategy is not set"))
+		return fmt.Errorf("current-strategy is not set")
 	}
 
 	fmt.Println(strategy)

@@ -9,7 +9,14 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `RenameStrategy renames a context from the shopconfig file.`
+const (
+	helpText = `Rename a context from the shopconfig file.
+
+    OLD_CONTEXT_NAME is the context name that you wish to change
+    NEW_CONTEXT_NAME is the new name for the context
+
+If the context being renamed is the 'current-context', it will get updated too.`
+)
 
 type flag struct {
 	oldName string
@@ -25,14 +32,17 @@ func (f *flag) parse(_ *cobra.Command, args []string) {
 func NewCmdRenameContext() *cobra.Command {
 	return &cobra.Command{
 		Use:   "rename-context OLD_CONTEXT_NAME NEW_CONTEXT_NAME",
-		Short: "Renames a context from the shopconfig file",
+		Short: "Rename a context from the shopconfig file",
 		Long:  helpText,
 		Args:  cobra.MinimumNArgs(2),
-		RunE:  renameContext,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmdutil.ExitOnErr(run(cmd, args))
+			return nil
+		},
 	}
 }
 
-func renameContext(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
 
@@ -65,6 +75,6 @@ func renameContext(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cmdutil.Success("context %q renamed to %q", flag.oldName, flag.newName)
+	cmdutil.Success("Context %q renamed to %q", flag.oldName, flag.newName)
 	return nil
 }
