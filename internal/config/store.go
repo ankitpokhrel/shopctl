@@ -80,6 +80,16 @@ func (c *StoreConfig) SetStoreBackupStrategy(bst *BackupStrategy) {
 	c.data.Strategies = append(c.data.Strategies, *bst)
 }
 
+// UnsetStrategy unsets given strategy.
+func (c *StoreConfig) UnsetStrategy(strategy string) {
+	for i, s := range c.data.Strategies {
+		if s.Name == strategy {
+			c.data.Strategies = append(c.data.Strategies[:i], c.data.Strategies[i+1:]...)
+			break
+		}
+	}
+}
+
 // Save saves the config of a store to the file.
 func (c *StoreConfig) Save() error {
 	k := koanf.New(".")

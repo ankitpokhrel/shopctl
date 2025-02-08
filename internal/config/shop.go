@@ -151,8 +151,13 @@ func (c *ShopConfig) UnsetCurrentContext() {
 	c.data.CurrentCtx = ""
 }
 
-// DeleteContext returns current context.
-func (c *ShopConfig) DeleteContext(ctx string) {
+// UnsetCurrentStrategy unsets current strategy.
+func (c *ShopConfig) UnsetCurrentStrategy() {
+	c.data.CurrentStrategy = ""
+}
+
+// UnsetContext unsets given context.
+func (c *ShopConfig) UnsetContext(ctx string) {
 	for i, x := range c.data.Contexts {
 		if x.Alias == ctx {
 			c.data.Contexts = append(c.data.Contexts[:i], c.data.Contexts[i+1:]...)

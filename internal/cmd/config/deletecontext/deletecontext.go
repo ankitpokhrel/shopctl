@@ -32,12 +32,11 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 // NewCmdDeleteContext cmd allows you to delete a context.
 func NewCmdDeleteContext() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "delete-context CONTEXT_NAME",
-		Short:   "Delete the specified context from the shopconfig",
-		Long:    helpText,
-		Aliases: []string{"use"},
-		Args:    cobra.MinimumNArgs(1),
-		RunE:    deleteContext,
+		Use:   "delete-context CONTEXT_NAME",
+		Short: "Delete the specified context from the shopconfig",
+		Long:  helpText,
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  deleteContext,
 	}
 
 	cmd.Flags().Bool("force", false, "Delete without confirmation")
@@ -88,7 +87,7 @@ func del(shopCfg *config.ShopConfig, ctx string) error {
 		shopCfg.UnsetCurrentContext()
 	}
 
-	shopCfg.DeleteContext(ctx)
+	shopCfg.UnsetContext(ctx)
 	if err := shopCfg.Save(); err != nil {
 		return err
 	}

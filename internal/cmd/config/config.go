@@ -6,6 +6,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentcontext"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentstrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletecontext"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletestrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/getcontexts"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usecontext"
@@ -33,6 +34,7 @@ func NewCmdConfig() *cobra.Command {
 		setstrategy.NewCmdSetStrategy(),
 		usestrategy.NewCmdUseStrategy(),
 		currentstrategy.NewCmdCurrentStrategy(),
+		deletestrategy.NewCmdDeleteStrategy(),
 	)
 
 	return &cmd
