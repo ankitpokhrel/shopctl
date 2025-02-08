@@ -3,17 +3,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentcontext"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentstrategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletecontext"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletestrategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/getcontexts"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/getstrategies"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/renamecontext"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/renamestrategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usecontext"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usestrategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/current-context"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/current-strategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-context"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-strategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/get-contexts"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/get-strategies"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-context"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-strategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/set-strategy"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/use-context"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/use-strategy"
 )
 
 const helpText = `Modify shopconfig files using commands like "shopctl config set-context my-context".`
