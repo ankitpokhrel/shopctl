@@ -98,6 +98,11 @@ func (c *ShopConfig) CurrentContext() string {
 	return c.data.CurrentCtx
 }
 
+// Contexts returns all available contexts.
+func (c *ShopConfig) Contexts() []StoreContext {
+	return c.data.Contexts
+}
+
 // UnsetCurrentContext unsets current context.
 func (c *ShopConfig) UnsetCurrentContext() {
 	c.data.CurrentCtx = ""

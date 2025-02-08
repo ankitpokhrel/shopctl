@@ -5,11 +5,12 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentcontext"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletecontext"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/getcontexts"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/usecontext"
 )
 
-const helpText = `Modify shopconfig files using commands like "shopctl config set current-context my-context".`
+const helpText = `Modify shopconfig files using commands like "shopctl config set-context my-context".`
 
 // NewCmdConfig creates a new config command.
 func NewCmdConfig() *cobra.Command {
@@ -26,6 +27,7 @@ func NewCmdConfig() *cobra.Command {
 		usecontext.NewCmdUseContext(),
 		currentcontext.NewCmdCurrentContext(),
 		deletecontext.NewCmdDeleteContext(),
+		getcontexts.NewCmdGetContexts(),
 		setstrategy.NewCmdSetStrategy(),
 	)
 
