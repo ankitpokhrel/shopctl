@@ -22,9 +22,10 @@ type StoreContext struct {
 }
 
 type shopItems struct {
-	Version    string         `koanf:"ver" yaml:"ver"`
-	Contexts   []StoreContext `koanf:"contexts" yaml:"contexts"`
-	CurrentCtx string         `koanf:"currentContext" yaml:"currentContext"`
+	Version         string         `koanf:"ver" yaml:"ver"`
+	Contexts        []StoreContext `koanf:"contexts" yaml:"contexts"`
+	CurrentCtx      string         `koanf:"currentContext" yaml:"currentContext"`
+	CurrentStrategy string         `koanf:"currentStrategy" yaml:"currentStrategy"`
 }
 
 // ShopConfig is a Shopify store config.
@@ -68,6 +69,16 @@ func (c *ShopConfig) HasContext(ctx string) bool {
 	return false
 }
 
+// GetContext returns the given context if it exists.
+func (c *ShopConfig) GetContext(ctx string) *StoreContext {
+	for _, x := range c.data.Contexts {
+		if x.Alias == ctx {
+			return &x
+		}
+	}
+	return nil
+}
+
 // SetStoreContext adds a store context to the shop config.
 // It will update the context if it already exist.
 func (c *ShopConfig) SetStoreContext(ctx *StoreContext) {
@@ -90,6 +101,33 @@ func (c *ShopConfig) SetCurrentContext(ctx string) error {
 		return fmt.Errorf("no context exists with the name: %q", ctx)
 	}
 	c.data.CurrentCtx = ctx
+	return nil
+}
+
+// SetCurrentStrategy updates current active strategy for the context.
+func (c *ShopConfig) SetCurrentStrategy(strategy string) error {
+	currentCtx := c.data.CurrentCtx
+	if currentCtx == "" {
+		return fmt.Errorf("current-context is not set")
+	}
+
+	ctx := c.GetContext(currentCtx)
+	if ctx == nil {
+		return fmt.Errorf("no context exists with the name: %q", currentCtx)
+	}
+
+	storeCfg, err := NewStoreConfig(ctx.Store, ctx.Alias)
+	if err != nil {
+		return fmt.Errorf("unable to build store config: %s", err)
+	}
+	if !exists(storeCfg.path) {
+		return fmt.Errorf("unable to locate config file for the context: %q", currentCtx)
+	}
+	if !storeCfg.HasBackupStrategy(strategy) {
+		return fmt.Errorf("no strategy exists with the name: %q", strategy)
+	}
+
+	c.data.CurrentStrategy = strategy
 	return nil
 }
 
