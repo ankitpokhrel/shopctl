@@ -17,11 +17,11 @@ func NewCmdCurrentContext() *cobra.Command {
 		Use:   "current-context",
 		Short: "Displays the current-context",
 		Long:  helpText,
-		RunE:  useContext,
+		RunE:  currentContext,
 	}
 }
 
-func useContext(cmd *cobra.Command, args []string) error {
+func currentContext(cmd *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err

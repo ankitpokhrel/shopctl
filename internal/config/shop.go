@@ -136,6 +136,11 @@ func (c *ShopConfig) CurrentContext() string {
 	return c.data.CurrentCtx
 }
 
+// CurrentStrategy returns current strategy.
+func (c *ShopConfig) CurrentStrategy() string {
+	return c.data.CurrentStrategy
+}
+
 // Contexts returns all available contexts.
 func (c *ShopConfig) Contexts() []StoreContext {
 	return c.data.Contexts

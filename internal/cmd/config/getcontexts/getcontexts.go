@@ -56,7 +56,7 @@ func getContexts(cmd *cobra.Command, args []string) error {
 	for _, x := range out {
 		name := x.Alias
 		if name == currentCtx {
-			name = name + "*"
+			name += "*"
 		}
 		_, _ = fmt.Fprintf(w, "%s\t %s\n", name, x.Store)
 	}

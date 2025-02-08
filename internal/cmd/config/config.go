@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentcontext"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config/currentstrategy"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/deletecontext"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/getcontexts"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config/setstrategy"
@@ -31,6 +32,7 @@ func NewCmdConfig() *cobra.Command {
 		getcontexts.NewCmdGetContexts(),
 		setstrategy.NewCmdSetStrategy(),
 		usestrategy.NewCmdUseStrategy(),
+		currentstrategy.NewCmdCurrentStrategy(),
 	)
 
 	return &cmd
