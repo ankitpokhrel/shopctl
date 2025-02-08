@@ -166,6 +166,16 @@ func (c *ShopConfig) UnsetContext(ctx string) {
 	}
 }
 
+// RenameContext sets the new context name.
+func (c *ShopConfig) RenameContext(oldname string, newname string) {
+	for i, s := range c.data.Contexts {
+		if s.Alias == oldname {
+			c.data.Contexts[i].Alias = newname
+			break
+		}
+	}
+}
+
 // Save saves the config of a store to the file.
 func (c *ShopConfig) Save() error {
 	k := koanf.New(".")

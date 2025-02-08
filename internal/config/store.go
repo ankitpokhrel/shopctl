@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/knadh/koanf/providers/structs"
 	"github.com/knadh/koanf/v2"
@@ -121,5 +123,12 @@ func (c *StoreConfig) Save() error {
 
 // Delete removes the config file.
 func (c *StoreConfig) Delete() error {
-	return os.Remove(c.Path())
+	return os.Remove(c.path)
+}
+
+// Rename renames the config file.
+func (c *StoreConfig) Rename(newname string) error {
+	path := filepath.Dir(c.path)
+	file := fmt.Sprintf("%s.%s", newname, fileTypeYaml)
+	return os.Rename(c.path, filepath.Join(path, file))
 }
