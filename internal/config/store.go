@@ -9,6 +9,7 @@ import (
 	"github.com/ankitpokhrel/shopctl"
 )
 
+// BackupStrategy is a store backup strategy.
 type BackupStrategy struct {
 	Name      string   `koanf:"name" yaml:"name"`
 	Kind      string   `koanf:"type" yaml:"type"`
@@ -88,6 +89,11 @@ func (c *StoreConfig) UnsetStrategy(strategy string) {
 			break
 		}
 	}
+}
+
+// Strategies returns all available backup strategies.
+func (c *StoreConfig) Strategies() []BackupStrategy {
+	return c.data.Strategies
 }
 
 // Save saves the config of a store to the file.

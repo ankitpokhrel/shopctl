@@ -14,7 +14,7 @@ const (
 	shopConfig = ".shopconfig"
 )
 
-// StoreContext stores shopify store .
+// StoreContext is a shopify store context.
 type StoreContext struct {
 	Alias string  `koanf:"alias" yaml:"alias"`
 	Store string  `koanf:"store" yaml:"store"`

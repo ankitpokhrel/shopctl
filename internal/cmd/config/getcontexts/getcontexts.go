@@ -35,18 +35,29 @@ func getContexts(cmd *cobra.Command, args []string) error {
 	var out []config.StoreContext
 
 	allContexts := cfg.Contexts()
+	if len(allContexts) == 0 {
+		return fmt.Errorf("no contexts found")
+	}
 	currentCtx := cfg.CurrentContext()
 
-	if len(args) == 0 {
+	givenCtx := ""
+	if len(args) > 0 {
+		givenCtx = args[0]
+	}
+
+	if givenCtx == "" {
 		out = allContexts
 	} else {
-		ctx := args[0]
 		for _, x := range allContexts {
-			if x.Alias == ctx {
+			if x.Alias == givenCtx {
 				out = append(out, x)
 				break
 			}
 		}
+	}
+
+	if len(out) == 0 {
+		return fmt.Errorf("context not found: %q", givenCtx)
 	}
 
 	b := new(bytes.Buffer)
