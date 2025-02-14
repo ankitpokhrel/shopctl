@@ -186,7 +186,7 @@ func (c *ShopConfig) Save() error {
 	if err := c.writer.Merge(k); err != nil {
 		return err
 	}
-	return writeConfig(c.path, c.data)
+	return writeYAML(c.path, c.data)
 }
 
 // GetToken retrieves token of a store from the config.

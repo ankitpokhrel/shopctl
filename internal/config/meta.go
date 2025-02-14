@@ -1,10 +1,7 @@
 package config
 
 import (
-	"os"
 	"sync"
-
-	"github.com/knadh/koanf/parsers/yaml"
 )
 
 const (
@@ -13,23 +10,20 @@ const (
 	KeyTimeStart = "timeStart"
 	KeyTimeEnd   = "timeEnd"
 
-	keyID    = "id"
-	keyStore = "store"
-
 	metaConfigFile = "metadata"
 )
 
 // MetaItems defines item in a metadata file.
 type RootMetaItems struct {
-	ID        string   `koanf:"id"`
-	Store     string   `koanf:"store"`
-	TimeInit  int64    `koanf:"timeInitiated"`
-	TimeStart int64    `koanf:"timeStart"`
-	TimeEnd   int64    `koanf:"timeEnd"`
-	Resources []string `koanf:"resources"`
-	Kind      string   `koanf:"type"`
-	Status    string   `koanf:"status"`
-	User      string   `koanf:"user"`
+	ID        string   `koanf:"id" json:"id"`
+	Store     string   `koanf:"store" json:"store"`
+	TimeInit  int64    `koanf:"timeInitiated" json:"timeInitiated"`
+	TimeStart int64    `koanf:"timeStart" json:"timeStart"`
+	TimeEnd   int64    `koanf:"timeEnd" json:"timeEnd"`
+	Resources []string `koanf:"resources" json:"resources"`
+	Kind      string   `koanf:"type" json:"type"`
+	Status    string   `koanf:"status" json:"status"`
+	User      string   `koanf:"user" json:"user"`
 }
 
 // RootMeta is a root metadata for the initiated backup.
@@ -41,7 +35,7 @@ type RootMeta struct {
 
 // NewRootMeta builds a RootMeta object for the initiated backup.
 func NewRootMeta(loc string, items RootMetaItems) (*RootMeta, error) {
-	cfg, err := newConfig(loc, metaConfigFile, fileTypeYaml)
+	cfg, err := newConfig(loc, metaConfigFile, fileTypeJson)
 	if err != nil {
 		return nil, err
 	}
@@ -59,28 +53,19 @@ func (r *RootMeta) Set(keyAndVal map[string]any) error {
 	defer r.mux.Unlock()
 
 	for k, v := range keyAndVal {
-		// ID and store could only be set once during meta creation.
-		if k != keyID && k != keyStore {
-			r.setData(k, v)
-			if err := r.writer.Set(k, v); err != nil {
-				return err
-			}
-		}
+		r.setData(k, v)
 	}
-
-	data, err := yaml.Parser().Marshal(r.writer.All())
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(r.path, data, modeFile)
+	return writeJSON(r.path, r.data)
 }
 
 // Save writes metadata to the file.
 func (r *RootMeta) Save() error {
-	return writeConfig(r.path, r.data)
+	return writeJSON(r.path, r.data)
 }
 
 func (r *RootMeta) setData(key string, val any) {
+	// Some keys like ID, store and time initiated can only
+	// be set once during meta creation so we skip them.
 	switch key {
 	case KeyStatus:
 		r.data.Status = val.(string)

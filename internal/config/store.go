@@ -128,7 +128,7 @@ func (c *StoreConfig) Save() error {
 	if err := c.writer.Merge(k); err != nil {
 		return err
 	}
-	return writeConfig(c.path, c.data)
+	return writeYAML(c.path, c.data)
 }
 
 // Delete removes the config file.
