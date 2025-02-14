@@ -23,7 +23,6 @@ $ shopctl peek product --id <product_id> --from </path/to/bkp>`
 
 // Flag wraps available command flags.
 type flag struct {
-	store  string
 	id     string
 	handle string
 	from   string
@@ -31,9 +30,6 @@ type flag struct {
 }
 
 func (f *flag) parse(cmd *cobra.Command) {
-	store, err := cmd.Flags().GetString("store")
-	cmdutil.ExitOnErr(err)
-
 	id, err := cmd.Flags().GetString("id")
 	cmdutil.ExitOnErr(err)
 
@@ -60,7 +56,6 @@ See 'shopctl peek product --help' for more info.`),
 		)
 	}
 
-	f.store = store
 	f.id = id
 	f.handle = handle
 	f.from = from
@@ -76,8 +71,11 @@ func NewCmdProduct() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			store := cmd.Context().Value("store").(string)
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-			return peek(cmd, client)
+
+			cmdutil.ExitOnErr(peek(cmd, store, client))
+			return nil
 		},
 	}
 	cmd.Flags().String("id", "", "Peek by product ID")
@@ -89,7 +87,7 @@ func NewCmdProduct() *cobra.Command {
 	return &cmd
 }
 
-func peek(cmd *cobra.Command, client *api.GQLClient) error {
+func peek(cmd *cobra.Command, store string, client *api.GQLClient) error {
 	var (
 		product *schema.Product
 		err     error
@@ -121,6 +119,6 @@ func peek(cmd *cobra.Command, client *api.GQLClient) error {
 	}
 
 	// Convert to Markdown.
-	r := NewFormatter(flag.store, product)
+	r := NewFormatter(store, product)
 	return r.Render()
 }

@@ -70,6 +70,16 @@ func (c *StoreConfig) HasBackupStrategy(strategy string) bool {
 	return false
 }
 
+// GetBackupStrategy returns the given strategy if it exists.
+func (c *StoreConfig) GetBackupStrategy(strategy string) *BackupStrategy {
+	for _, s := range c.data.Strategies {
+		if s.Name == strategy {
+			return &s
+		}
+	}
+	return nil
+}
+
 // SetStoreBackupStrategy adds a store context to the shop config.
 // It will update the context if it already exist.
 func (c *StoreConfig) SetStoreBackupStrategy(bst *BackupStrategy) {

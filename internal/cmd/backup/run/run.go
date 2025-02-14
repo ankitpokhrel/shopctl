@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"sync"
@@ -21,69 +20,36 @@ import (
 
 const helpText = `Run starts a backup process based on the given config.`
 
-type flag struct {
-	store string
-	alias string
-}
-
-func (f *flag) parse(cmd *cobra.Command) {
-	store, err := cmd.Flags().GetString("store")
-	cmdutil.ExitOnErr(err)
-
-	alias, err := cmd.Flags().GetString("alias")
-	cmdutil.ExitOnErr(err)
-
-	if alias == "" {
-		cmdutil.ExitOnErr(
-			fmt.Errorf(`Error: config alias is required.
-
-Usage:
-  $ shopctl backup run -s <store> -a <alias>
-
-See 'shopctl backup run --help' for more info.`),
-		)
-	}
-
-	f.store = store
-	f.alias = alias
-}
-
 // NewCmdRun creates a new run command.
 func NewCmdRun() *cobra.Command {
-	cmd := cobra.Command{
+	return &cobra.Command{
 		Use:     "run",
 		Short:   "Run starts a backup process",
 		Long:    helpText,
 		Aliases: []string{"start", "exec"},
-		RunE:    run,
-	}
-	cmd.Flags().StringP("alias", "a", "", "Alias of the config to run")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context().Value("context").(*config.StoreContext)
+			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
+			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
+			logger := cmd.Context().Value("logger").(*tlog.Logger)
 
-	return &cmd
+			cmdutil.ExitOnErr(run(client, ctx, strategy, logger))
+			return nil
+		},
+	}
 }
 
-func run(cmd *cobra.Command, _ []string) error {
-	flag := &flag{}
-	flag.parse(cmd)
-
-	preset, err := config.ReadAllPreset(flag.store, flag.alias)
-	if err != nil {
-		cmdutil.Fail("Error: Preset with alias '%s' couldn't be found for store '%s'", flag.alias, flag.store)
-		os.Exit(1)
-	}
-
+func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
 	bkpEng := engine.NewBackup(
-		flag.store,
-		engine.WithBackupDir(preset.BkpDir),
-		engine.WithBackupPrefix(preset.BkpPrefix),
+		ctx.Store,
+		engine.WithBackupDir(strategy.BkpDir),
+		engine.WithBackupPrefix(strategy.BkpPrefix),
 	)
 	eng := engine.New(bkpEng)
-	client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-	logger := cmd.Context().Value("logger").(*tlog.Logger)
 
-	meta, err := saveRootMeta(bkpEng, preset)
+	meta, err := saveRootMeta(bkpEng, strategy)
 	if err != nil {
-		cmdutil.Fail("Error: Unable to create backup files; make sure that the location is writable by the user", flag.alias, flag.store)
+		cmdutil.Fail("Error: Unable to create backup files; make sure that the location is writable by the user")
 		os.Exit(1)
 	}
 
@@ -101,10 +67,10 @@ func run(cmd *cobra.Command, _ []string) error {
 		wg  sync.WaitGroup
 		rnr runner.Runner
 
-		runners = make([]runner.Runner, 0, len(preset.Resources))
+		runners = make([]runner.Runner, 0, len(strategy.Resources))
 	)
 
-	for _, resource := range preset.Resources {
+	for _, resource := range strategy.Resources {
 		switch engine.ResourceType(resource) {
 		case engine.Product:
 			rnr = product.NewRunner(eng, client, logger)
@@ -135,7 +101,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func saveRootMeta(bkpEng *engine.Backup, preset *config.PresetItems) (*config.RootMeta, error) {
+func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*config.RootMeta, error) {
 	u, _ := user.Current()
 
 	meta, err := config.NewRootMeta(bkpEng.Dir(), config.RootMetaItems{
@@ -144,8 +110,8 @@ func saveRootMeta(bkpEng *engine.Backup, preset *config.PresetItems) (*config.Ro
 		TimeInit:  bkpEng.Timestamp().Unix(),
 		TimeStart: time.Now().Unix(),
 		Status:    string(engine.BackupStatusRunning),
-		Resources: preset.Resources,
-		Kind:      preset.Kind,
+		Resources: strategy.Resources,
+		Kind:      strategy.Kind,
 		User:      u.Username,
 	})
 	if err != nil {

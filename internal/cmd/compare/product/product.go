@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	cmputil "github.com/ankitpokhrel/shopctl/internal/cmdutil/compare"
+	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/pkg/structdiff"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -49,16 +50,12 @@ var (
 
 // Flag wraps available command flags.
 type flag struct {
-	store string
-	id    string
-	from  string
-	with  string
+	id   string
+	from string
+	with string
 }
 
 func (f *flag) parse(cmd *cobra.Command) {
-	store, err := cmd.Flags().GetString("store")
-	cmdutil.ExitOnErr(err)
-
 	id, err := cmd.Flags().GetString("id")
 	cmdutil.ExitOnErr(err)
 
@@ -71,8 +68,8 @@ func (f *flag) parse(cmd *cobra.Command) {
 	id = cmdutil.ShopifyProductID(id)
 
 	usage := `Usage:
-  $ shopctl cmp product --id <product_id> --with </path/to/bkp>
-  $ shopctl cmp product --id <product_id> --from </path/to/source/bkp> --with </path/to/bkp>
+  $ shopctl cmp product --id <product_id> --with <bkp_id>
+  $ shopctl cmp product --id <product_id> --from </path/to/source/bkp> --with <bkp_id>
 
 See 'shopctl cmp product --help' for more info.`
 
@@ -87,7 +84,6 @@ See 'shopctl cmp product --help' for more info.`
 		)
 	}
 
-	f.store = store
 	f.id = id
 	f.from = from
 	f.with = with
@@ -102,8 +98,11 @@ func NewCmdProduct() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-			return compare(cmd, client)
+
+			cmdutil.ExitOnErr(compare(cmd, client, strategy))
+			return nil
 		},
 	}
 	cmd.Flags().String("id", "", "Compare by product ID")
@@ -115,7 +114,7 @@ func NewCmdProduct() *cobra.Command {
 	return &cmd
 }
 
-func compare(cmd *cobra.Command, client *api.GQLClient) error {
+func compare(cmd *cobra.Command, client *api.GQLClient, strategy *config.BackupStrategy) error {
 	var (
 		product *schema.Product
 		reg     *registry.Registry
@@ -139,7 +138,12 @@ func compare(cmd *cobra.Command, client *api.GQLClient) error {
 		return err
 	}
 
-	reg, err = registry.NewRegistry(flag.with)
+	path, err := registry.LookForDirWithSuffix(flag.with, strategy.BkpDir)
+	if err != nil {
+		return err
+	}
+
+	reg, err = registry.NewRegistry(path)
 	if err != nil {
 		return err
 	}

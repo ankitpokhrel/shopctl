@@ -7,6 +7,8 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/compare/product"
+	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
+	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
 const helpText = `Compare lets you compare data in the store with the backup
@@ -22,18 +24,16 @@ func NewCmdCompare() *cobra.Command {
 		Aliases:     []string{"cmp", "diff"},
 		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			store, err := cmd.Flags().GetString("store")
-			if err != nil {
-				return err
-			}
-
-			gqlClient := api.NewGQLClient(store)
-			cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
-
+			cmdutil.ExitOnErr(preRun(cmd, args))
 			return nil
 		},
-		RunE: compare,
+		RunE: run,
 	}
+
+	cmd.PersistentFlags().StringP(
+		"strategy", "s", "",
+		"Override current-strategy",
+	)
 
 	cmd.AddCommand(
 		product.NewCmdProduct(),
@@ -42,6 +42,29 @@ func NewCmdCompare() *cobra.Command {
 	return &cmd
 }
 
-func compare(cmd *cobra.Command, _ []string) error {
+func preRun(cmd *cobra.Command, _ []string) error {
+	cfg, err := config.NewShopConfig()
+	if err != nil {
+		return err
+	}
+
+	ctx, err := cmdutil.GetContext(cmd, cfg)
+	if err != nil {
+		return err
+	}
+
+	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
+	if err != nil {
+		return err
+	}
+
+	gqlClient := api.NewGQLClient(ctx.Store)
+	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
+	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
+
+	return nil
+}
+
+func run(cmd *cobra.Command, _ []string) error {
 	return cmd.Help()
 }

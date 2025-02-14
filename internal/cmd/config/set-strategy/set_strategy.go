@@ -72,10 +72,11 @@ See 'shopctl config set-strategy --help' for more info.`),
 // NewCmdSetStrategy is a cmd to add/update a backup strategy.
 func NewCmdSetStrategy() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "set-strategy STRATEGY_NAME",
-		Short: "Add/update a backup strategy",
-		Long:  helpText,
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "set-strategy STRATEGY_NAME",
+		Short:   "Add/update a backup strategy",
+		Long:    helpText,
+		Example: example,
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(run(cmd, args))
 			return nil

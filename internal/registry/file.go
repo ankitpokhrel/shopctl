@@ -63,7 +63,7 @@ func lookForDir(in string, cmpFn func(os.FileInfo) bool) (string, error) {
 	var (
 		loc string
 
-		maxDepth  = 4
+		maxDepth  = 5
 		baseDepth = strings.Count(filepath.Clean(in), string(os.PathSeparator))
 	)
 

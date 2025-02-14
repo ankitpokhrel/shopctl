@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // ExitOnErr exits the program if an error is not nil.
@@ -54,6 +57,52 @@ func GetStoreSlug(store string) string {
 		slug = pieces[0]
 	}
 	return slug
+}
+
+// GetContext gets current context details from the config.
+func GetContext(cmd *cobra.Command, cfg *config.ShopConfig) (*config.StoreContext, error) {
+	usrCtx, err := cmd.Flags().GetString("context")
+	if err != nil {
+		return nil, err
+	}
+
+	if usrCtx == "" {
+		currCtx := cfg.CurrentContext()
+		if currCtx == "" {
+			return nil, fmt.Errorf("current-context is not set; either set a context with %q or use %q flag", "shopctl use-context context-name", "-c")
+		}
+		usrCtx = currCtx
+	}
+
+	ctx := cfg.GetContext(usrCtx)
+	if ctx == nil {
+		return nil, fmt.Errorf("no context exists with the name: %q", usrCtx)
+	}
+
+	return ctx, nil
+}
+
+// GetStrategy gets current backup strategy details from the config.
+func GetStrategy(cmd *cobra.Command, ctx *config.StoreContext, cfg *config.ShopConfig) (*config.BackupStrategy, error) {
+	usrStrategy, err := cmd.Flags().GetString("strategy")
+	if err != nil {
+		return nil, err
+	}
+
+	storeCfg, err := config.NewStoreConfig(ctx.Store, ctx.Alias)
+	if err != nil {
+		return nil, err
+	}
+
+	if usrStrategy == "" {
+		currStrategy := cfg.CurrentStrategy()
+		if currStrategy == "" {
+			return nil, fmt.Errorf("current-strategy is not set; either set a strategy with %q or use %q flag", "shopctl use-strategy strategy-name", "-s")
+		}
+		usrStrategy = currStrategy
+	}
+
+	return storeCfg.GetBackupStrategy(usrStrategy), nil
 }
 
 // stripProtocol strips the http protocol from a URL.

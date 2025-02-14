@@ -3,17 +3,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/current-context"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/current-strategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-context"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-strategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/get-contexts"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/get-strategies"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-context"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-strategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/set-strategy"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/use-context"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/config/use-strategy"
+	cc "github.com/ankitpokhrel/shopctl/internal/cmd/config/current-context"
+	cs "github.com/ankitpokhrel/shopctl/internal/cmd/config/current-strategy"
+	dc "github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-context"
+	ds "github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-strategy"
+	gc "github.com/ankitpokhrel/shopctl/internal/cmd/config/get-contexts"
+	gs "github.com/ankitpokhrel/shopctl/internal/cmd/config/get-strategies"
+	rc "github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-context"
+	rs "github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-strategy"
+	ss "github.com/ankitpokhrel/shopctl/internal/cmd/config/set-strategy"
+	uc "github.com/ankitpokhrel/shopctl/internal/cmd/config/use-context"
+	us "github.com/ankitpokhrel/shopctl/internal/cmd/config/use-strategy"
 )
 
 const helpText = `Modify shopconfig files using commands like "shopctl config set-context my-context".`
@@ -30,17 +30,17 @@ func NewCmdConfig() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		usecontext.NewCmdUseContext(),
-		currentcontext.NewCmdCurrentContext(),
-		deletecontext.NewCmdDeleteContext(),
-		getcontexts.NewCmdGetContexts(),
-		renamecontext.NewCmdRenameContext(),
-		setstrategy.NewCmdSetStrategy(),
-		usestrategy.NewCmdUseStrategy(),
-		currentstrategy.NewCmdCurrentStrategy(),
-		deletestrategy.NewCmdDeleteStrategy(),
-		getstrategies.NewCmdGetStrategies(),
-		renamestrategy.NewCmdRenameStrategy(),
+		uc.NewCmdUseContext(),
+		cc.NewCmdCurrentContext(),
+		dc.NewCmdDeleteContext(),
+		gc.NewCmdGetContexts(),
+		rc.NewCmdRenameContext(),
+		ss.NewCmdSetStrategy(),
+		us.NewCmdUseStrategy(),
+		cs.NewCmdCurrentStrategy(),
+		ds.NewCmdDeleteStrategy(),
+		gs.NewCmdGetStrategies(),
+		rs.NewCmdRenameStrategy(),
 	)
 
 	return &cmd

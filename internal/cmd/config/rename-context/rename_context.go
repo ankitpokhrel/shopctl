@@ -66,7 +66,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 	shopCfg.RenameContext(flag.oldName, flag.newName)
 	if shopCfg.CurrentContext() == flag.oldName {
-		shopCfg.SetCurrentContext(flag.newName)
+		if err := shopCfg.SetCurrentContext(flag.newName); err != nil {
+			return err
+		}
 	}
 	if err := shopCfg.Save(); err != nil {
 		return err

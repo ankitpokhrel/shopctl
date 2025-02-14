@@ -23,24 +23,16 @@ import (
 const helpText = `Run starts a data restoration process based on the given config and backup id.`
 
 type flag struct {
-	store     string
-	alias     string
 	id        string
 	all       bool
 	resources []string
 }
 
 func (f *flag) parse(cmd *cobra.Command) {
-	store, err := cmd.Flags().GetString("store")
-	cmdutil.ExitOnErr(err)
-
-	alias, err := cmd.Flags().GetString("alias")
-	cmdutil.ExitOnErr(err)
-
 	id, err := cmd.Flags().GetString("id")
 	cmdutil.ExitOnErr(err)
 
-	if alias == "" || id == "" {
+	if id == "" {
 		cmdutil.ExitOnErr(
 			fmt.Errorf(`Error: config alias and backup id is required.
 
@@ -62,8 +54,6 @@ See 'shopctl restore run --help' for more info.`),
 	all, err := cmd.Flags().GetBool("all")
 	cmdutil.ExitOnErr(err)
 
-	f.store = store
-	f.alias = alias
 	f.id = id
 	f.all = all
 	f.resources = resources
@@ -76,9 +66,16 @@ func NewCmdRun() *cobra.Command {
 		Short:   "Run starts a data restoration process",
 		Long:    helpText,
 		Aliases: []string{"start", "exec"},
-		RunE:    run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context().Value("context").(*config.StoreContext)
+			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
+			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
+			logger := cmd.Context().Value("logger").(*tlog.Logger)
+
+			cmdutil.ExitOnErr(run(cmd, client, ctx, strategy, logger))
+			return nil
+		},
 	}
-	cmd.Flags().StringP("alias", "a", "", "Alias of the config to run")
 	cmd.Flags().String("id", "", "ID of the bakcup to restore")
 	cmd.Flags().StringP("resource", "r", "", "Resource types to restore (comma separated)")
 	cmd.Flags().Bool("all", false, "Restore all resources configured in the backup config")
@@ -88,42 +85,25 @@ func NewCmdRun() *cobra.Command {
 	return &cmd
 }
 
-func run(cmd *cobra.Command, _ []string) error {
+func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
 	flag := &flag{}
 	flag.parse(cmd)
 
-	preset, err := config.ReadAllPreset(flag.store, flag.alias)
-	if err != nil {
-		cmdutil.Fail("Error: Preset with alias '%s' couldn't be found for store '%s'", flag.alias, flag.store)
-		os.Exit(1)
-	}
-
-	eng := engine.New(engine.NewRestore(flag.store))
-	client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-	logger := cmd.Context().Value("logger").(*tlog.Logger)
-
-	if err != nil {
-		cmdutil.Fail("Error: Unable to create backup files; make sure that the location is writable by the user")
-		os.Exit(1)
-	}
-
 	resources := flag.resources
 	if flag.all && len(resources) == 0 {
-		resources = preset.Resources
+		resources = strategy.Resources
 	}
 	if len(resources) == 0 {
-		cmdutil.ExitOnErr(
-			fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.
+		return fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.
 
 Usage:
   # Restore products and customers.
-  $ shopctl restore run -s <store> -a <alias> --id <backup id> --resource=product,customer
+  $ shopctl restore run  -a <alias> --id <backup id> --resource=product,customer
 
   # Restore everything based on backup config.
   $ shopctl restore run -s <store> -a <alias> --id <backup id> --all
 
-See 'shopctl restore run --help' for more info.`),
-		)
+See 'shopctl restore run --help' for more info.`)
 	}
 
 	var (
@@ -133,11 +113,12 @@ See 'shopctl restore run --help' for more info.`),
 		runners = make([]runner.Runner, 0, len(resources))
 	)
 
-	path, err := registry.LookForDirWithSuffix(flag.id, preset.BkpDir)
+	path, err := registry.LookForDirWithSuffix(flag.id, strategy.BkpDir)
 	if err != nil {
-		cmdutil.Fail("Error: Unable to find backup with id '%s' in config '%s' of store '%s'", flag.id, flag.alias, flag.store)
+		cmdutil.Fail("Error: Unable to find backup with id %q in strategy %q of context %q", flag.id, strategy.Name, ctx.Alias)
 		os.Exit(1)
 	}
+	eng := engine.New(engine.NewRestore(ctx.Store))
 
 	// TODO:
 	// We need to maintain the order in which products, customers and orders are restored.
