@@ -12,7 +12,7 @@ type Variant struct {
 }
 
 func (v *Variant) Handle() (any, error) {
-	v.Logger.V(tlog.VL1).Infof("Product %s: processing variants", v.ProductID)
+	v.Logger.Infof("Product %s: processing variants", v.ProductID)
 
 	variants, err := v.Client.GetProductVariants(v.ProductID)
 	if err != nil {

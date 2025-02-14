@@ -12,7 +12,7 @@ type Media struct {
 }
 
 func (m *Media) Handle() (any, error) {
-	m.Logger.V(tlog.VL1).Infof("Product %s: processing media items", m.ProductID)
+	m.Logger.Infof("Product %s: processing media items", m.ProductID)
 
 	medias, err := m.Client.GetProductMedias(m.ProductID)
 	if err != nil {

@@ -51,7 +51,7 @@ func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 		opt(&c)
 	}
 	if c.logger == nil {
-		c.logger = tlog.New(tlog.VerboseLevel(tlog.VL2))
+		c.logger = tlog.New(tlog.VerboseLevel(tlog.VL1), false)
 	}
 	c.Client = client.NewClient(server, token, client.WithLogger(c.logger))
 

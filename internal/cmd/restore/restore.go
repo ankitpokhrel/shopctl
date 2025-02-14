@@ -47,8 +47,16 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	v, _ := cmd.Flags().GetCount("verbose")
-	lgr := tlog.New(tlog.VerboseLevel(v))
+	v, err := cmd.Flags().GetCount("verbose")
+	if err != nil {
+		return err
+	}
+
+	quiet, err := cmd.Flags().GetBool("quiet")
+	if err != nil {
+		return err
+	}
+	lgr := tlog.New(tlog.VerboseLevel(v), quiet)
 
 	cfg, err := config.NewShopConfig()
 	if err != nil {
@@ -65,7 +73,7 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	gqlClient := api.NewGQLClient(ctx.Store)
+	gqlClient := api.NewGQLClient(ctx.Store, api.LogRequest(lgr))
 	cmd.SetContext(context.WithValue(cmd.Context(), "context", ctx))
 	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
 	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))

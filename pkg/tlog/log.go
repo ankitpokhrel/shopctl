@@ -2,6 +2,7 @@ package tlog
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"time"
 
@@ -29,6 +30,7 @@ var noopLogger = slog.New(zapslog.NewHandler(zapcore.NewNopCore()))
 // Logger is an app logger.
 type Logger struct {
 	writer    *slog.Logger
+	errWriter *slog.Logger
 	verbosity VerboseLevel
 }
 
@@ -69,13 +71,21 @@ func newConsole(options ...zap.Option) (*zap.Logger, error) {
 }
 
 // New constructs a new logger.
-func New(v VerboseLevel) *Logger {
+func New(v VerboseLevel, quiet bool) *Logger {
 	zapLogger := zap.Must(newConsole())
 	defer func() { _ = zapLogger.Sync() }()
 
-	logger := slog.New(zapslog.NewHandler(zapLogger.Sugar().Desugar().Core()))
+	w := slog.New(zapslog.NewHandler(zapLogger.Sugar().Desugar().Core()))
+
+	var logger *slog.Logger
+	if quiet {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	} else {
+		logger = w
+	}
 	return &Logger{
 		writer:    logger,
+		errWriter: w,
 		verbosity: v,
 	}
 }
@@ -110,12 +120,12 @@ func (l *Logger) Warnf(msg string, args ...any) {
 
 // Error logs error messages.
 func (l *Logger) Error(msg string, args ...any) {
-	l.writer.Error(msg, args...)
+	l.errWriter.Error(msg, args...)
 }
 
 // Errorf logs formatted error messages.
 func (l *Logger) Errorf(msg string, args ...any) {
-	l.writer.Error(fmt.Sprintf(msg, args...))
+	l.errWriter.Error(fmt.Sprintf(msg, args...))
 }
 
 // Debug logs debug messages for verbosity level >= VL3.

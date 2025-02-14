@@ -12,7 +12,7 @@ type MetaField struct {
 }
 
 func (m *MetaField) Handle() (any, error) {
-	m.Logger.V(tlog.VL1).Infof("Customer %s: processing meta fields", m.CustomerID)
+	m.Logger.Infof("Customer %s: processing meta fields", m.CustomerID)
 
 	metafields, err := m.Client.GetCustomerMetaFields(m.CustomerID)
 	if err != nil {

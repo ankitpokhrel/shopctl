@@ -77,7 +77,7 @@ func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.Backu
 		case engine.Customer:
 			rnr = customer.NewRunner(eng, client, logger)
 		default:
-			logger.V(tlog.VL1).Warnf("Skipping '%s': Invalid resource", resource)
+			logger.Warnf("Skipping '%s': Invalid resource", resource)
 			continue
 		}
 		runners = append(runners, rnr)
