@@ -204,27 +204,6 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
       edges {
         node {
           %s
-          image {
-            id
-            altText
-            url
-            height
-            width
-            metafields(first: 5) {
-              edges {
-                node {
-                  id
-                  description
-                }
-              }
-              nodes {
-                id
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-          }
         }
       }
     }
@@ -237,6 +216,9 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
 	}
 	return out, nil
 }
@@ -269,6 +251,9 @@ metafields(first: 200) {
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
 	return out, nil
 }
 
@@ -299,6 +284,9 @@ media(first: 250) {
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
 	}
 	return out, nil
 }

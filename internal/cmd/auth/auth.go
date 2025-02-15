@@ -16,6 +16,8 @@ func NewCmdAuth() *cobra.Command {
 		RunE:        auth,
 	}
 
+	cmd.PersistentFlags().StringP("store", "s", "", "Shopify store to login to")
+
 	cmd.AddCommand(
 		login.NewCmdLogin(),
 	)

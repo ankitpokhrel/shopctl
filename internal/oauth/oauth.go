@@ -37,8 +37,10 @@ var (
 		"read_content",
 		"read_online_store_pages",
 
-		// Product, ProductVariant, Collection, ResourceFeedback.
+		// Product, ProductVariant, Collection, Inventory.
 		"read_products",
+		"read_product_listings",
+		"read_inventory",
 
 		// Customer data.
 		"read_customers",

@@ -36,6 +36,10 @@ const (
  requiresSellingPlan
  templateSuffix
  vendor
+ seo {
+    title
+    description
+}
  options {
    name
    values
@@ -44,31 +48,112 @@ const (
      id
      name
      hasVariants
-   }
- }`
+  }
+}
+compareAtPriceRange{
+  maxVariantCompareAtPrice{
+    amount
+    currencyCode
+  }
+  minVariantCompareAtPrice{
+     amount
+    currencyCode
+  }
+}
+priceRangeV2{
+  maxVariantPrice{
+    amount
+    currencyCode
+  }
+  minVariantPrice{
+    amount
+    currencyCode
+  }
+}`
 
 	fieldsVariant = `id
- title
- displayName
- price
- sku
- position
- availableForSale
- barcode
- compareAtPrice
- inventoryQuantity
- sellableOnlineQuantity
- requiresComponents
- taxable
- taxCode
- createdAt
- updatedAt`
+legacyResourceId
+title
+displayName
+sku
+position
+price
+unitPriceMeasurement {
+  measuredType
+  quantityUnit
+  quantityValue
+  referenceUnit
+  referenceValue
+}
+image {
+  id
+  altText
+  url
+  height
+  width
+}
+availableForSale
+barcode
+compareAtPrice
+sellableOnlineQuantity
+requiresComponents
+taxable
+taxCode
+selectedOptions {
+  name
+  optionValue {
+    id
+  }
+  value
+}
+sellingPlanGroupsCount {
+  count
+  precision
+}
+inventoryPolicy
+inventoryQuantity
+inventoryItem {
+  id
+  legacyResourceId
+  sku
+  countryCodeOfOrigin
+  provinceCodeOfOrigin
+  harmonizedSystemCode
+  duplicateSkuCount
+  locationsCount{
+    count
+    precision
+  }
+  inventoryHistoryUrl
+  measurement {
+    id
+    weight {
+      unit
+      value
+    }
+  }
+  requiresShipping
+  tracked
+  trackedEditable {
+    locked
+    reason
+  }
+  unitCost {
+    amount
+    currencyCode
+  }
+  createdAt
+  updatedAt
+}
+createdAt
+updatedAt`
 
 	fieldsMedia = `id
 alt
 status
 preview {
   image {
+    id
     altText
     url
     height
@@ -84,8 +169,48 @@ mediaWarnings { message }`
 namespace
 key
 jsonValue
-description
+definition {
+  id
+  key
+  namespace
+  name
+  description
+  ownerType
+  metafieldsCount
+  type {
+    name
+    category
+  }
+  validations {
+    __typename
+    name
+    type
+    value
+  }
+  validationStatus
+  useAsCollectionCondition
+  standardTemplate {
+    id
+    key
+    name
+    description
+    namespace
+    ownerTypes
+    type {
+      name
+      category
+    }
+    validations {
+      type
+      name
+      value
+    }
+    visibleToStorefrontApi
+  }
+  pinnedPosition
+}
 type
+description
 ownerType
 createdAt
 updatedAt`
