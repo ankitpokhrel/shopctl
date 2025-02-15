@@ -42,7 +42,6 @@ func NewCmdRun() *cobra.Command {
 func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
 	bkpEng := engine.NewBackup(
 		ctx.Store,
-		engine.WithBackupDir(strategy.BkpDir),
 		engine.WithBackupPrefix(strategy.BkpPrefix),
 	)
 	eng := engine.New(bkpEng)
@@ -97,6 +96,12 @@ func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.Backu
 	}
 
 	wg.Wait()
+	logger.V(tlog.VL1).Infof("We're done with fetching data. Archiving...")
+
+	if err := cmdutil.Archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir()); err != nil {
+		return err
+	}
+
 	logger.Infof("Backup complete in %s", time.Since(start))
 	return nil
 }
@@ -104,7 +109,7 @@ func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.Backu
 func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*config.RootMeta, error) {
 	u, _ := user.Current()
 
-	meta, err := config.NewRootMeta(bkpEng.Dir(), config.RootMetaItems{
+	meta, err := config.NewRootMeta(bkpEng.Root(), config.RootMetaItems{
 		ID:        bkpEng.ID(),
 		Store:     bkpEng.Store(),
 		TimeInit:  bkpEng.Timestamp().Unix(),

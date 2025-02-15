@@ -1,14 +1,18 @@
 package cmdutil
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
+
+	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
 // ExitOnErr exits the program if an error is not nil.
@@ -103,6 +107,31 @@ func GetStrategy(cmd *cobra.Command, ctx *config.StoreContext, cfg *config.ShopC
 	}
 
 	return storeCfg.GetBackupStrategy(usrStrategy), nil
+}
+
+// Archive archives the source and saves it to the destination.
+func Archive(src string, dest string, dir string) error {
+	ctx := context.Background()
+
+	files, err := archives.FilesFromDisk(ctx, nil, map[string]string{
+		src: ".",
+	})
+	if err != nil {
+		return err
+	}
+
+	zipFile := filepath.Join(dest, fmt.Sprintf("%s.tar.gz", dir))
+	out, err := os.Create(zipFile)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = out.Close() }()
+
+	format := archives.CompressedArchive{
+		Compression: archives.Gz{},
+		Archival:    archives.Tar{},
+	}
+	return format.Archive(ctx, out, files)
 }
 
 // stripProtocol strips the http protocol from a URL.

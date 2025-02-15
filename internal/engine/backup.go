@@ -33,6 +33,7 @@ type Backup struct {
 	id        string
 	store     string
 	root      string
+	dir       string
 	prefix    string
 	timestamp time.Time
 }
@@ -47,6 +48,7 @@ func NewBackup(store string, opts ...Option) *Backup {
 	bkp := Backup{
 		id:        id,
 		store:     store,
+		root:      os.TempDir(),
 		timestamp: now,
 	}
 
@@ -58,8 +60,8 @@ func NewBackup(store string, opts ...Option) *Backup {
 		bkp.prefix = "backup"
 	}
 
-	dir := fmt.Sprintf("%s_%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"), id)
-	bkp.root = filepath.Join(bkp.root, dir)
+	bkp.dir = fmt.Sprintf("%s_%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"), id)
+	bkp.root = filepath.Join(bkp.root, bkp.dir)
 
 	return &bkp
 }
@@ -88,9 +90,14 @@ func (b *Backup) Store() string {
 	return b.store
 }
 
-// Dir returns root backup directory.
-func (b *Backup) Dir() string {
+// Root returns root backup directory.
+func (b *Backup) Root() string {
 	return b.root
+}
+
+// Dir returns backup directory name.
+func (b *Backup) Dir() string {
+	return b.dir
 }
 
 // Timestamp returns backup timestamp.
@@ -112,10 +119,7 @@ func (b *Backup) Do(rs Resource) error {
 		return err
 	}
 
-	if err := b.saveJSON(dest, data); err != nil {
-		return err
-	}
-	return nil
+	return b.saveJSON(dest, data)
 }
 
 // saveJSON saves data to a JSON file.
