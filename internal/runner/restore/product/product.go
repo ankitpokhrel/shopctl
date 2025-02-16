@@ -83,3 +83,8 @@ func (r *Runner) restore() error {
 
 	return nil
 }
+
+// TODO.
+func (r *Runner) Stats() string {
+	return ""
+}

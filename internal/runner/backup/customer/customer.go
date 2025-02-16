@@ -7,6 +7,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/internal/runner/backup/customer/provider"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
@@ -19,6 +20,7 @@ type Runner struct {
 	bkpEng *engine.Backup
 	client *api.GQLClient
 	logger *tlog.Logger
+	stats  *runner.Summary
 }
 
 // NewRunner constructs a new backup runner.
@@ -30,12 +32,18 @@ func NewRunner(eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *
 		bkpEng: bkpEng,
 		client: client,
 		logger: logger,
+		stats:  &runner.Summary{},
 	}
 }
 
 // Kind returns runner type; implements `runner.Runner` interface.
 func (r *Runner) Kind() engine.ResourceType {
 	return engine.Customer
+}
+
+// Stats returns runner stats.
+func (r *Runner) Stats() string {
+	return r.stats.String()
 }
 
 // Run executes customer backup; implements `runner.Runner` interface.
@@ -50,7 +58,10 @@ func (r *Runner) Run() error {
 
 	for res := range r.eng.Run(engine.Customer) {
 		if res.Err != nil {
+			r.stats.Failed += 1
 			r.logger.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
+		} else if res.ResourceType == engine.Customer {
+			r.stats.Passed += 1
 		}
 	}
 
@@ -73,6 +84,8 @@ func (r *Runner) backup(limit int, after *string) {
 	}()
 
 	for customers := range customersCh {
+		r.stats.Count += len(customers.Data.Customers.Edges)
+
 		for _, customer := range customers.Data.Customers.Edges {
 			cid := engine.ExtractNumericID(customer.Node.ID)
 			hash := engine.GetHashDir(cid)

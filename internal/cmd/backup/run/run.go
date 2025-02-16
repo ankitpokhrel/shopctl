@@ -1,8 +1,11 @@
 package run
 
 import (
+	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,7 +21,14 @@ import (
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
-const helpText = `Run starts a backup process based on the given config.`
+const (
+	helpText = `Run starts a backup process based on the given config.`
+
+	repeatedDashes = "" +
+		"-------------------------------"
+	repeatedEquals = "" +
+		"==============================="
+)
 
 // NewCmdRun creates a new run command.
 func NewCmdRun() *cobra.Command {
@@ -33,13 +43,18 @@ func NewCmdRun() *cobra.Command {
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 			logger := cmd.Context().Value("logger").(*tlog.Logger)
 
-			cmdutil.ExitOnErr(run(client, ctx, strategy, logger))
+			cmdutil.ExitOnErr(run(cmd, client, ctx, strategy, logger))
 			return nil
 		},
 	}
 }
 
-func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
+func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
+	quiet, err := cmd.Flags().GetBool("quiet")
+	if err != nil {
+		return err
+	}
+
 	bkpEng := engine.NewBackup(
 		ctx.Store,
 		engine.WithBackupPrefix(strategy.BkpPrefix),
@@ -101,8 +116,11 @@ func run(client *api.GQLClient, ctx *config.StoreContext, strategy *config.Backu
 	if err := cmdutil.Archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir()); err != nil {
 		return err
 	}
-
 	logger.Infof("Backup complete in %s", time.Since(start))
+
+	if !quiet {
+		summarize(strategy, bkpEng, runners)
+	}
 	return nil
 }
 
@@ -126,4 +144,26 @@ func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*conf
 		return nil, err
 	}
 	return meta, nil
+}
+
+func summarize(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners []runner.Runner) {
+	title := func(msg string, sep string) {
+		fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
+	}
+
+	title("BACKUP SUMMARY", repeatedEquals)
+	fmt.Printf(`ID: %s
+Strategy: %s
+Store: %s
+Type: %s
+Path: %s
+`,
+		bkpEng.ID(), strategy.Name, bkpEng.Store(),
+		strategy.Kind, filepath.Join(strategy.BkpDir, bkpEng.Dir()),
+	)
+	for _, rnr := range runners {
+		fmt.Println()
+		title(strings.ToTitle(string(rnr.Kind())), repeatedDashes)
+		fmt.Println(rnr.Stats())
+	}
 }
