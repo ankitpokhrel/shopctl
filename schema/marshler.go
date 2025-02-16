@@ -104,6 +104,37 @@ func (m MetafieldDefinition) MarshalJSON() ([]byte, error) {
 	return sanitizeAndMarshal(patch(m), rmAlways, nil)
 }
 
+func (c Customer) MarshalJSON() ([]byte, error) {
+	type patch Customer
+
+	rmAlways := []string{
+		"addresses",
+		"companyContactProfiles",
+		"events",
+		"orders",
+		"mergeable",
+		"metafields",
+		"paymentMethods",
+		"storeCreditAccounts",
+		"subscriptionContracts",
+	}
+	rmIfNil := []string{
+		"lastOrder",
+		"metafield",
+	}
+	return sanitizeAndMarshal(patch(c), rmAlways, rmIfNil)
+}
+
+func (m MailingAddressConnection) MarshalJSON() ([]byte, error) {
+	type patch MailingAddressConnection
+
+	rmAlways := []string{
+		"edges",
+		"pageInfo",
+	}
+	return sanitizeAndMarshal(patch(m), rmAlways, nil)
+}
+
 func (i ProductInput) MarshalJSON() ([]byte, error) {
 	type patch ProductInput
 

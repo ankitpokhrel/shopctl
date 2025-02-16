@@ -216,6 +216,7 @@ createdAt
 updatedAt`
 
 	fieldsCustomer = `id
+legacyResourceId
 firstName
 lastName
 displayName
@@ -225,9 +226,17 @@ validEmailAddress
 phone
 tags
 taxExempt
+taxExemptions
 state
 note
 numberOfOrders
+image {
+  id
+  altText
+  url
+  height
+  width
+}
 emailMarketingConsent {
   consentUpdatedAt
   marketingOptInLevel
@@ -259,6 +268,14 @@ amountSpent {
   amount
   currencyCode
 }
+statistics {
+    __typename
+  predictedSpendTier
+}
+canDelete
+dataSaleOptOut
+productSubscriberStatus
+unsubscribeUrl
 createdAt
 updatedAt`
 )
