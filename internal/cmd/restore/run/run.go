@@ -91,7 +91,11 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 
 	resources := flag.resources
 	if flag.all && len(resources) == 0 {
-		resources = strategy.Resources
+		rs := make([]string, 0, len(strategy.Resources))
+		for _, r := range strategy.Resources {
+			rs = append(rs, string(r.Resource))
+		}
+		resources = rs
 	}
 	if len(resources) == 0 {
 		return fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.

@@ -106,7 +106,11 @@ func GetStrategy(cmd *cobra.Command, ctx *config.StoreContext, cfg *config.ShopC
 		usrStrategy = currStrategy
 	}
 
-	return storeCfg.GetBackupStrategy(usrStrategy), nil
+	strategy := storeCfg.GetBackupStrategy(usrStrategy)
+	if strategy == nil {
+		return nil, fmt.Errorf("strategy not found; either set a strategy with %q or use %q flag", "shopctl use-strategy strategy-name", "-s")
+	}
+	return strategy, nil
 }
 
 // Archive archives the source and saves it to the destination.

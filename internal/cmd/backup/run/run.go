@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -63,7 +62,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 
 	meta, err := saveRootMeta(bkpEng, strategy)
 	if err != nil {
-		cmdutil.Fail("Error: Unable to create backup files; make sure that the location is writable by the user")
+		cmdutil.Fail("Error: unable to create backup files; make sure that the location is writable by the user")
 		os.Exit(1)
 	}
 
@@ -73,7 +72,11 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 			config.KeyTimeEnd: time.Now().Unix(),
 		})
 		if err != nil {
-			logger.Errorf("Unable to update metadata after backup run: %s", err.Error())
+			logger.Errorf("Error: unable to update metadata after backup run: %s", err.Error())
+		}
+
+		if err := archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir()); err != nil {
+			logger.Errorf("Error: unable to archive: %s", err.Error())
 		}
 	}()
 
@@ -85,13 +88,13 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 	)
 
 	for _, resource := range strategy.Resources {
-		switch engine.ResourceType(resource) {
+		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
 			rnr = product.NewRunner(eng, client, logger)
 		case engine.Customer:
 			rnr = customer.NewRunner(eng, client, logger)
 		default:
-			logger.Warnf("Skipping '%s': Invalid resource", resource)
+			logger.Warnf("Skipping '%s': invalid resource", resource)
 			continue
 		}
 		runners = append(runners, rnr)
@@ -112,10 +115,6 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 
 	wg.Wait()
 	logger.V(tlog.VL1).Infof("We're done with fetching data. Archiving...")
-
-	if err := cmdutil.Archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir()); err != nil {
-		return err
-	}
 	logger.Infof("Backup complete in %s", time.Since(start))
 
 	if !quiet {
@@ -124,8 +123,21 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 	return nil
 }
 
+func archive(from string, to string, name string) error {
+	const modDir = 0o755
+	if err := os.MkdirAll(to, modDir); err != nil {
+		return err
+	}
+	return cmdutil.Archive(from, to, name)
+}
+
 func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*config.RootMeta, error) {
 	u, _ := user.Current()
+
+	resources := make([]string, 0, len(strategy.Resources))
+	for _, r := range strategy.Resources {
+		resources = append(resources, string(r.Resource))
+	}
 
 	meta, err := config.NewRootMeta(bkpEng.Root(), config.RootMetaItems{
 		ID:        bkpEng.ID(),
@@ -133,7 +145,7 @@ func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*conf
 		TimeInit:  bkpEng.Timestamp().Unix(),
 		TimeStart: time.Now().Unix(),
 		Status:    string(engine.BackupStatusRunning),
-		Resources: strategy.Resources,
+		Resources: resources,
 		Kind:      strategy.Kind,
 		User:      u.Username,
 	})
@@ -157,9 +169,10 @@ Strategy: %s
 Store: %s
 Type: %s
 Path: %s
+File: %s.tar.gz
 `,
 		bkpEng.ID(), strategy.Name, bkpEng.Store(),
-		strategy.Kind, filepath.Join(strategy.BkpDir, bkpEng.Dir()),
+		strategy.Kind, strategy.BkpDir, bkpEng.Dir(),
 	)
 	for _, rnr := range runners {
 		fmt.Println()

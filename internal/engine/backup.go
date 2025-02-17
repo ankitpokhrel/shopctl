@@ -56,11 +56,11 @@ func NewBackup(store string, opts ...Option) *Backup {
 		opt(&bkp)
 	}
 
-	if bkp.prefix == "" {
-		bkp.prefix = "backup"
+	dir := fmt.Sprintf("%s_%s", bkp.timestamp.Format("2006_01_02_15_04_05"), id)
+	if bkp.prefix != "" {
+		dir = fmt.Sprintf("%s_%s", bkp.prefix, dir)
 	}
-
-	bkp.dir = fmt.Sprintf("%s_%s_%s", bkp.prefix, bkp.timestamp.Format("2006_01_02_15_04_05"), id)
+	bkp.dir = dir
 	bkp.root = filepath.Join(bkp.root, bkp.dir)
 
 	return &bkp

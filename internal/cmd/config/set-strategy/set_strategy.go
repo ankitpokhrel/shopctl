@@ -29,7 +29,7 @@ type flag struct {
 	kind      string
 	bkpDir    string
 	bkpPrefix string
-	resources []string
+	resources []config.BackupResource
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
@@ -48,25 +48,37 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	prefix, err := cmd.Flags().GetString("prefix")
 	cmdutil.ExitOnErr(err)
 
-	resources, err := cmd.Flags().GetString("resources")
+	resources, err := cmd.Flags().GetStringArray("resources")
 	cmdutil.ExitOnErr(err)
 
-	if dir == "" || resources == "" {
+	usage := `Usage:
+  $ shopctl config set-strategy daily -d /path/to/bkp-dir -r product=tag:premium -r customer
+
+See 'shopctl config set-strategy --help' for more info.`
+
+	if dir == "" || len(resources) == 0 {
 		cmdutil.ExitOnErr(
-			fmt.Errorf(`Error: backup directory and resources to backup are required.
-
-Usage:
-  $ shopctl config set-strategy daily -d /path/to/bkp-dir -r=product,customer
-
-See 'shopctl config set-strategy --help' for more info.`),
+			fmt.Errorf("Error: backup directory and resources to backup are required.\n\n%s", usage),
 		)
+	}
+
+	bkpResources := make([]config.BackupResource, 0, len(resources))
+	for _, resource := range resources {
+		piece := strings.SplitN(resource, "=", 2)
+		res := config.BackupResource{
+			Resource: piece[0],
+		}
+		if len(piece) == 2 {
+			res.Query = piece[1]
+		}
+		bkpResources = append(bkpResources, res)
 	}
 
 	f.name = name
 	f.kind = kind
 	f.bkpDir = dir
 	f.bkpPrefix = prefix
-	f.resources = strings.Split(resources, ",")
+	f.resources = bkpResources
 }
 
 // NewCmdSetStrategy is a cmd to add/update a backup strategy.
@@ -84,7 +96,7 @@ func NewCmdSetStrategy() *cobra.Command {
 	}
 	cmd.Flags().StringP("dir", "d", "", "Root directory to save backups to")
 	cmd.Flags().StringP("prefix", "p", "", "Prefix for the main backup directory")
-	cmd.Flags().StringP("resources", "r", "", "Resource types to backup (comma separated)")
+	cmd.Flags().StringArrayP("resources", "r", []string{}, "Resource types to backup (format: resourcetype=filter)")
 	cmd.Flags().StringP("type", "t", "", "Backup type (full or incremental)")
 
 	cmd.Flags().SortFlags = false

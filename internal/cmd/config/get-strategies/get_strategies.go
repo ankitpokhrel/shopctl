@@ -74,13 +74,21 @@ func run(_ *cobra.Command, args []string) error {
 	b := new(bytes.Buffer)
 	w := tabwriter.NewWriter(b, 0, tabWidth, 1, '\t', 0)
 
-	_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\n", "NAME", "TYPE", "BACKUP DIR", "PREFIX", "RESOURCES")
+	_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\t%s\n", "NAME", "TYPE", "BACKUP DIR", "PREFIX", "RESOURCES", "FILTERS")
 	for _, s := range out {
 		name := s.Name
 		if name == currentStrategy {
 			name += "*"
 		}
-		_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\n", name, s.Kind, s.BkpDir, s.BkpPrefix, strings.Join(s.Resources, ","))
+		resources := make([]string, 0, len(s.Resources))
+		filters := make([]string, 0, len(s.Resources))
+		for _, r := range s.Resources {
+			resources = append(resources, r.Resource)
+			if r.Query != "" {
+				filters = append(filters, fmt.Sprintf("%s=%q", r.Resource, r.Query))
+			}
+		}
+		_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\t%s\n", name, s.Kind, s.BkpDir, s.BkpPrefix, strings.Join(resources, ","), strings.Join(filters, ","))
 	}
 
 	if err := w.Flush(); err != nil {

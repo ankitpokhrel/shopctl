@@ -11,13 +11,19 @@ import (
 	"github.com/ankitpokhrel/shopctl"
 )
 
+// BackupResource wraps resource type and query filter.
+type BackupResource struct {
+	Resource string `koanf:"resource" yaml:"resource"`
+	Query    string `koanf:"query" yaml:"query,omitempty"`
+}
+
 // BackupStrategy is a store backup strategy.
 type BackupStrategy struct {
-	Name      string   `koanf:"name" yaml:"name"`
-	Kind      string   `koanf:"type" yaml:"type"`
-	BkpDir    string   `koanf:"dir" yaml:"dir"`
-	BkpPrefix string   `koanf:"prefix" yaml:"prefix"`
-	Resources []string `koanf:"resources" yaml:"resources"`
+	Name      string           `koanf:"name" yaml:"name"`
+	Kind      string           `koanf:"type" yaml:"type"`
+	BkpDir    string           `koanf:"dir" yaml:"dir"`
+	BkpPrefix string           `koanf:"prefix" yaml:"prefix"`
+	Resources []BackupResource `koanf:"resources" yaml:"resources"`
 }
 
 type storeItems struct {
