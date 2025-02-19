@@ -7,6 +7,7 @@ import (
 	cs "github.com/ankitpokhrel/shopctl/internal/cmd/config/current-strategy"
 	dc "github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-context"
 	ds "github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-strategy"
+	ec "github.com/ankitpokhrel/shopctl/internal/cmd/config/edit-context"
 	gc "github.com/ankitpokhrel/shopctl/internal/cmd/config/get-contexts"
 	gs "github.com/ankitpokhrel/shopctl/internal/cmd/config/get-strategies"
 	rc "github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-context"
@@ -33,6 +34,7 @@ func NewCmdConfig() *cobra.Command {
 		uc.NewCmdUseContext(),
 		cc.NewCmdCurrentContext(),
 		dc.NewCmdDeleteContext(),
+		ec.NewCmdEditContext(),
 		gc.NewCmdGetContexts(),
 		rc.NewCmdRenameContext(),
 		ss.NewCmdSetStrategy(),
