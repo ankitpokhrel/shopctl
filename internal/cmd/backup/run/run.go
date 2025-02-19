@@ -90,7 +90,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 	for _, resource := range strategy.Resources {
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
-			rnr = product.NewRunner(eng, client, logger)
+			rnr = product.NewRunner(eng, client, resource.Query, logger)
 		case engine.Customer:
 			rnr = customer.NewRunner(eng, client, logger)
 		default:

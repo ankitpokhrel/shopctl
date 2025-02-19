@@ -19,18 +19,25 @@ type Runner struct {
 	eng    *engine.Engine
 	bkpEng *engine.Backup
 	client *api.GQLClient
+	filter *string
 	logger *tlog.Logger
 	stats  *runner.Summary
 }
 
 // NewRunner constructs a new backup runner.
-func NewRunner(eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
+func NewRunner(eng *engine.Engine, client *api.GQLClient, filter string, logger *tlog.Logger) *Runner {
 	bkpEng := eng.Doer().(*engine.Backup)
+
+	var f *string
+	if filter != "" {
+		f = &filter
+	}
 
 	return &Runner{
 		eng:    eng,
 		bkpEng: bkpEng,
 		client: client,
+		filter: f,
 		logger: logger,
 		stats:  &runner.Summary{},
 	}
@@ -53,7 +60,7 @@ func (r *Runner) Run() error {
 
 	go func() {
 		defer r.eng.Done(engine.Product)
-		r.backup(batchSize, nil)
+		r.backup(batchSize, nil, r.filter)
 	}()
 
 	for res := range r.eng.Run(engine.Product) {
@@ -72,13 +79,13 @@ func (r *Runner) Run() error {
 	return nil
 }
 
-func (r *Runner) backup(limit int, after *string) {
+func (r *Runner) backup(limit int, after *string, query *string) {
 	productsCh := make(chan *api.ProductsResponse, batchSize)
 
 	go func() {
 		defer close(productsCh)
 
-		if err := r.client.GetAllProducts(productsCh, limit, after); err != nil {
+		if err := r.client.GetAllProducts(productsCh, limit, after, query); err != nil {
 			r.logger.Error("error when fetching products", "limit", limit, "after", after, "error", err)
 		}
 	}()

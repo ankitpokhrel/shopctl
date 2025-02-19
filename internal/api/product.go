@@ -145,11 +145,11 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 }
 
 // GetAllProducts fetches products in a batch and streams the response to a channel.
-func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *string) error {
+func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *string, query *string) error {
 	var out *ProductsResponse
 
-	query := fmt.Sprintf(`query GetProducts($first: Int!, $after: String) {
-  products(first: $first, after: $after) {
+	productQuery := fmt.Sprintf(`query GetProducts($first: Int!, $after: String, $query: String) {
+        products(first: $first, after: $after, query: $query) {
     edges {
       node {
       	%s
@@ -169,10 +169,11 @@ func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *s
 }`, fieldsProduct)
 
 	req := client.GQLRequest{
-		Query: query,
+		Query: productQuery,
 		Variables: client.QueryVars{
 			"first": limit,
 			"after": after,
+			"query": query,
 		},
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
@@ -185,7 +186,7 @@ func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *s
 	ch <- out
 
 	if out.Data.Products.PageInfo.HasNextPage {
-		return c.GetAllProducts(ch, limit, out.Data.Products.PageInfo.EndCursor)
+		return c.GetAllProducts(ch, limit, out.Data.Products.PageInfo.EndCursor, query)
 	}
 	return nil
 }
