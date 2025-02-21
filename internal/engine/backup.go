@@ -56,20 +56,29 @@ func NewBackup(store string, opts ...Option) *Backup {
 		opt(&bkp)
 	}
 
-	dir := fmt.Sprintf("%s_%s", bkp.timestamp.Format("2006_01_02_15_04_05"), id)
-	if bkp.prefix != "" {
-		dir = fmt.Sprintf("%s_%s", bkp.prefix, dir)
+	if bkp.dir == "" {
+		dir := fmt.Sprintf("%s_%s", bkp.timestamp.Format("2006_01_02_15_04_05"), id)
+		if bkp.prefix != "" {
+			dir = fmt.Sprintf("%s_%s", bkp.prefix, dir)
+		}
+		bkp.dir = dir
 	}
-	bkp.dir = dir
 	bkp.root = filepath.Join(bkp.root, bkp.dir)
 
 	return &bkp
 }
 
-// WithBackupDir sets root backup dir.
+// WithBackupRoot sets root backup dir.
+func WithBackupRoot(root string) Option {
+	return func(b *Backup) {
+		b.root = root
+	}
+}
+
+// WithBackupDir sets backup dir name.
 func WithBackupDir(dir string) Option {
 	return func(b *Backup) {
-		b.root = dir
+		b.dir = dir
 	}
 }
 

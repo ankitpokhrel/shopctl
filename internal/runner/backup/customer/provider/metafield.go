@@ -16,7 +16,7 @@ func (m *MetaField) Handle() (any, error) {
 
 	metafields, err := m.Client.GetCustomerMetaFields(m.CustomerID)
 	if err != nil {
-		m.Logger.Error("error when fetching metafield", "customerID", m.CustomerID, "error", err)
+		m.Logger.Error("Error when fetching metafield", "customerID", m.CustomerID, "error", err)
 		return nil, err
 	}
 	return metafields.Data.Customer, nil

@@ -138,6 +138,22 @@ func Archive(src string, dest string, dir string) error {
 	return format.Archive(ctx, out, files)
 }
 
+// ParseBackupResource parses raw resource string.
+func ParseBackupResource(resources []string) []config.BackupResource {
+	bkpResources := make([]config.BackupResource, 0, len(resources))
+	for _, resource := range resources {
+		piece := strings.SplitN(resource, "=", 2)
+		res := config.BackupResource{
+			Resource: piece[0],
+		}
+		if len(piece) == 2 {
+			res.Query = piece[1]
+		}
+		bkpResources = append(bkpResources, res)
+	}
+	return bkpResources
+}
+
 // stripProtocol strips the http protocol from a URL.
 func stripProtocol(url string) string {
 	if len(url) < 8 /* Max protocol length */ { //nolint:mnd

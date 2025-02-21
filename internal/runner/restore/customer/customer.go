@@ -7,6 +7,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
@@ -85,6 +86,6 @@ func (r *Runner) restore() error {
 }
 
 // TODO.
-func (r *Runner) Stats() string {
-	return ""
+func (r *Runner) Stats() *runner.Summary {
+	return &runner.Summary{}
 }

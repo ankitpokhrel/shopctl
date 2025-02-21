@@ -2,7 +2,6 @@ package setstrategy
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -62,23 +61,11 @@ See 'shopctl config set-strategy --help' for more info.`
 		)
 	}
 
-	bkpResources := make([]config.BackupResource, 0, len(resources))
-	for _, resource := range resources {
-		piece := strings.SplitN(resource, "=", 2)
-		res := config.BackupResource{
-			Resource: piece[0],
-		}
-		if len(piece) == 2 {
-			res.Query = piece[1]
-		}
-		bkpResources = append(bkpResources, res)
-	}
-
 	f.name = name
 	f.kind = kind
 	f.bkpDir = dir
 	f.bkpPrefix = prefix
-	f.resources = bkpResources
+	f.resources = cmdutil.ParseBackupResource(resources)
 }
 
 // NewCmdSetStrategy is a cmd to add/update a backup strategy.

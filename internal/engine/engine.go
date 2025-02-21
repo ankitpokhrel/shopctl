@@ -41,6 +41,9 @@ func (e *Engine) Doer() Doer {
 
 // Register registers a resource type to execute.
 func (e *Engine) Register(rt ResourceType) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+
 	e.jobs[rt] = make(chan ResourceCollection) // TODO: Decide buffer size based on store size.
 }
 

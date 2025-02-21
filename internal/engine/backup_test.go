@@ -33,7 +33,7 @@ func TestBackup_Do(t *testing.T) {
 	path := "./testdata/.tmp"
 	now := time.Now().Format("2006_01_02_15_04_05")
 
-	bkpEng := NewBackup("teststore.example.com", WithBackupDir(path+"/test"), WithBackupPrefix("bkp"))
+	bkpEng := NewBackup("teststore.example.com", WithBackupRoot(path+"/test"), WithBackupPrefix("bkp"))
 	root := fmt.Sprintf("%s/test/bkp_%s_%s", path, now, bkpEng.id)
 
 	eng := New(bkpEng)

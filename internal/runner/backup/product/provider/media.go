@@ -16,7 +16,7 @@ func (m *Media) Handle() (any, error) {
 
 	medias, err := m.Client.GetProductMedias(m.ProductID)
 	if err != nil {
-		m.Logger.Error("error when fetching media", "", m.ProductID, "error", err)
+		m.Logger.Error("Error when fetching media", "productID", m.ProductID, "error", err)
 		return nil, err
 	}
 	return medias.Data.Product, nil

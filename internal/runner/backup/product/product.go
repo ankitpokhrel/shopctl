@@ -49,8 +49,8 @@ func (r *Runner) Kind() engine.ResourceType {
 }
 
 // Stats returns runner stats.
-func (r *Runner) Stats() string {
-	return r.stats.String()
+func (r *Runner) Stats() *runner.Summary {
+	return r.stats
 }
 
 // Run executes product backup; implements `runner.Runner` interface.

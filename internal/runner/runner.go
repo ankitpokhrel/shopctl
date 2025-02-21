@@ -10,7 +10,7 @@ import (
 type Runner interface {
 	Run() error
 	Kind() engine.ResourceType
-	Stats() string
+	Stats() *Summary
 }
 
 // Summary aggregate runner stats.

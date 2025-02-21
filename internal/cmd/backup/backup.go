@@ -69,7 +69,9 @@ func preRun(cmd *cobra.Command, _ []string) error {
 
 	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
 	if err != nil {
-		return err
+		// Let's pass empty strategy if we fail to retrieve strategy.
+		// This value will be checked and properly set downstream.
+		strategy = nil
 	}
 
 	gqlClient := api.NewGQLClient(ctx.Store, api.LogRequest(lgr))

@@ -22,6 +22,21 @@ import (
 
 const (
 	helpText = `Run starts a backup process based on the given config.`
+	examples = `# Run backup for configured context and strategy
+$ shopctl backup run
+
+# Specify custom context and strategy
+$ shopctl backup run -c mycontext -s mystrategy
+
+# Run adhoc backup for all products and customers
+$ shopctl backup run -r product -r customer -o /path/to/bkp
+
+# Backup all products for current context and save as mybkp in the given path
+$ shopctl backup run -r product -o /path/to/bkp -n mybkp
+
+# Backup premium on-sale products and customers created starting 2025
+$ shopctl backup run -c mycontext -r product="tag:on-sale AND tag:premium" -r customer=created_at:>=2025-01-01 -o /path/to/bkp
+`
 
 	repeatedDashes = "" +
 		"-------------------------------"
@@ -29,12 +44,43 @@ const (
 		"==============================="
 )
 
+type flag struct {
+	outDir    string
+	name      string
+	resources []config.BackupResource
+	quiet     bool
+}
+
+func (f *flag) parse(cmd *cobra.Command) {
+	dir, err := cmd.Flags().GetString("output-dir")
+	cmdutil.ExitOnErr(err)
+
+	name, err := cmd.Flags().GetString("name")
+	cmdutil.ExitOnErr(err)
+
+	resources, err := cmd.Flags().GetStringArray("resource")
+	cmdutil.ExitOnErr(err)
+
+	if len(resources) > 0 && dir == "" {
+		cmdutil.ExitOnErr(helpErrorf("Error: backup directory is required for adhoc run."))
+	}
+
+	quiet, err := cmd.Flags().GetBool("quiet")
+	cmdutil.ExitOnErr(err)
+
+	f.outDir = dir
+	f.name = name
+	f.resources = cmdutil.ParseBackupResource(resources)
+	f.quiet = quiet
+}
+
 // NewCmdRun creates a new run command.
 func NewCmdRun() *cobra.Command {
-	return &cobra.Command{
+	cmd := cobra.Command{
 		Use:     "run",
 		Short:   "Run starts a backup process",
 		Long:    helpText,
+		Example: examples,
 		Aliases: []string{"start", "exec"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context().Value("context").(*config.StoreContext)
@@ -46,25 +92,60 @@ func NewCmdRun() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().StringP("output-dir", "o", "", "Root output directory to save backup to")
+	cmd.Flags().StringP("name", "n", "", "Backup dir name")
+	cmd.Flags().StringArrayP("resource", "r", []string{}, "Resources to run backup for")
+
+	return &cmd
 }
 
+//nolint:gocyclo
 func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
-	quiet, err := cmd.Flags().GetBool("quiet")
-	if err != nil {
-		return err
+	flag := &flag{}
+	flag.parse(cmd)
+
+	isAdhocRun := flag.outDir != "" || len(flag.resources) > 0
+
+	bkpPlan := strategy
+	if bkpPlan == nil {
+		bkpPlan = &config.BackupStrategy{
+			Name:      "adhoc",
+			BkpPrefix: "adhoc",
+		}
+	}
+	if flag.outDir != "" {
+		bkpPlan.BkpDir = flag.outDir
+	}
+	if len(flag.resources) > 0 {
+		bkpPlan.Resources = flag.resources
+	}
+
+	if len(bkpPlan.Resources) == 0 {
+		return helpErrorf("Error: you must define resources to backup for adhoc run")
 	}
 
 	bkpEng := engine.NewBackup(
 		ctx.Store,
-		engine.WithBackupPrefix(strategy.BkpPrefix),
+		engine.WithBackupDir(flag.name),
+		engine.WithBackupPrefix(bkpPlan.BkpPrefix),
 	)
 	eng := engine.New(bkpEng)
 
-	meta, err := saveRootMeta(bkpEng, strategy)
+	meta, err := saveRootMeta(bkpEng, bkpPlan)
 	if err != nil {
 		cmdutil.Fail("Error: unable to create backup files; make sure that the location is writable by the user")
 		os.Exit(1)
 	}
+
+	var (
+		wg      sync.WaitGroup
+		rnr     runner.Runner
+		start   time.Time
+		counter int
+
+		runners = make([]runner.Runner, 0, len(bkpPlan.Resources))
+	)
 
 	defer func() {
 		err := meta.Set(map[string]any{
@@ -75,19 +156,24 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 			logger.Errorf("Error: unable to update metadata after backup run: %s", err.Error())
 		}
 
-		if err := archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir()); err != nil {
-			logger.Errorf("Error: unable to archive: %s", err.Error())
+		if counter > 0 {
+			err := archive(bkpEng.Root(), bkpPlan.BkpDir, bkpEng.Dir())
+			if err != nil {
+				logger.Errorf("Error: unable to archive: %s", err.Error())
+			}
+		}
+		logger.Infof("Backup complete in %s", time.Since(start))
+
+		if counter > 0 {
+			if isAdhocRun {
+				summarizeAdhoc(bkpPlan, bkpEng, runners)
+			} else {
+				summarize(bkpPlan, bkpEng, runners)
+			}
 		}
 	}()
 
-	var (
-		wg  sync.WaitGroup
-		rnr runner.Runner
-
-		runners = make([]runner.Runner, 0, len(strategy.Resources))
-	)
-
-	for _, resource := range strategy.Resources {
+	for _, resource := range bkpPlan.Resources {
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
 			rnr = product.NewRunner(eng, client, resource.Query, logger)
@@ -100,7 +186,13 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 		runners = append(runners, rnr)
 	}
 
-	start := time.Now()
+	logger.V(tlog.VL1).Infof("Using context %q", ctx.Alias)
+	logger.V(tlog.VL1).Infof("Using store %q", ctx.Store)
+	if strategy != nil {
+		logger.V(tlog.VL1).Infof("Using strategy %q", strategy.Name)
+	}
+
+	start = time.Now()
 	for _, rnr := range runners {
 		wg.Add(1)
 
@@ -114,11 +206,20 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 	}
 
 	wg.Wait()
-	logger.V(tlog.VL1).Infof("We're done with fetching data. Archiving...")
-	logger.Infof("Backup complete in %s", time.Since(start))
+	logger.V(tlog.VL1).Infof("We're done with fetching data. Processing results...")
 
-	if !quiet {
-		summarize(strategy, bkpEng, runners)
+	if flag.quiet {
+		return nil
+	}
+
+	for _, rnr := range runners {
+		stats := rnr.Stats()
+		counter += stats.Count
+	}
+
+	if counter == 0 {
+		logger.Info("No matching records found for the given criteria")
+		logger.Warn("Backup was not created since no records were found")
 	}
 	return nil
 }
@@ -163,6 +264,7 @@ func summarize(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners [
 		fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
 	}
 
+	fmt.Println()
 	title("BACKUP SUMMARY", repeatedEquals)
 	fmt.Printf(`ID: %s
 Strategy: %s
@@ -179,4 +281,34 @@ File: %s.tar.gz
 		title(strings.ToTitle(string(rnr.Kind())), repeatedDashes)
 		fmt.Println(rnr.Stats())
 	}
+}
+
+func summarizeAdhoc(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners []runner.Runner) {
+	title := func(msg string, sep string) {
+		fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
+	}
+
+	fmt.Println()
+	title("BACKUP SUMMARY", repeatedEquals)
+	fmt.Printf(`ID: %s
+Store: %s
+Path: %s
+File: %s.tar.gz
+`,
+		bkpEng.ID(), bkpEng.Store(),
+		strategy.BkpDir, bkpEng.Dir(),
+	)
+	for _, rnr := range runners {
+		fmt.Println()
+		title(strings.ToTitle(string(rnr.Kind())), repeatedDashes)
+		fmt.Println(rnr.Stats())
+	}
+}
+
+func helpErrorf(msg string) error {
+	lines := strings.Split(examples, "\n")
+	for i, line := range lines {
+		lines[i] = "  " + line
+	}
+	return fmt.Errorf(msg+"\n\n\033[1mUsage:\033[0m\n\n%s", strings.Join(lines, "\n"))
 }
