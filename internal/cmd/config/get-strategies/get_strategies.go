@@ -31,12 +31,16 @@ func NewCmdGetStrategies() *cobra.Command {
 	}
 }
 
-func run(_ *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) error {
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err
 	}
-	ctx := cfg.GetContext(cfg.CurrentContext())
+
+	ctx, err := cmdutil.GetContext(cmd, cfg)
+	if err != nil {
+		return err
+	}
 
 	storeCfg, err := config.NewStoreConfig(ctx.Store, ctx.Alias)
 	if err != nil {
