@@ -37,6 +37,10 @@ func NewCmdBackup() *cobra.Command {
 		"strategy", "s", "",
 		"Override current-strategy",
 	)
+	cmd.PersistentFlags().Bool(
+		"quiet", false,
+		"Do not print anything to stdout",
+	)
 
 	cmd.AddCommand(
 		run.NewCmdRun(),

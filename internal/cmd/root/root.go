@@ -34,10 +34,6 @@ func NewCmdRoot() *cobra.Command {
 		"verbose", "v",
 		"Set the verbosity level (e.g., -v, -vv, -vvv)",
 	)
-	cmd.PersistentFlags().Bool(
-		"quiet", false,
-		"Do not print anything to stdout",
-	)
 
 	cmd.SetHelpFunc(helpFunc)
 
