@@ -2,12 +2,16 @@ package product
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
+	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
@@ -16,24 +20,31 @@ const (
 
 Use this command to quickly look into the upstream or local product data.`
 
-	examples = `$ shopctl peek product --id <product_id>
-$ shopctl peek product --handle <product_handle>
-$ shopctl peek product --id <product_id> --from </path/to/bkp>`
+	examples = `# Peek by id
+$ shopctl peek product <product_id>
+
+# Peek a product from a backup using backup id
+$ shopctl peek product <product_id> -b <backup_id>
+
+# Peek a product from the backup folder
+$ shopctl peek product <product_id> --from </path/to/backup>`
 )
 
 // Flag wraps available command flags.
 type flag struct {
-	id     string
-	handle string
-	from   string
-	json   bool
+	id    string
+	bkpID string
+	from  string
+	json  bool
 }
 
-func (f *flag) parse(cmd *cobra.Command) {
-	id, err := cmd.Flags().GetString("id")
-	cmdutil.ExitOnErr(err)
+func (f *flag) parse(cmd *cobra.Command, args []string) {
+	id := cmdutil.ShopifyProductID(args[0])
+	if id == "" {
+		cmdutil.ExitOnErr(fmt.Errorf("invalid product id"))
+	}
 
-	handle, err := cmd.Flags().GetString("handle")
+	bkpID, err := cmd.Flags().GetString("backup-id")
 	cmdutil.ExitOnErr(err)
 
 	from, err := cmd.Flags().GetString("from")
@@ -42,22 +53,8 @@ func (f *flag) parse(cmd *cobra.Command) {
 	jsonOut, err := cmd.Flags().GetBool("json")
 	cmdutil.ExitOnErr(err)
 
-	id = cmdutil.ShopifyProductID(id)
-
-	if id == "" && handle == "" {
-		cmdutil.ExitOnErr(
-			fmt.Errorf(`Error: either a valid product ID or handle is required.
-
-Usage:
-  $ shopctl peek product --id <product_id>
-  $ shopctl peek product --handle <product_handle>
-
-See 'shopctl peek product --help' for more info.`),
-		)
-	}
-
 	f.id = id
-	f.handle = handle
+	f.bkpID = bkpID
 	f.from = from
 	f.json = jsonOut
 }
@@ -65,47 +62,63 @@ See 'shopctl peek product --help' for more info.`),
 // NewCmdProduct creates a new product restore command.
 func NewCmdProduct() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "product",
+		Use:     "product PRODUCT_ID",
 		Short:   "Product lets you peek into product data",
 		Long:    helpText,
 		Example: examples,
+		Args:    cobra.MinimumNArgs(1),
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			store := cmd.Context().Value("store").(string)
+			ctx := cmd.Context().Value("context").(*config.StoreContext)
+			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 
-			cmdutil.ExitOnErr(peek(cmd, store, client))
+			cmdutil.ExitOnErr(run(cmd, args, ctx, strategy, client))
 			return nil
 		},
 	}
-	cmd.Flags().String("id", "", "Peek by product ID")
-	cmd.Flags().StringP("handle", "l", "", "Peek by product handle")
-	cmd.Flags().StringP("from", "f", "", "Fetch from local backup")
-
-	cmd.Flags().SortFlags = false
+	cmd.Flags().StringP("backup-id", "b", "", "Backup id to look into")
+	cmd.Flags().StringP("from", "f", "", "Direct path to the backup to look into")
 
 	return &cmd
 }
 
-func peek(cmd *cobra.Command, store string, client *api.GQLClient) error {
+func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, strategy *config.BackupStrategy, client *api.GQLClient) error {
 	var (
 		product *schema.Product
+		reg     *registry.Registry
 		err     error
 	)
 
 	flag := &flag{}
-	flag.parse(cmd)
+	flag.parse(cmd, args)
 
-	if flag.from != "" {
-		// TODO: Set source to local backup.
-	}
+	switch {
+	case flag.bkpID != "":
+		var path string
 
-	if flag.id != "" {
+		path, err = registry.LookForDirWithSuffix(flag.bkpID, strategy.BkpDir)
+		if err != nil {
+			if errors.Is(err, registry.ErrNoTargetFound) {
+				return fmt.Errorf("couldn't find backup with id %q in %q", flag.bkpID, strategy.BkpDir)
+			}
+			return err
+		}
+
+		reg, err = registry.NewRegistry(path)
+		if err != nil {
+			return err
+		}
+		product, err = reg.GetProductByID(cmdutil.ExtractNumericID(flag.id))
+	case flag.from != "":
+		reg, err = registry.NewRegistry(filepath.Join(flag.from, "products"))
+		if err != nil {
+			return err
+		}
+		product, err = reg.GetProductByID(cmdutil.ExtractNumericID(flag.id))
+	default:
 		product, err = client.GetProductByID(flag.id)
-	} else {
-		product, err = client.GetProductByHandle(flag.handle)
 	}
-
 	if err != nil {
 		return err
 	}
@@ -119,6 +132,6 @@ func peek(cmd *cobra.Command, store string, client *api.GQLClient) error {
 	}
 
 	// Convert to Markdown.
-	r := NewFormatter(store, product)
+	r := NewFormatter(ctx.Store, product)
 	return r.Render()
 }

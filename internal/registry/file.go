@@ -86,7 +86,7 @@ func LookForDir(dir, in string) (string, error) {
 // LookForDirWithSuffix searches for a directory with a give suffix in a specified path.
 func LookForDirWithSuffix(suffix, in string) (string, error) {
 	return lookForDir(in, func(info os.FileInfo) bool {
-		return strings.HasSuffix(info.Name(), suffix)
+		return strings.HasSuffix(strings.TrimSuffix(info.Name(), ".tar.gz"), suffix)
 	})
 }
 
@@ -104,7 +104,7 @@ func lookForDir(in string, cmpFn func(os.FileInfo) bool) (string, error) {
 		}
 		depth := strings.Count(filepath.Clean(path), string(os.PathSeparator)) - baseDepth
 
-		if !info.IsDir() {
+		if !strings.HasSuffix(info.Name(), ".tar.gz") && !info.IsDir() {
 			return nil
 		}
 		if depth > maxDepth {

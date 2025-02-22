@@ -2,7 +2,6 @@ package peek
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -33,6 +32,10 @@ func NewCmdPeek() *cobra.Command {
 		},
 	}
 
+	cmd.PersistentFlags().StringP(
+		"strategy", "s", "",
+		"Override current-strategy",
+	)
 	cmd.PersistentFlags().Bool("json", false, "Output in JSON format")
 
 	cmd.AddCommand(
@@ -43,33 +46,25 @@ func NewCmdPeek() *cobra.Command {
 }
 
 func preRun(cmd *cobra.Command, _ []string) error {
-	var usrCtx string
-
-	usrCtx, err := cmd.Flags().GetString("context")
-	if err != nil {
-		return err
-	}
-
 	cfg, err := config.NewShopConfig()
 	if err != nil {
 		return err
 	}
 
-	if usrCtx == "" {
-		currCtx := cfg.CurrentContext()
-		if currCtx == "" {
-			return fmt.Errorf("current-context is not set; either set a context with %q or use %q flag", "shopctl use-context context-name", "-c")
-		}
-		usrCtx = currCtx
+	ctx, err := cmdutil.GetContext(cmd, cfg)
+	if err != nil {
+		return err
 	}
-	ctx := cfg.GetContext(usrCtx)
-	if ctx == nil {
-		return fmt.Errorf("no context exists with the name: %q", usrCtx)
+
+	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
+	if err != nil {
+		return err
 	}
 
 	gqlClient := api.NewGQLClient(ctx.Store)
+	cmd.SetContext(context.WithValue(cmd.Context(), "context", ctx))
+	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
 	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
-	cmd.SetContext(context.WithValue(cmd.Context(), "store", ctx.Store))
 
 	return nil
 }
