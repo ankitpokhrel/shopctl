@@ -1,6 +1,10 @@
 package registry
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,6 +35,33 @@ func FindFilesInDir(dir, name string) (<-chan File, error) {
 				return nil
 			}
 			if !info.IsDir() && info.Name() == name {
+				located <- File{Path: path}
+			}
+			return nil
+		})
+	}()
+
+	return located, nil
+}
+
+// GetAllInDir returns all files with given extension within a directory.
+// It returns all folders if the ext is empty.
+func GetAllInDir(dir, ext string) (<-chan File, error) {
+	located := make(chan File)
+
+	go func() {
+		defer close(located)
+
+		_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				located <- File{Err: err}
+				return nil
+			}
+			if ext != "" {
+				if !info.IsDir() && strings.HasSuffix(info.Name(), ext) {
+					located <- File{Path: path}
+				}
+			} else if info.IsDir() {
 				located <- File{Path: path}
 			}
 			return nil
@@ -92,4 +123,41 @@ func lookForDir(in string, cmpFn func(os.FileInfo) bool) (string, error) {
 		return "", ErrNoTargetFound
 	}
 	return loc, nil
+}
+
+// ReadFromTarGZ allow you to read a single file from the `.tar.gz` folder.
+func ReadFromTarGZ(tarGzFilePath string, targetFileName string) ([]byte, error) {
+	file, err := os.Open(tarGzFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open tar.gz file: %w", err)
+	}
+	defer func() { _ = file.Close() }()
+
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer func() { _ = gzReader.Close() }()
+
+	tarReader := tar.NewReader(gzReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error reading tar archive: %w", err)
+		}
+
+		if header.Name == targetFileName {
+			fileContent, err := io.ReadAll(tarReader)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read file content: %w", err)
+			}
+			return fileContent, nil
+		}
+	}
+
+	return nil, fmt.Errorf("file %s not found in the tar.gz archive", targetFileName)
 }

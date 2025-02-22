@@ -93,12 +93,12 @@ func NewCmdRun() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"start", "exec"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			shopCfg := cmd.Context().Value("shopCfg").(*config.ShopConfig)
 			ctx := cmd.Context().Value("context").(*config.StoreContext)
-			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 			logger := cmd.Context().Value("logger").(*tlog.Logger)
 
-			cmdutil.ExitOnErr(run(cmd, client, ctx, strategy, logger))
+			cmdutil.ExitOnErr(run(cmd, client, shopCfg, ctx, logger))
 			return nil
 		},
 	}
@@ -112,38 +112,38 @@ func NewCmdRun() *cobra.Command {
 }
 
 //nolint:gocyclo
-func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
+func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, ctx *config.StoreContext, logger *tlog.Logger) error {
 	flag := &flag{}
 	flag.parse(cmd)
 
 	isAdhocRun := flag.outDir != "" || len(flag.resources) > 0
 
-	bkpPlan := strategy
-	if bkpPlan == nil {
-		bkpPlan = &config.BackupStrategy{
+	strategy, _ := cmdutil.GetStrategy(cmd, ctx, shopCfg)
+	if strategy == nil {
+		strategy = &config.BackupStrategy{
 			Name:      "adhoc",
 			BkpPrefix: "adhoc",
 		}
 	}
 	if flag.outDir != "" {
-		bkpPlan.BkpDir = flag.outDir
+		strategy.BkpDir = flag.outDir
 	}
 	if len(flag.resources) > 0 {
-		bkpPlan.Resources = flag.resources
+		strategy.Resources = flag.resources
 	}
 
-	if len(bkpPlan.Resources) == 0 {
+	if len(strategy.Resources) == 0 {
 		return helpErrorf("Error: you must define resources to backup for adhoc run")
 	}
 
 	bkpEng := engine.NewBackup(
 		ctx.Store,
 		engine.WithBackupDir(flag.name),
-		engine.WithBackupPrefix(bkpPlan.BkpPrefix),
+		engine.WithBackupPrefix(strategy.BkpPrefix),
 	)
 	eng := engine.New(bkpEng)
 
-	meta, err := saveRootMeta(bkpEng, bkpPlan)
+	meta, err := saveRootMeta(bkpEng, strategy)
 	if err != nil {
 		cmdutil.Fail("Error: unable to create backup files; make sure that the location is writable by the user")
 		os.Exit(1)
@@ -155,7 +155,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 		start   time.Time
 		counter int
 
-		runners = make([]runner.Runner, 0, len(bkpPlan.Resources))
+		runners = make([]runner.Runner, 0, len(strategy.Resources))
 	)
 
 	defer func() {
@@ -168,7 +168,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 		}
 
 		if !flag.dryRun && counter > 0 {
-			err := archive(bkpEng.Root(), bkpPlan.BkpDir, bkpEng.Dir())
+			err := archive(bkpEng.Root(), strategy.BkpDir, bkpEng.Dir())
 			if err != nil {
 				logger.Errorf("Error: unable to archive: %s", err.Error())
 			}
@@ -177,14 +177,14 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 
 		if counter > 0 {
 			if isAdhocRun {
-				summarizeAdhoc(bkpPlan, bkpEng, runners)
+				summarizeAdhoc(strategy, bkpEng, runners)
 			} else {
-				summarize(bkpPlan, bkpEng, runners)
+				summarize(strategy, bkpEng, runners)
 			}
 		}
 	}()
 
-	for _, resource := range bkpPlan.Resources {
+	for _, resource := range strategy.Resources {
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
 			rnr = product.NewRunner(eng, client, resource.Query, logger)

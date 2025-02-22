@@ -108,7 +108,7 @@ func GetStrategy(cmd *cobra.Command, ctx *config.StoreContext, cfg *config.ShopC
 
 	strategy := storeCfg.GetBackupStrategy(usrStrategy)
 	if strategy == nil {
-		return nil, fmt.Errorf("strategy not found; either set a strategy with %q or use %q flag", "shopctl use-strategy strategy-name", "-s")
+		return nil, fmt.Errorf("strategy not found; please select a valid strategy with %q or use %q flag", "shopctl use-strategy strategy-name", "-s")
 	}
 	return strategy, nil
 }

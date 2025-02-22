@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/list"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/backup/run"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
@@ -44,6 +45,7 @@ func NewCmdBackup() *cobra.Command {
 
 	cmd.AddCommand(
 		run.NewCmdRun(),
+		list.NewCmdList(),
 	)
 
 	return &cmd
@@ -71,16 +73,9 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
-	if err != nil {
-		// Let's pass empty strategy if we fail to retrieve strategy.
-		// This value will be checked and properly set downstream.
-		strategy = nil
-	}
-
 	gqlClient := api.NewGQLClient(ctx.Store, api.LogRequest(lgr))
+	cmd.SetContext(context.WithValue(cmd.Context(), "shopCfg", cfg))
 	cmd.SetContext(context.WithValue(cmd.Context(), "context", ctx))
-	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
 	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
 	cmd.SetContext(context.WithValue(cmd.Context(), "logger", lgr))
 
