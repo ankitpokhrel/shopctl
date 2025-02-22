@@ -36,6 +36,11 @@ $ shopctl backup run -r product -o /path/to/bkp -n mybkp
 
 # Backup premium on-sale products and customers created starting 2025
 $ shopctl backup run -c mycontext -r product="tag:on-sale AND tag:premium" -r customer=created_at:>=2025-01-01 -o /path/to/bkp
+
+# Dry run executes the backup without creating final backup files. This will still save files in temporary location.
+# Use this option if you want to verify your config without the risk of saving data to the unintented location.
+$ shopctl backup run --dry-run
+$ shopctl backup run --dry-run -vvv
 `
 
 	repeatedDashes = "" +
@@ -48,6 +53,7 @@ type flag struct {
 	outDir    string
 	name      string
 	resources []config.BackupResource
+	dryRun    bool
 	quiet     bool
 }
 
@@ -65,12 +71,16 @@ func (f *flag) parse(cmd *cobra.Command) {
 		cmdutil.ExitOnErr(helpErrorf("Error: backup directory is required for adhoc run."))
 	}
 
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	cmdutil.ExitOnErr(err)
+
 	quiet, err := cmd.Flags().GetBool("quiet")
 	cmdutil.ExitOnErr(err)
 
 	f.outDir = dir
 	f.name = name
 	f.resources = cmdutil.ParseBackupResource(resources)
+	f.dryRun = dryRun
 	f.quiet = quiet
 }
 
@@ -96,6 +106,7 @@ func NewCmdRun() *cobra.Command {
 	cmd.Flags().StringP("output-dir", "o", "", "Root output directory to save backup to")
 	cmd.Flags().StringP("name", "n", "", "Backup dir name")
 	cmd.Flags().StringArrayP("resource", "r", []string{}, "Resources to run backup for")
+	cmd.Flags().Bool("dry-run", false, "Print logs without creating an actual backup file")
 
 	return &cmd
 }
@@ -156,7 +167,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 			logger.Errorf("Error: unable to update metadata after backup run: %s", err.Error())
 		}
 
-		if counter > 0 {
+		if !flag.dryRun && counter > 0 {
 			err := archive(bkpEng.Root(), bkpPlan.BkpDir, bkpEng.Dir())
 			if err != nil {
 				logger.Errorf("Error: unable to archive: %s", err.Error())
@@ -186,6 +197,9 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, st
 		runners = append(runners, rnr)
 	}
 
+	if flag.dryRun {
+		logger.Warn("This is a dry run. API calls will be made but final backup files won't be created.")
+	}
 	logger.V(tlog.VL1).Infof("Using context %q", ctx.Alias)
 	logger.V(tlog.VL1).Infof("Using store %q", ctx.Store)
 	if strategy != nil {
