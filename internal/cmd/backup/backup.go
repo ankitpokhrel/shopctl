@@ -15,9 +15,7 @@ import (
 
 const helpText = `Backup initiates backup process for a Shopify store.
 
-You can either backup an entire store or a filtered subset, including products, customers and orders.
-
-Supports advanced options for incremental backups and output customization.`
+You can either backup an entire store or a filtered subset, including products, customers and orders.`
 
 // NewCmdBackup creates a new backup command.
 func NewCmdBackup() *cobra.Command {

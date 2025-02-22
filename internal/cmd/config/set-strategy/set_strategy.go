@@ -25,7 +25,6 @@ $ shopctl config set-strategy weekly -t full -d "/path/to/backups/weekly" -r pro
 
 type flag struct {
 	name      string
-	kind      string
 	bkpDir    string
 	bkpPrefix string
 	resources []config.BackupResource
@@ -33,13 +32,6 @@ type flag struct {
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
 	name := args[0]
-
-	kind, err := cmd.Flags().GetString("type")
-	cmdutil.ExitOnErr(err)
-
-	if kind == "" {
-		kind = string(engine.BackupTypeIncremental)
-	}
 
 	dir, err := cmd.Flags().GetString("dir")
 	cmdutil.ExitOnErr(err)
@@ -62,7 +54,6 @@ See 'shopctl config set-strategy --help' for more info.`
 	}
 
 	f.name = name
-	f.kind = kind
 	f.bkpDir = dir
 	f.bkpPrefix = prefix
 	f.resources = cmdutil.ParseBackupResource(resources)
@@ -84,7 +75,6 @@ func NewCmdSetStrategy() *cobra.Command {
 	cmd.Flags().StringP("dir", "d", "", "Root directory to save backups to")
 	cmd.Flags().StringP("prefix", "p", "", "Prefix for the main backup directory")
 	cmd.Flags().StringArrayP("resources", "r", []string{}, "Resource types to backup (format: resourcetype=filter)")
-	cmd.Flags().StringP("type", "t", "", "Backup type (full or incremental)")
 
 	cmd.Flags().SortFlags = false
 
@@ -111,7 +101,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	storeCfg.SetStoreBackupStrategy(&config.BackupStrategy{
 		Name:      flag.name,
-		Kind:      flag.kind,
+		Kind:      string(engine.BackupTypeFull),
 		BkpDir:    flag.bkpDir,
 		BkpPrefix: flag.bkpPrefix,
 		Resources: flag.resources,
