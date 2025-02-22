@@ -15,15 +15,15 @@ const (
 
 // MetaItems defines item in a metadata file.
 type RootMetaItems struct {
-	ID        string   `koanf:"id" json:"id"`
-	Store     string   `koanf:"store" json:"store"`
-	TimeInit  int64    `koanf:"timeInitiated" json:"timeInitiated"`
-	TimeStart int64    `koanf:"timeStart" json:"timeStart"`
-	TimeEnd   int64    `koanf:"timeEnd" json:"timeEnd"`
-	Resources []string `koanf:"resources" json:"resources"`
-	Kind      string   `koanf:"type" json:"type"`
-	Status    string   `koanf:"status" json:"status"`
-	User      string   `koanf:"user" json:"user"`
+	ID        string           `koanf:"id" json:"id"`
+	Store     string           `koanf:"store" json:"store"`
+	TimeInit  int64            `koanf:"timeInitiated" json:"timeInitiated"`
+	TimeStart int64            `koanf:"timeStart" json:"timeStart"`
+	TimeEnd   int64            `koanf:"timeEnd" json:"timeEnd"`
+	Resources []BackupResource `koanf:"resources" json:"resources"`
+	Kind      string           `koanf:"type" json:"type"`
+	Status    string           `koanf:"status" json:"status"`
+	User      string           `koanf:"user" json:"user"`
 }
 
 // RootMeta is a root metadata for the initiated backup.
@@ -70,7 +70,7 @@ func (r *RootMeta) setData(key string, val any) {
 	case KeyStatus:
 		r.data.Status = val.(string)
 	case KeyResources:
-		r.data.Resources = val.([]string)
+		r.data.Resources = val.([]BackupResource)
 	case KeyTimeStart:
 		r.data.TimeStart = val.(int64)
 	case KeyTimeEnd:

@@ -249,18 +249,13 @@ func archive(from string, to string, name string) error {
 func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*config.RootMeta, error) {
 	u, _ := user.Current()
 
-	resources := make([]string, 0, len(strategy.Resources))
-	for _, r := range strategy.Resources {
-		resources = append(resources, string(r.Resource))
-	}
-
 	meta, err := config.NewRootMeta(bkpEng.Root(), config.RootMetaItems{
 		ID:        bkpEng.ID(),
 		Store:     bkpEng.Store(),
 		TimeInit:  bkpEng.Timestamp().Unix(),
 		TimeStart: time.Now().Unix(),
 		Status:    string(engine.BackupStatusRunning),
-		Resources: resources,
+		Resources: strategy.Resources,
 		Kind:      strategy.Kind,
 		User:      u.Username,
 	})

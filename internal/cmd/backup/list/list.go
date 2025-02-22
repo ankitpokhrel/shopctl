@@ -79,9 +79,21 @@ func run(cmd *cobra.Command, shopCfg *config.ShopConfig, ctx *config.StoreContex
 	b := new(bytes.Buffer)
 	w := tabwriter.NewWriter(b, 0, tabWidth, 1, '\t', 0)
 
-	_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\n", "ID", "RESOURCES", "TIME START", "TIME END", "STATUS")
+	_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\t%s\n", "ID", "RESOURCES", "FILTERS", "TIME START", "TIME END", "STATUS")
 	for _, m := range metaItems {
-		_, _ = fmt.Fprintf(w, "%s\t %s\t%s\t%s\t%s\n", m.ID, strings.Join(m.Resources, ","), formatTime(m.TimeStart), formatTime(m.TimeEnd), m.Status)
+		resources := make([]string, 0, len(m.Resources))
+		filters := make([]string, 0, len(m.Resources))
+		for _, r := range m.Resources {
+			resources = append(resources, r.Resource)
+			if r.Query != "" {
+				filters = append(filters, fmt.Sprintf("%s=%q", r.Resource, r.Query))
+			}
+		}
+		_, _ = fmt.Fprintf(
+			w, "%s\t %s\t%s\t%s\t%s\t%s\n",
+			m.ID, strings.Join(resources, ","), strings.Join(filters, ","),
+			formatTime(m.TimeStart), formatTime(m.TimeEnd), m.Status,
+		)
 	}
 
 	if err := w.Flush(); err != nil {
