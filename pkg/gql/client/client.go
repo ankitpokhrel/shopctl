@@ -6,9 +6,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -77,9 +79,52 @@ func NewClient(server, token string, opts ...ClientFunc) *Client {
 
 	c.http.Logger = c.logger
 	c.http.HTTPClient.Transport = DefaultTransport
+
+	// Shopify's GQL API doesn't return the 429 status code for throttled requests.
+	// Instead it returns 200 with 'Throttled' as a message body. Therefore, we'd need
+	// to inspect message body to check if the request was throttled and we need to retry.
+	// This creates some extra overhead since we have to decode the response multiple times.
+	c.http.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		retryable, retryErr := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+		if retryable {
+			return true, retryErr
+		}
+
+		if resp != nil && resp.StatusCode == http.StatusOK {
+			var body struct {
+				Errors []struct {
+					Message string `json:"message"`
+				} `json:"errors"`
+			}
+
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return true, err
+			}
+
+			// Rewind request body.
+			defer func() { resp.Body = io.NopCloser(bytes.NewBuffer(b)) }()
+
+			if err := json.NewDecoder(bytes.NewReader(b)).Decode(&body); err == nil {
+				for _, e := range body.Errors {
+					if strings.EqualFold(e.Message, "Throttled") {
+						return true, nil
+					}
+				}
+			}
+		}
+		return false, nil
+	}
 	c.http.RequestLogHook = func(l retryablehttp.Logger, r *http.Request, n int) {
+		var msg string
 		if n > 0 {
-			l.Printf("Retrying as the request was either throttled or server sent unexpected response: attempt #%d", n)
+			resID := r.Header.Get("X-ShopCTL-Resource-ID")
+			if resID != "" {
+				msg = fmt.Sprintf("Resource %s: retrying as the request was either throttled or server sent unexpected response: attempt #%d", resID, n)
+			} else {
+				msg = fmt.Sprintf("Retrying as the request was either throttled or server sent unexpected response: attempt #%d", n)
+			}
+			l.Printf(msg)
 		}
 	}
 	c.http.ResponseLogHook = func(l retryablehttp.Logger, r *http.Response) {

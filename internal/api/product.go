@@ -21,7 +21,7 @@ func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 		Query:     query,
 		Variables: client.QueryVars{"id": id},
 	}
-	if err = c.Execute(context.Background(), req, nil, &out); err != nil {
+	if err = c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": id}, &out); err != nil {
 		return nil, err
 	}
 	return out, err
@@ -51,7 +51,7 @@ func (c GQLClient) GetProductByID(id string) (*schema.Product, error) {
 		Query:     query,
 		Variables: client.QueryVars{"id": id},
 	}
-	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": id}, &out); err != nil {
 		return nil, err
 	}
 	if out.Data.Product.ID == "" {
@@ -215,7 +215,7 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": productID}, &out); err != nil {
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
@@ -249,7 +249,7 @@ metafields(first: 200) {
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": productID}, &out); err != nil {
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
@@ -283,7 +283,7 @@ media(first: 250) {
 		Query:     query,
 		Variables: client.QueryVars{"id": productID},
 	}
-	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": productID}, &out); err != nil {
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
