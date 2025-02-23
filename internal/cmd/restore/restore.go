@@ -12,7 +12,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
-const helpText = `Restore initiates data restoration process.
+const helpText = `Restore initiates a data restoration process.
 
 You can either restore an entire store or a filtered subset, including products, customers and orders.`
 

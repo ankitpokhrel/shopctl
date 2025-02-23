@@ -12,8 +12,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ankitpokhrel/shopctl/schema"
 	"github.com/mholt/archives"
+
+	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 var (

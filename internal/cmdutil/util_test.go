@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
 func TestShopifyProductID(t *testing.T) {
@@ -141,6 +143,126 @@ func TestGetStoreSlug(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, GetStoreSlug(tc.store))
+		})
+	}
+}
+
+func TestParseBackupResource(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []config.BackupResource
+	}{
+		{
+			name: "valid input with query and resource",
+			input: []string{
+				`product="tag:premium AND created_at:>=2025-01-01"`,
+				"customer",
+			},
+			expected: []config.BackupResource{
+				{Resource: "product", Query: "\"tag:premium AND created_at:>=2025-01-01\""},
+				{Resource: "customer", Query: ""},
+			},
+		},
+		{
+			name: "input with multiple resources having queries",
+			input: []string{
+				`order="status:completed"`,
+				`customer="country:US"`,
+			},
+			expected: []config.BackupResource{
+				{Resource: "order", Query: "\"status:completed\""},
+				{Resource: "customer", Query: "\"country:US\""},
+			},
+		},
+		{
+			name: "input with no query",
+			input: []string{
+				"product",
+				"order",
+			},
+			expected: []config.BackupResource{
+				{Resource: "product", Query: ""},
+				{Resource: "order", Query: ""},
+			},
+		},
+		{
+			name:     "empty input",
+			input:    []string{},
+			expected: []config.BackupResource{},
+		},
+		{
+			name: "input with empty query string",
+			input: []string{
+				"product=",
+				"customer=",
+			},
+			expected: []config.BackupResource{
+				{Resource: "product", Query: ""},
+				{Resource: "customer", Query: ""},
+			},
+		},
+		{
+			name: "input with malformed resource",
+			input: []string{
+				"=query",
+				"product",
+			},
+			expected: []config.BackupResource{
+				{Resource: "", Query: "query"},
+				{Resource: "product", Query: ""},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, ParseBackupResource(tt.input))
+		})
+	}
+}
+
+func TestGetBackupIDFromName(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty filename",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "valid name with .tar.gz",
+			input:    "daily_2025_02_22_18_18_32_3820045c0c.tar.gz",
+			expected: "3820045c0c",
+		},
+		{
+			name:     "valid name without .tar.gz",
+			input:    "daily_2025_02_22_18_18_32_3820045c0c",
+			expected: "3820045c0c",
+		},
+		{
+			name:     "invalid name missing parts",
+			input:    "daily_2025_02_22_18_18_32",
+			expected: "",
+		},
+		{
+			name:     "completely invalid name",
+			input:    "random_text",
+			expected: "",
+		},
+		{
+			name:     "name with additional underscores",
+			input:    "daily___2025_02_22_18_18_32_3820045c0c.tar.gz",
+			expected: "3820045c0c",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, GetBackupIDFromName(tc.input))
 		})
 	}
 }

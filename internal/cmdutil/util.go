@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -152,6 +153,20 @@ func ParseBackupResource(resources []string) []config.BackupResource {
 		bkpResources = append(bkpResources, res)
 	}
 	return bkpResources
+}
+
+// GetBackupIDFromName extracts backup id from the file name.
+func GetBackupIDFromName(name string) string {
+	name = strings.TrimSuffix(name, ".tar.gz")
+	pattern := regexp.MustCompile(`^.+_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+)$`)
+	matches := pattern.FindStringSubmatch(name)
+	if matches == nil {
+		return ""
+	}
+	if len(matches) < 3 {
+		return ""
+	}
+	return matches[2]
 }
 
 // stripProtocol strips the http protocol from a URL.

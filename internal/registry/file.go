@@ -3,11 +3,16 @@ package registry
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
+
+	"github.com/mholt/archives"
 )
 
 // Exists checks if a file exists at the specified location.
@@ -69,6 +74,109 @@ func GetAllInDir(dir, ext string) (<-chan File, error) {
 	}()
 
 	return located, nil
+}
+
+// GetLatestInDir returns the latest .tar.gz file within a directory.
+func GetLatestInDir(dir string) (*File, string, error) {
+	var (
+		latest       *File
+		latestTime   time.Time
+		latestSuffix string
+	)
+
+	namePattern := regexp.MustCompile(`^.+_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+)\.tar\.gz$`)
+
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			latest = &File{Err: err}
+			return nil
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tar.gz") {
+			matches := namePattern.FindStringSubmatch(info.Name())
+			if matches == nil {
+				return nil
+			}
+			datetime := matches[1]
+			suffix := matches[2]
+
+			parsedTime, err := time.Parse("2006_01_02_15_04_05", datetime)
+			if err != nil {
+				return fmt.Errorf("failed to parse datetime: %v", err)
+			}
+
+			if parsedTime.After(latestTime) {
+				latest = &File{Path: path}
+				latestTime = parsedTime
+				latestSuffix = suffix
+			}
+		}
+		return nil
+	})
+	if latest != nil {
+		return latest, latestSuffix, nil
+	}
+	return nil, "", ErrNoTargetFound
+}
+
+// ExtractZipToTemp extracts .tar.gz file to a temp location.
+func ExtractZipToTemp(zipPath string, name string) (string, error) {
+	zipFile, err := os.Open(zipPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open zip file: %w", err)
+	}
+	defer func() { _ = zipFile.Close() }()
+
+	gz, err := gzip.NewReader(zipFile)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = gz.Close() }()
+
+	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("shopctl-%s-*", name))
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	fileHandler := func(ctx context.Context, file archives.FileInfo) error {
+		destPath := filepath.Join(tmpDir, file.NameInArchive)
+
+		if file.IsDir() {
+			if err := os.MkdirAll(destPath, os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", destPath, err)
+			}
+			return nil
+		}
+
+		if err := os.MkdirAll(filepath.Dir(destPath), os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create directories for %s: %w", destPath, err)
+		}
+
+		src, err := file.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open file %s in zip: %w", file.NameInArchive, err)
+		}
+		defer func() { _ = src.Close() }()
+
+		dest, err := os.Create(destPath)
+		if err != nil {
+			return fmt.Errorf("failed to create file %s: %w", destPath, err)
+		}
+		defer func() { _ = dest.Close() }()
+
+		if _, err := io.Copy(dest, src); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", destPath, err)
+		}
+
+		return nil
+	}
+
+	var zipFormat archives.Tar
+
+	err = zipFormat.Extract(context.Background(), gz, fileHandler)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract zip file: %w", err)
+	}
+	return tmpDir, nil
 }
 
 // ReadFileContents reads the contents of a file at a specified path.
