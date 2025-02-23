@@ -63,3 +63,21 @@ type CustomerSmsMarketingConsentInput struct {
 	MarketingState      CustomerSmsMarketingState    `json:"marketingState"`
 	ConsentUpdatedAt    *string                      `json:"consentUpdatedAt,omitempty"`
 }
+
+type OptionCreateInput struct {
+	Name            *string                     `json:"name,omitempty"`
+	Position        *int                        `json:"position,omitempty"`
+	Values          []any                       `json:"values"`
+	LinkedMetafield *LinkedMetafieldCreateInput `json:"linkedMetafield,omitempty"`
+}
+
+type OptionValueCreateInput struct {
+	Name                 *string `json:"name,omitempty"`
+	LinkedMetafieldValue *string `json:"linkedMetafieldValue,omitempty"`
+}
+
+type LinkedMetafieldCreateInput struct {
+	Namespace string                   `json:"namespace"`
+	Key       string                   `json:"key"`
+	Values    []OptionValueCreateInput `json:"values"`
+}

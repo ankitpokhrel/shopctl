@@ -67,13 +67,8 @@ func (f *flag) parse(cmd *cobra.Command) {
 	path, err := cmd.Flags().GetString("backup-path")
 	cmdutil.ExitOnErr(err)
 
-	resource, err := cmd.Flags().GetString("resource")
+	resources, err := cmd.Flags().GetStringArray("resource")
 	cmdutil.ExitOnErr(err)
-
-	var resources []string
-	if resource != "" {
-		resources = strings.Split(resource, ",")
-	}
 
 	all, err := cmd.Flags().GetBool("all")
 	cmdutil.ExitOnErr(err)
@@ -120,7 +115,7 @@ func NewCmdRun() *cobra.Command {
 	}
 	cmd.Flags().StringP("backup-id", "b", "", "ID of the backup to restore from")
 	cmd.Flags().StringP("backup-path", "p", "", "Path of the backup folder to restore from")
-	cmd.Flags().StringP("resource", "r", "", "Resource types to restore")
+	cmd.Flags().StringArrayP("resource", "r", []string{}, "Resource types to restore")
 	cmd.Flags().Bool("latest", false, "Restore from the latest backup")
 	cmd.Flags().Bool("all", false, "Restore all resources configured in the backup config")
 	cmd.Flags().Bool("dry-run", false, "Print logs without creating an actual backup file")
@@ -184,7 +179,9 @@ See 'shopctl restore run --help' for more info.`)
 	// We need to maintain the order in which products, customers and orders are restored.
 	// The order should always be Product -> Customer -> Order.
 
+	toRestore := make([]string, 0, len(flag.resources))
 	for _, resource := range flag.resources {
+		toRestore = append(toRestore, resource.Resource)
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
 			rnr = product.NewRunner(bkpPath, eng, client, logger)
@@ -196,6 +193,9 @@ See 'shopctl restore run --help' for more info.`)
 		}
 		runners = append(runners, rnr)
 	}
+
+	logger.Infof("Starting restore for store: %s", ctx.Store)
+	logger.Infof("Resources to restore: %s", strings.Join(toRestore, ","))
 
 	start := time.Now()
 	for _, rnr := range runners {

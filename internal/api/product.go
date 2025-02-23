@@ -323,10 +323,10 @@ func (c GQLClient) CreateProduct(input schema.ProductInput) (*ProductCreateRespo
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Product %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+		return nil, fmt.Errorf("Product: The operation failed with error: %s", out.Errors.Error())
 	}
 	if len(out.Data.ProductCreate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Product %s: The operation failed with user error: %s", *input.ID, out.Data.ProductCreate.UserErrors.Error())
+		return nil, fmt.Errorf("Product: The operation failed with user error: %s", out.Data.ProductCreate.UserErrors.Error())
 	}
 	return &out.Data.ProductCreate, nil
 }

@@ -128,10 +128,10 @@ func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+		return nil, fmt.Errorf("Customer: The operation failed with error: %s", out.Errors.Error())
 	}
 	if len(out.Data.CustomerCreate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerCreate.UserErrors.Error())
+		return nil, fmt.Errorf("Customer: The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
 	}
 	return &out.Data.CustomerCreate, nil
 }
