@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/internal/runner"
+	"github.com/ankitpokhrel/shopctl/internal/runner/restore/product/handler"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 )
 
@@ -75,7 +76,7 @@ func (r *Runner) restore() error {
 			continue
 		}
 
-		productFn := &productHandler{client: r.client, file: f, logger: r.logger}
+		productFn := &handler.ProductHandler{Client: r.client, File: f, Logger: r.logger}
 
 		r.eng.Add(engine.Product, engine.ResourceCollection{
 			engine.NewResource(engine.Product, r.path, productFn),

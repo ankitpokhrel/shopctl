@@ -1,4 +1,4 @@
-package product
+package handler
 
 import (
 	"encoding/json"
@@ -9,27 +9,27 @@ import (
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
-type productHandler struct {
-	client *api.GQLClient
-	logger *tlog.Logger
-	file   registry.File
+type ProductHandler struct {
+	Client *api.GQLClient
+	Logger *tlog.Logger
+	File   registry.File
 }
 
-func (h *productHandler) Handle() (any, error) {
-	product, err := registry.ReadFileContents(h.file.Path)
+func (h *ProductHandler) Handle() (any, error) {
+	product, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
-		h.logger.Error("Unable to read contents", "file", h.file.Path, "error", err)
+		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
 
 	var prod schema.Product
 	if err = json.Unmarshal(product, &prod); err != nil {
-		h.logger.Error("Unable to marshal contents", "file", h.file.Path, "error", err)
+		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
 
 	// TODO: Handle/log error.
-	res, err := createOrUpdateProduct(&prod, h.client, h.logger)
+	res, err := createOrUpdateProduct(&prod, h.Client, h.Logger)
 	if err != nil {
 		return nil, err
 	}
