@@ -42,7 +42,7 @@ $ shopctl restore run -c mycontext -s mystrategy --latest -r product="id:id1,id2
 $ shopctl restore run --latest -r product="id:id1,id2,id3" -r customer
 
 # Restore products and customers directly from the given backup path
-$ shopctl restore run -r product -r customer --backup-path /path/to/bkp
+$ shopctl restore run --backup-path /path/to/unzipped/bkp -r product -r customer
 
 # Dry run executes the restoration process and print logs without making an actual API call
 $ shopctl restore run --latest --all --dry-run
@@ -86,6 +86,38 @@ func (f *flag) parse(cmd *cobra.Command) {
 		cmdutil.ExitOnErr(helpErrorf("Error: either '--backup-id', '--backup-path' or the '--latest' flag is required."))
 	}
 
+	// Reset other options based on precedence to prevent accidental mixups.
+	// Precedence: latest --> backup-id --> backup-path
+	if latest {
+		id = ""
+		path = ""
+	} else if id != "" {
+		path = ""
+	}
+
+	if path != "" && len(resources) == 0 {
+		cmdutil.ExitOnErr(helpErrorf("Error: the '--backup-path' option require resources to process; use '--resource' option to provide a list of resources to restore."))
+	}
+
+	if len(resources) == 0 && !all {
+		cmdutil.ExitOnErr(
+			fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.
+
+Usage:
+
+  # Restore everything from the latest backup
+  $ shopctl restore run --latest --all
+
+  # Restore all products and customers from the given backup id
+  $ shopctl restore run --backup-id 3820045c0c -r product -r customer
+
+  # Restore some products and all customers from the given backup id
+  $ shopctl restore run --backup-id 3820045c0c -r product="id:id1,id2,id3" -r customer
+
+  See 'shopctl restore run --help' for more info.`),
+		)
+	}
+
 	f.id = id
 	f.path = path
 	f.all = all
@@ -104,12 +136,12 @@ func NewCmdRun() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"start", "exec"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			shopCfg := cmd.Context().Value("shopCfg").(*config.ShopConfig)
 			ctx := cmd.Context().Value("context").(*config.StoreContext)
-			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
 			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
 			logger := cmd.Context().Value("logger").(*tlog.Logger)
 
-			cmdutil.ExitOnErr(run(cmd, client, ctx, strategy, logger))
+			cmdutil.ExitOnErr(run(cmd, client, shopCfg, ctx, logger))
 			return nil
 		},
 	}
@@ -125,24 +157,21 @@ func NewCmdRun() *cobra.Command {
 	return &cmd
 }
 
-func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, strategy *config.BackupStrategy, logger *tlog.Logger) error {
+func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, ctx *config.StoreContext, logger *tlog.Logger) error {
+	var strategy *config.BackupStrategy
+
 	flag := &flag{}
 	flag.parse(cmd)
 
-	if len(flag.resources) == 0 && !flag.all {
-		return fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.
+	if flag.latest || flag.id != "" {
+		var err error
+		if strategy, err = cmdutil.GetStrategy(cmd, ctx, shopCfg); err != nil {
+			return err
+		}
+	}
 
-Usage:
-  # Restore everything from the latest backup
-  $ shopctl restore run --latest --all
-
-  # Restore all products and customers from the given backup id
-  $ shopctl restore run --backup-id 3820045c0c -r product -r customer
-
-  # Restore some products and all customers from the given backup id
-  $ shopctl restore run --backup-id 3820045c0c -r product="id:id1,id2,id3" -r customer
-
-See 'shopctl restore run --help' for more info.`)
+	if flag.path == "" && strategy == nil {
+		return fmt.Errorf("strategy not found")
 	}
 
 	if flag.all && len(flag.resources) == 0 {
@@ -161,6 +190,10 @@ See 'shopctl restore run --help' for more info.`)
 		return fmt.Errorf("context: %q: %w", ctx.Alias, err)
 	}
 	eng := engine.New(engine.NewRestore(ctx.Store))
+
+	if flag.latest || flag.id != "" {
+		logger.Infof("Using backup with id %s and name %s", id, filepath.Base(path))
+	}
 
 	bkpPath := path
 	if strings.HasSuffix(path, ".tar.gz") {

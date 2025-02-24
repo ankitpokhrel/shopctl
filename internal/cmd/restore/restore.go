@@ -72,14 +72,9 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
-	if err != nil {
-		return err
-	}
-
 	gqlClient := api.NewGQLClient(ctx.Store, api.LogRequest(lgr))
+	cmd.SetContext(context.WithValue(cmd.Context(), "shopCfg", cfg))
 	cmd.SetContext(context.WithValue(cmd.Context(), "context", ctx))
-	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
 	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
 	cmd.SetContext(context.WithValue(cmd.Context(), "logger", lgr))
 
