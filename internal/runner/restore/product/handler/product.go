@@ -9,13 +9,13 @@ import (
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
-type ProductHandler struct {
+type Product struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
 }
 
-func (h *ProductHandler) Handle() (any, error) {
+func (h *Product) Handle() (any, error) {
 	product, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -28,7 +28,6 @@ func (h *ProductHandler) Handle() (any, error) {
 		return nil, err
 	}
 
-	// TODO: Handle/log error.
 	res, err := createOrUpdateProduct(&prod, h.Client, h.Logger)
 	if err != nil {
 		return nil, err

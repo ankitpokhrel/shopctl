@@ -41,13 +41,18 @@ const (
     description
 }
  options {
+   id
    name
-   values
    position
+   linkedMetafield {
+     key
+     namespace
+   }
    optionValues {
      id
      name
      hasVariants
+     linkedMetafieldValue
   }
 }
 compareAtPriceRange{

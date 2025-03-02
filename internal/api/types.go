@@ -26,22 +26,31 @@ type ProductData struct {
 	PageInfo schema.PageInfo `json:"pageInfo"`
 }
 
+type ProductOptionsResponse struct {
+	Data struct {
+		Product ProductOptionsData `json:"product"`
+	} `json:"data"`
+	Errors Errors `json:"errors"`
+}
+
+type ProductOptionsData struct {
+	ProductID string                 `json:"id"`
+	Options   []schema.ProductOption `json:"options"`
+}
+
 type ProductVariantsResponse struct {
 	Data struct {
-		Product struct {
-			ID       string             `json:"id"`
-			Variants ProductVariantData `json:"variants"`
-		} `json:"product"`
+		Product ProductVariantData `json:"product"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`
 }
 
 type ProductVariantData struct {
-	Edges []struct {
-		Node schema.ProductVariant `json:"node"`
-	} `json:"edges"`
-	PageInfo schema.PageInfo `json:"pageInfo"`
+	ProductID string `json:"id"`
+	Variants  struct {
+		Nodes []schema.ProductVariant `json:"nodes"`
+	} `json:"variants"`
 }
 
 type ProductMetaFieldsResponse struct {
@@ -88,6 +97,22 @@ type ProductMediaData struct {
 type ProductCreateResponse struct {
 	Product    schema.Product `json:"product"`
 	UserErrors UserErrors     `json:"userErrors"`
+}
+
+type ProductOptionSyncResponse struct {
+	Product struct {
+		ID string `json:"id"`
+	} `json:"product"`
+	Options    schema.ProductOption `json:"options"`
+	UserErrors UserErrors           `json:"userErrors"`
+}
+
+type ProductVariantsCreateResponse struct {
+	Product struct {
+		ID string `json:"id"`
+	} `json:"product"`
+	ProductVariants schema.ProductVariant `json:"productVariants"`
+	UserErrors      UserErrors            `json:"userErrors"`
 }
 
 type CustomerCreateResponse struct {

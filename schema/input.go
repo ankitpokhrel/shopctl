@@ -76,8 +76,72 @@ type OptionValueCreateInput struct {
 	LinkedMetafieldValue *string `json:"linkedMetafieldValue,omitempty"`
 }
 
+type OptionValueUpdateInput struct {
+	ID                   string  `json:"id"`
+	Name                 *string `json:"name,omitempty"`
+	LinkedMetafieldValue *string `json:"linkedMetafieldValue,omitempty"`
+}
+
 type LinkedMetafieldCreateInput struct {
 	Namespace string                   `json:"namespace"`
 	Key       string                   `json:"key"`
 	Values    []OptionValueCreateInput `json:"values"`
+}
+
+type OptionUpdateInput struct {
+	ID              string                      `json:"id"`
+	Name            *string                     `json:"name,omitempty"`
+	Position        *int                        `json:"position,omitempty"`
+	LinkedMetafield *LinkedMetafieldUpdateInput `json:"linkedMetafield,omitempty"`
+}
+
+type LinkedMetafieldUpdateInput struct {
+	Namespace string `json:"namespace"`
+	Key       string `json:"key"`
+}
+
+type ProductVariantsBulkInput struct {
+	Barcode             *string                        `json:"barcode,omitempty"`
+	CompareAtPrice      *string                        `json:"compareAtPrice,omitempty"`
+	ID                  *string                        `json:"id,omitempty"`
+	MediaSrc            []any                          `json:"mediaSrc"`
+	InventoryPolicy     *ProductVariantInventoryPolicy `json:"inventoryPolicy,omitempty"`
+	InventoryQuantities []any                          `json:"inventoryQuantities"`
+	InventoryItem       *InventoryItemInput            `json:"inventoryItem,omitempty"`
+	MediaID             *string                        `json:"mediaId,omitempty"`
+	Metafields          []any                          `json:"metafields"`
+	OptionValues        []any                          `json:"optionValues"`
+	Price               *string                        `json:"price,omitempty"`
+	Taxable             *bool                          `json:"taxable,omitempty"`
+	TaxCode             *string                        `json:"taxCode,omitempty"`
+	RequiresComponents  *bool                          `json:"requiresComponents,omitempty"`
+}
+
+type InventoryItemInput struct {
+	Sku                          *string                        `json:"sku,omitempty"`
+	Cost                         *string                        `json:"cost,omitempty"`
+	Tracked                      *bool                          `json:"tracked,omitempty"`
+	CountryCodeOfOrigin          *CountryCode                   `json:"countryCodeOfOrigin,omitempty"`
+	HarmonizedSystemCode         *string                        `json:"harmonizedSystemCode,omitempty"`
+	CountryHarmonizedSystemCodes []any                          `json:"countryHarmonizedSystemCodes"`
+	ProvinceCodeOfOrigin         *string                        `json:"provinceCodeOfOrigin,omitempty"`
+	Measurement                  *InventoryItemMeasurementInput `json:"measurement,omitempty"`
+	RequiresShipping             *bool                          `json:"requiresShipping,omitempty"`
+}
+
+type InventoryItemMeasurementInput struct {
+	Weight *WeightInput `json:"weight,omitempty"`
+}
+
+type VariantOptionValueInput struct {
+	ID                   *string `json:"id,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	LinkedMetafieldValue *string `json:"linkedMetafieldValue,omitempty"`
+	OptionID             *string `json:"optionId,omitempty"`
+	OptionName           *string `json:"optionName,omitempty"`
+}
+
+type WeightInput struct {
+	Value float64    `json:"value"`
+	Unit  WeightUnit `json:"unit"`
 }

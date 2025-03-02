@@ -191,6 +191,44 @@ func (c GQLClient) GetAllProducts(ch chan *ProductsResponse, limit int, after *s
 	return nil
 }
 
+// GetProductOptions fetches product options.
+func (c GQLClient) GetProductOptions(productID string) (*ProductOptionsResponse, error) {
+	var out *ProductOptionsResponse
+
+	query := `query GetProductOptions($id: ID!) {
+  product(id: $id) {
+    id
+    options {
+      id
+      name
+      position
+      linkedMetafield {
+        key
+        namespace
+      }
+      optionValues {
+        id
+        name
+        hasVariants
+        linkedMetafieldValue
+      }
+    }
+  }
+}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": productID},
+	}
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": productID}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return out, nil
+}
+
 // GetProductVariants fetches variants of a product.
 //
 // Shopify limits 100 variants per product so we should be good to fetch them all at once.
@@ -202,10 +240,8 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
   product(id: $id) {
     id
     variants(first: 100) {
-      edges {
-        node {
-          %s
-        }
+      nodes {
+        %s
       }
     }
   }
@@ -268,8 +304,8 @@ func (c GQLClient) GetProductMedias(productID string) (*ProductMediasResponse, e
 
 	query := fmt.Sprintf(`query GetProductMedias($id: ID!) {
   product(id: $id) {
-id
-media(first: 250) {
+    id
+    media(first: 250) {
       edges {
         node {
           %s
@@ -323,10 +359,10 @@ func (c GQLClient) CreateProduct(input schema.ProductInput) (*ProductCreateRespo
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Product: The operation failed with error: %s", out.Errors.Error())
+		return nil, fmt.Errorf("productCreate: the operation failed with error: %s", out.Errors.Error())
 	}
 	if len(out.Data.ProductCreate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Product: The operation failed with user error: %s", out.Data.ProductCreate.UserErrors.Error())
+		return nil, fmt.Errorf("productCreate: the operation failed with user error: %s", out.Data.ProductCreate.UserErrors.Error())
 	}
 	return &out.Data.ProductCreate, nil
 }
@@ -363,10 +399,163 @@ func (c GQLClient) UpdateProduct(input schema.ProductInput) (*ProductCreateRespo
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Product %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+		return nil, fmt.Errorf("productUpdate: Product %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
 	}
 	if len(out.Data.ProductUpdate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Product %s: The operation failed with user error: %s", *input.ID, out.Data.ProductUpdate.UserErrors.Error())
+		return nil, fmt.Errorf("productUpdate: Product %s: The operation failed with user error: %s", *input.ID, out.Data.ProductUpdate.UserErrors.Error())
 	}
 	return &out.Data.ProductUpdate, nil
+}
+
+// CreateProductOptions creates one or more product options.
+func (c GQLClient) CreateProductOptions(productID string, options []schema.OptionCreateInput) (*ProductOptionSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductOptionCreate ProductOptionSyncResponse `json:"productOptionsCreate"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation createOptions($productId: ID!, $options: [OptionCreateInput!]!) {
+      productOptionsCreate(productId: $productId, options: $options) {
+        product {
+          id
+          options {
+            id
+            name
+          }
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+			"options":   options,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productOptionsCreate: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductOptionCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("productOptionsCreate: the operation failed with user error: %s", out.Data.ProductOptionCreate.UserErrors.Error())
+	}
+	return &out.Data.ProductOptionCreate, nil
+}
+
+// UpdateProductOptions updates product options.
+func (c GQLClient) UpdateProductOptions(
+	productID string,
+	option *schema.OptionUpdateInput,
+	optionsToAdd []schema.OptionValueCreateInput,
+	optionsToUpdate []schema.OptionValueUpdateInput,
+	optionsToDelete []string,
+) (*ProductOptionSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductOptionUpdate ProductOptionSyncResponse `json:"productOptionUpdate"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation updateOption($productId: ID!, $option: OptionUpdateInput!, $optionValuesToAdd: [OptionValueCreateInput!], $optionValuesToUpdate: [OptionValueUpdateInput!], $optionValuesToDelete: [ID!], $variantStrategy: ProductOptionUpdateVariantStrategy) {
+      productOptionUpdate(productId: $productId, option: $option, optionValuesToAdd: $optionValuesToAdd, optionValuesToUpdate: $optionValuesToUpdate, optionValuesToDelete: $optionValuesToDelete, variantStrategy: $variantStrategy) {
+        product {
+          id
+          options {
+            id
+            name
+          }
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId":            productID,
+			"option":               option,
+			"optionValuesToAdd":    optionsToAdd,
+			"optionValuesToUpdate": optionsToUpdate,
+			"optionValuesToDelete": optionsToDelete,
+			"variantStrategy":      "MANAGE",
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productOptionUpdate: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductOptionUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("productOptionUpdate: the operation failed with user error: %s", out.Data.ProductOptionUpdate.UserErrors.Error())
+	}
+	return &out.Data.ProductOptionUpdate, nil
+}
+
+// DeleteProductOptions removes one or more product options.
+func (c GQLClient) DeleteProductOptions(productID string, options []string) (*ProductOptionSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductOptionDelete ProductOptionSyncResponse `json:"productOptionsDelete"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation deleteOptions($productId: ID!, $options: [ID!]!, $strategy: ProductOptionDeleteStrategy) {
+      productOptionsDelete(productId: $productId, options: $options, strategy: $strategy) {
+        deletedOptionsIds
+        product {
+          id
+          options {
+            id
+            name
+          }
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+			"options":   options,
+			"strategy":  "POSITION",
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productOptionsDelete: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductOptionDelete.UserErrors) > 0 {
+		return nil, fmt.Errorf("productOptionsDelete: the operation failed with user error: %s", out.Data.ProductOptionDelete.UserErrors.Error())
+	}
+	return &out.Data.ProductOptionDelete, nil
 }

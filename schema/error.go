@@ -5,4 +5,5 @@ package schema
 type UserError struct {
 	Field   []any  `json:"field"`
 	Message string `json:"message"`
+	Code    string `json:"code"`
 }

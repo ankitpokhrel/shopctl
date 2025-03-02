@@ -158,6 +158,19 @@ func (i CustomerInput) MarshalJSON() ([]byte, error) {
 	return sanitizeAndMarshal(patch(i), nil, rmIfNil)
 }
 
+func (i ProductVariantsBulkInput) MarshalJSON() ([]byte, error) {
+	type patch ProductVariantsBulkInput
+
+	rmAlways := []string{
+		"mediaSrc",
+	}
+	rmIfNil := []string{
+		"metafields",
+		"inventoryQuantities",
+	}
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil)
+}
+
 func sanitizeAndMarshal(input any, rmAlways, rmIfNil []string) ([]byte, error) {
 	b, err := json.Marshal(input)
 	if err != nil {
