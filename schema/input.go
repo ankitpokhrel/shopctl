@@ -119,7 +119,7 @@ type ProductVariantsBulkInput struct {
 
 type InventoryItemInput struct {
 	Sku                          *string                        `json:"sku,omitempty"`
-	Cost                         *string                        `json:"cost,omitempty"`
+	Cost                         *float64                       `json:"cost,omitempty"`
 	Tracked                      *bool                          `json:"tracked,omitempty"`
 	CountryCodeOfOrigin          *CountryCode                   `json:"countryCodeOfOrigin,omitempty"`
 	HarmonizedSystemCode         *string                        `json:"harmonizedSystemCode,omitempty"`

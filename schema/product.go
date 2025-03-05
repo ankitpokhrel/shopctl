@@ -69,7 +69,7 @@ type ProductPriceRangeV2 struct {
 }
 
 type MoneyV2 struct {
-	Amount       string       `json:"amount"`
+	Amount       float64      `json:"amount"`
 	CurrencyCode CurrencyCode `json:"currencyCode"`
 }
 

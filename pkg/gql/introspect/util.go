@@ -40,6 +40,8 @@ func gqlTypeToGoType(ref TypeRef) string {
 		case "Int":
 			return "int"
 		case "Float":
+			fallthrough
+		case "Decimal":
 			return "float64"
 		case "String":
 			return "string"
