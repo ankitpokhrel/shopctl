@@ -270,12 +270,10 @@ func (c GQLClient) GetProductMetaFields(productID string) (*ProductMetaFieldsRes
 
 	query := fmt.Sprintf(`query GetProductMetaFields($id: ID!) {
   product(id: $id) {
-id
-metafields(first: 200) {
-      edges {
-        node {
-          %s
-        }
+    id
+    metafields(first: 200) {
+      nodes {
+        %s
       }
     }
   }

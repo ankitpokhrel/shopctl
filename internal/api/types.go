@@ -55,19 +55,17 @@ type ProductVariantData struct {
 
 type ProductMetaFieldsResponse struct {
 	Data struct {
-		Product struct {
-			ID         string         `json:"id"`
-			MetaFields MetaFieldsData `json:"metafields"`
-		} `json:"product"`
+		Product ProductMetaFieldsData `json:"product"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`
 }
 
-type MetaFieldsData struct {
-	Edges []struct {
-		Node schema.Metafield `json:"node"`
-	} `json:"edges"`
+type ProductMetaFieldsData struct {
+	ProductID  string `json:"id"`
+	MetaFields struct {
+		Nodes []schema.Metafield `json:"nodes"`
+	} `json:"metafields"`
 }
 
 type ProductMediasResponse struct {
@@ -107,12 +105,12 @@ type ProductOptionSyncResponse struct {
 	UserErrors UserErrors           `json:"userErrors"`
 }
 
-type ProductVariantsCreateResponse struct {
+type ProductVariantsSyncResponse struct {
 	Product struct {
 		ID string `json:"id"`
 	} `json:"product"`
-	ProductVariants schema.ProductVariant `json:"productVariants"`
-	UserErrors      UserErrors            `json:"userErrors"`
+	Variants   []schema.ProductVariant `json:"productVariants"`
+	UserErrors UserErrors              `json:"userErrors"`
 }
 
 type CustomerCreateResponse struct {
@@ -145,8 +143,8 @@ type CustomerData struct {
 type CustomerMetaFieldsResponse struct {
 	Data struct {
 		Customer struct {
-			ID         string         `json:"id"`
-			MetaFields MetaFieldsData `json:"metafields"`
+			ID         string                `json:"id"`
+			MetaFields ProductMetaFieldsData `json:"metafields"`
 		} `json:"customer"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`

@@ -108,6 +108,7 @@ selectedOptions {
   name
   optionValue {
     id
+    linkedMetafieldValue
   }
   value
 }
