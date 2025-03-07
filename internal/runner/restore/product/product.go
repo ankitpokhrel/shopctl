@@ -72,7 +72,17 @@ func (r *Runner) restore() error {
 		return err
 	}
 
-	resources := make(map[string]engine.ResourceCollection, 0)
+	// When adding resource to the resource collection we need to maintain
+	// the following order: Product -> Options -> Metafields -> Variants
+	const (
+		Product    = 0
+		Options    = 1
+		Metafields = 2
+		Variants   = 3
+	)
+
+	// Initialize resources with fixed slots for ordering.
+	resources := make(map[string][]engine.ResourceCollection)
 
 	for f := range foundFiles {
 		currentID, err := extractID(f.Path)
@@ -85,23 +95,41 @@ func (r *Runner) restore() error {
 			continue
 		}
 
+		if _, exists := resources[currentID]; !exists {
+			resources[currentID] = make([]engine.ResourceCollection, 4)
+		}
+
 		switch filepath.Base(f.Path) {
 		case "product.json":
 			productFn := &handler.Product{Client: r.client, File: f, Logger: r.logger}
 			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger}
-			resources[currentID] = append(
-				resources[currentID],
+			resources[currentID][Product] = append(
+				resources[currentID][Product],
 				engine.NewResource(engine.Product, r.path, productFn),
 				engine.NewResource(engine.Product, r.path, optionsFn),
 			)
+		case "metafields.json":
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
+			resources[currentID][Metafields] = append(
+				resources[currentID][Metafields],
+				engine.NewResource(engine.ProductMetaField, r.path, metafieldFn),
+			)
 		case "variants.json":
 			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger}
-			resources[currentID] = append(resources[currentID], engine.NewResource(engine.ProductVariant, r.path, variantFn))
+			resources[currentID][Variants] = append(
+				resources[currentID][Variants],
+				engine.NewResource(engine.ProductVariant, r.path, variantFn),
+			)
 		}
 	}
 
-	for _, rc := range resources {
-		r.eng.Add(engine.Product, rc)
+	// Flatten resources for each currentID in the defined order.
+	for _, orderedResources := range resources {
+		var flattened engine.ResourceCollection
+		for _, rc := range orderedResources {
+			flattened = append(flattened, rc...)
+		}
+		r.eng.Add(engine.Product, flattened)
 	}
 	return nil
 }

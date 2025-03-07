@@ -85,12 +85,9 @@ func (m Metafield) MarshalJSON() ([]byte, error) {
 		"owner",
 		"reference",
 		"references",
-		"value",
-	}
-	rmIfNil := []string{
 		"definition",
 	}
-	return sanitizeAndMarshal(patch(m), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(m), rmAlways, nil)
 }
 
 func (m MetafieldDefinition) MarshalJSON() ([]byte, error) {
@@ -100,6 +97,9 @@ func (m MetafieldDefinition) MarshalJSON() ([]byte, error) {
 		"access",
 		"capabilities",
 		"metafields",
+		"validations",
+		"validationStatus",
+		"standardTemplate",
 	}
 	return sanitizeAndMarshal(patch(m), rmAlways, nil)
 }

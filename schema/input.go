@@ -83,9 +83,9 @@ type OptionValueUpdateInput struct {
 }
 
 type LinkedMetafieldCreateInput struct {
-	Namespace string                   `json:"namespace"`
-	Key       string                   `json:"key"`
-	Values    []OptionValueCreateInput `json:"values"`
+	Namespace string `json:"namespace"`
+	Key       string `json:"key"`
+	Values    []any  `json:"values"`
 }
 
 type OptionUpdateInput struct {
@@ -144,4 +144,19 @@ type VariantOptionValueInput struct {
 type WeightInput struct {
 	Value float64    `json:"value"`
 	Unit  WeightUnit `json:"unit"`
+}
+
+type MetafieldsSetInput struct {
+	OwnerID       string  `json:"ownerId"`
+	Namespace     *string `json:"namespace,omitempty"`
+	Key           string  `json:"key"`
+	Value         string  `json:"value"`
+	CompareDigest *string `json:"compareDigest,omitempty"`
+	Type          *string `json:"type,omitempty"`
+}
+
+type MetafieldIdentifierInput struct {
+	OwnerID   string `json:"ownerId"`
+	Namespace string `json:"namespace"`
+	Key       string `json:"key"`
 }

@@ -86,7 +86,7 @@ func (r *Runner) backup(limit int, after *string, query *string) {
 		defer close(productsCh)
 
 		if err := r.client.GetAllProducts(productsCh, limit, after, query); err != nil {
-			r.logger.Error("error when fetching products", "limit", limit, "after", after, "error", err)
+			r.logger.Error("Failed to fetch products", "limit", limit, "after", after, "error", err)
 		}
 	}()
 

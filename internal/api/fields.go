@@ -62,7 +62,7 @@ compareAtPriceRange{
   }
   minVariantCompareAtPrice{
      amount
-    currencyCode
+     currencyCode
   }
 }
 priceRangeV2{
@@ -171,50 +171,11 @@ mediaContentType
 mediaErrors { details }
 mediaWarnings { message }`
 
-	fieldsMetaFields = `id
+	fieldsMetafields = `id
 namespace
 key
 jsonValue
-definition {
-  id
-  key
-  namespace
-  name
-  description
-  ownerType
-  metafieldsCount
-  type {
-    name
-    category
-  }
-  validations {
-    __typename
-    name
-    type
-    value
-  }
-  validationStatus
-  useAsCollectionCondition
-  standardTemplate {
-    id
-    key
-    name
-    description
-    namespace
-    ownerTypes
-    type {
-      name
-      category
-    }
-    validations {
-      type
-      name
-      value
-    }
-    visibleToStorefrontApi
-  }
-  pinnedPosition
-}
+value
 type
 description
 ownerType

@@ -421,6 +421,12 @@ type Metafield struct {
 	Value            string                        `json:"value"`
 }
 
+type MetafieldIdentifier struct {
+	Key       string `json:"key"`
+	Namespace string `json:"namespace"`
+	OwnerID   string `json:"ownerId"`
+}
+
 type HasMetafields interface {
 	Metafield() Metafield
 	Metafields() MetafieldConnection

@@ -86,7 +86,7 @@ metafields(first: 200) {
       }
     }
   }
-}`, fieldsMetaFields)
+}`, fieldsMetafields)
 
 	req := client.GQLRequest{
 		Query:     query,

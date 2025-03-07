@@ -277,7 +277,7 @@ func (c GQLClient) GetProductMetaFields(productID string) (*ProductMetaFieldsRes
       }
     }
   }
-}`, fieldsMetaFields)
+}`, fieldsMetafields)
 
 	req := client.GQLRequest{
 		Query:     query,
@@ -556,4 +556,138 @@ func (c GQLClient) DeleteProductOptions(productID string, options []string) (*Pr
 		return nil, fmt.Errorf("productOptionsDelete: the operation failed with user error: %s", out.Data.ProductOptionDelete.UserErrors.Error())
 	}
 	return &out.Data.ProductOptionDelete, nil
+}
+
+// CreateProductVariants creates one or more product variants.
+func (c GQLClient) CreateProductVariants(productID string, variants []schema.ProductVariantsBulkInput) (*ProductVariantsSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductVariantsBulkCreate ProductVariantsSyncResponse `json:"productVariantsBulkCreate"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation ProductVariantsCreate($productId: ID!, $variants: [ProductVariantsBulkInput!]!, $strategy: ProductVariantsBulkCreateStrategy) {
+      productVariantsBulkCreate(productId: $productId, variants: $variants, strategy: $strategy) {
+        product {
+          id
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+			"variants":  variants,
+			"strategy":  "REMOVE_STANDALONE_VARIANT",
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productVariantsCreate: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductVariantsBulkCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("productVariantsCreate: the operation failed with user error: %s", out.Data.ProductVariantsBulkCreate.UserErrors.Error())
+	}
+	return &out.Data.ProductVariantsBulkCreate, nil
+}
+
+// UpdateProductVariants creates one or more product variants.
+func (c GQLClient) UpdateProductVariants(productID string, variants []schema.ProductVariantsBulkInput) (*ProductVariantsSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductVariantsBulkUpdate ProductVariantsSyncResponse `json:"productVariantsBulkUpdate"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation ProductVariantsUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+        product {
+          id
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+			"variants":  variants,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productVariantsUpdate: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductVariantsBulkUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("productVariantsUpdate: the operation failed with user error: %s", out.Data.ProductVariantsBulkUpdate.UserErrors.Error())
+	}
+	return &out.Data.ProductVariantsBulkUpdate, nil
+}
+
+// DeleteProductVariants deletes one or more product variants.
+func (c GQLClient) DeleteProductVariants(productID string, variants []string) (*ProductVariantsSyncResponse, error) {
+	var out struct {
+		Data struct {
+			ProductVariantBulkDelete ProductVariantsSyncResponse `json:"productVariantsDelete"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation productVariantsDelete($productId: ID!, $variantsIds: [ID!]!) {
+      productVariantsBulkDelete(productId: $productId, variantsIds: $variantsIds) {
+        product {
+          id
+          options {
+            id
+            name
+          }
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId":   productID,
+			"variantsIds": variants,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productVariantsDelete: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductVariantBulkDelete.UserErrors) > 0 {
+		return nil, fmt.Errorf("productVariantsDelete: the operation failed with user error: %s", out.Data.ProductVariantBulkDelete.UserErrors.Error())
+	}
+	return &out.Data.ProductVariantBulkDelete, nil
 }

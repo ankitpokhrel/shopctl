@@ -48,6 +48,7 @@ func (h Option) Handle() (any, error) {
 	toAdd := make([]*schema.ProductOption, 0)
 	toUpdate := make([]*schema.ProductOption, 0)
 	toDelete := make([]string, 0)
+
 	for id := range currentOptionsMap {
 		if opt, ok := backupOptionsMap[id]; ok {
 			toUpdate = append(toUpdate, opt)
@@ -61,16 +62,25 @@ func (h Option) Handle() (any, error) {
 		}
 	}
 
-	sync := func(pid string) (*api.ProductOptionSyncResponse, error) {
+	attemptSync := func(pid string) error {
+		if _, err := h.handleProductOptionDelete(pid, toDelete); err != nil {
+			return err
+		}
 		if _, err := h.handleProductOptionAdd(pid, toAdd); err != nil {
-			return nil, err
+			return err
 		}
 		if _, err := h.handlProductOptionUpdate(pid, currentOptionsMap, toUpdate); err != nil {
-			return nil, err
+			return err
 		}
-		return h.handleProductOptionDelete(pid, toDelete)
+		return nil
 	}
-	return sync(product.ID)
+
+	h.Logger.V(1).Info("Attempting to sync product options", "id", product.ID)
+	err = attemptSync(product.ID)
+	if err != nil {
+		h.Logger.Error("Failed to sync product options", "id", product.ID)
+	}
+	return nil, err
 }
 
 func (h Option) handleProductOptionAdd(productID string, toAdd []*schema.ProductOption) (*api.ProductOptionSyncResponse, error) {
@@ -81,26 +91,34 @@ func (h Option) handleProductOptionAdd(productID string, toAdd []*schema.Product
 	options := make([]schema.OptionCreateInput, 0, len(toAdd))
 	for _, opt := range toAdd {
 		optionValues := make([]any, 0, len(opt.OptionValues))
+		linkedOptionValues := make([]any, 0, len(optionValues))
 		for _, val := range opt.OptionValues {
-			optionValues = append(optionValues, schema.OptionValueCreateInput{
-				Name:                 &val.Name,
-				LinkedMetafieldValue: val.LinkedMetafieldValue,
-			})
-		}
-		var linkedMetaField schema.LinkedMetafieldCreateInput
-		if opt.LinkedMetafield != nil {
-			linkedMetaField = schema.LinkedMetafieldCreateInput{
-				Key:       *opt.LinkedMetafield.Key,
-				Namespace: *opt.LinkedMetafield.Namespace,
+			if val.LinkedMetafieldValue == nil {
+				optionValues = append(optionValues, schema.OptionValueCreateInput{Name: &val.Name})
+			} else {
+				linkedOptionValues = append(linkedOptionValues, val.LinkedMetafieldValue)
 			}
 		}
-		options = append(options, schema.OptionCreateInput{
-			Name:            &opt.Name,
-			Position:        &opt.Position,
-			Values:          optionValues,
-			LinkedMetafield: &linkedMetaField,
-		})
+		if opt.LinkedMetafield != nil {
+			linkedMetaField := &schema.LinkedMetafieldCreateInput{
+				Key:       *opt.LinkedMetafield.Key,
+				Namespace: *opt.LinkedMetafield.Namespace,
+				Values:    linkedOptionValues,
+			}
+			options = append(options, schema.OptionCreateInput{
+				Name:            &opt.Name,
+				Position:        &opt.Position,
+				LinkedMetafield: linkedMetaField,
+			})
+		} else {
+			options = append(options, schema.OptionCreateInput{
+				Name:     &opt.Name,
+				Position: &opt.Position,
+				Values:   optionValues,
+			})
+		}
 	}
+	h.Logger.V(2).Info("Attempting to create product options", "id", productID)
 	return h.Client.CreateProductOptions(productID, options)
 }
 
@@ -114,6 +132,7 @@ func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map
 		updateErrors    = make([]error, 0)
 	)
 
+	h.Logger.V(2).Info("Attempting to update product options", "id", productID)
 	for _, opt := range toUpdate {
 		option := schema.OptionUpdateInput{
 			ID:       opt.ID,
@@ -187,5 +206,6 @@ func (h Option) handleProductOptionDelete(productID string, toDelete []string) (
 	if len(toDelete) == 0 {
 		return nil, nil
 	}
+	h.Logger.V(2).Info("Attempting to delete product options", "id", productID)
 	return h.Client.DeleteProductOptions(productID, toDelete)
 }
