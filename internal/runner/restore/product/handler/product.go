@@ -93,7 +93,7 @@ func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *
 		input.ID = &product.ID
 
 		lgr.Warn("Product already exists, updating", "id", product.ID)
-		return client.UpdateProduct(input)
+		return client.UpdateProduct(input, nil)
 	}
 
 	// Some fields can only be specified during create.

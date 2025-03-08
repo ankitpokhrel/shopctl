@@ -72,13 +72,17 @@ func (r *Runner) restore() error {
 		return err
 	}
 
-	// When adding resource to the resource collection we need to maintain
-	// the following order: Product -> Options -> Metafields -> Variants
+	// This is the max number of resources we're expecting to process.
+	const maxNumResources = 5
+
+	// When adding resource to the resource collection we need to maintain the
+	// following order: Product -> Options -> Metafields -> Variants -> Media
 	const (
-		Product    = 0
-		Options    = 1
-		Metafields = 2
-		Variants   = 3
+		Product = iota
+		Options
+		Metafields
+		Variants
+		Media
 	)
 
 	// Initialize resources with fixed slots for ordering.
@@ -96,12 +100,12 @@ func (r *Runner) restore() error {
 		}
 
 		if _, exists := resources[currentID]; !exists {
-			resources[currentID] = make([]engine.ResourceCollection, 4)
+			resources[currentID] = make([]engine.ResourceCollection, maxNumResources)
 		}
 
 		switch filepath.Base(f.Path) {
 		case "product.json":
-			productFn := &handler.Product{Client: r.client, File: f, Logger: r.logger}
+			productFn := &handler.Media{Client: r.client, File: f, Logger: r.logger}
 			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger}
 			resources[currentID][Product] = append(
 				resources[currentID][Product],
@@ -119,6 +123,12 @@ func (r *Runner) restore() error {
 			resources[currentID][Variants] = append(
 				resources[currentID][Variants],
 				engine.NewResource(engine.ProductVariant, r.path, variantFn),
+			)
+		case "media.json":
+			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger}
+			resources[currentID][Media] = append(
+				resources[currentID][Media],
+				engine.NewResource(engine.ProductMedia, r.path, mediaFn),
 			)
 		}
 	}

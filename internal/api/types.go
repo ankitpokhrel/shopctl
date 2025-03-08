@@ -70,26 +70,24 @@ type ProductMetafieldsData struct {
 
 type ProductMediasResponse struct {
 	Data struct {
-		Product struct {
-			ID    string           `json:"id"`
-			Media ProductMediaData `json:"media"`
-		} `json:"product"`
+		Product ProductMediaData `json:"product"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`
 }
 
 type ProductMediaData struct {
-	Edges []struct {
-		Node struct {
+	ProductID string `json:"id"`
+	Media     struct {
+		Nodes []struct {
 			ID               string                   `json:"id"`
 			Status           schema.MediaStatus       `json:"status"`
 			Preview          schema.MediaPreviewImage `json:"preview"`
 			MediaContentType schema.MediaContentType  `json:"mediaContentType"`
-			MediaErrors      []any                    `json:"mediaErrors"`
-			MediaWarnings    []any                    `json:"mediaWarnings"`
-		} `json:"node"`
-	} `json:"edges"`
+			MediaErrors      []any                    `json:"mediaErrors,omitempty"`
+			MediaWarnings    []any                    `json:"mediaWarnings,omitempty"`
+		} `json:"nodes"`
+	} `json:"media"`
 }
 
 type ProductCreateResponse struct {

@@ -304,10 +304,8 @@ func (c GQLClient) GetProductMedias(productID string) (*ProductMediasResponse, e
   product(id: $id) {
     id
     media(first: 250) {
-      edges {
-        node {
-          %s
-        }
+      nodes {
+        %s
       }
     }
   }
@@ -366,7 +364,7 @@ func (c GQLClient) CreateProduct(input schema.ProductInput) (*ProductCreateRespo
 }
 
 // UpdateProduct updates a product.
-func (c GQLClient) UpdateProduct(input schema.ProductInput) (*ProductCreateResponse, error) {
+func (c GQLClient) UpdateProduct(input schema.ProductInput, media []schema.CreateMediaInput) (*ProductCreateResponse, error) {
 	var out struct {
 		Data struct {
 			ProductUpdate ProductCreateResponse `json:"productUpdate"`
@@ -375,8 +373,8 @@ func (c GQLClient) UpdateProduct(input schema.ProductInput) (*ProductCreateRespo
 	}
 
 	query := `
-	mutation productUpdate($input: ProductInput!) {
-		productUpdate(input: $input) {
+	mutation productUpdate($input: ProductInput!, $media: [CreateMediaInput!]) {
+        productUpdate(input: $input, media: $media) {
 			product {
 				id
 				title
@@ -389,8 +387,11 @@ func (c GQLClient) UpdateProduct(input schema.ProductInput) (*ProductCreateRespo
 	}`
 
 	req := client.GQLRequest{
-		Query:     query,
-		Variables: client.QueryVars{"input": input},
+		Query: query,
+		Variables: client.QueryVars{
+			"input": input,
+			"media": media,
+		},
 	}
 
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {

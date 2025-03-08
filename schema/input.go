@@ -160,3 +160,9 @@ type MetafieldIdentifierInput struct {
 	Namespace string `json:"namespace"`
 	Key       string `json:"key"`
 }
+
+type CreateMediaInput struct {
+	OriginalSource   string           `json:"originalSource"`
+	Alt              *string          `json:"alt,omitempty"`
+	MediaContentType MediaContentType `json:"mediaContentType"`
+}
