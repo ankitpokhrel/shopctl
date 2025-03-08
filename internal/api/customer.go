@@ -3,23 +3,40 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
-// CheckCustomerByID fetches a customer by ID without additional details.
-func (c GQLClient) CheckCustomerByID(id string) (*CustomerResponse, error) {
+// CheckCustomerByEmailOrPhone fetches a customer by email or phone without additional details.
+func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*CustomersResponse, error) {
 	var (
-		query = `query CheckCustomerByID($id: ID!) { customer(id: $id) { id } }`
+		query = `query CheckCustomerByEmailOrPhone($query: String!) {
+          customers(first: 1, query: $query) {
+            nodes {
+              id
+              email
+              phone
+            }
+          }
+        }`
 
-		out *CustomerResponse
+		exp []string
+		out *CustomersResponse
 		err error
 	)
 
+	if email != nil {
+		exp = append(exp, fmt.Sprintf("email:%s", *email))
+	}
+	if phone != nil {
+		exp = append(exp, fmt.Sprintf("phone:%s", *phone))
+	}
+
 	req := client.GQLRequest{
 		Query:     query,
-		Variables: client.QueryVars{"id": id},
+		Variables: client.QueryVars{"query": strings.Join(exp, " OR ")},
 	}
 	if err = c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
@@ -33,10 +50,8 @@ func (c GQLClient) GetAllCustomers(ch chan *CustomersResponse, limit int, after 
 
 	query := fmt.Sprintf(`query GetCustomers($first: Int!, $after: String) {
   customers(first: $first, after: $after) {
-    edges {
-      node {
-        %s
-      }
+    nodes {
+      %s
     }
     pageInfo {
       hasNextPage
@@ -77,12 +92,10 @@ func (c GQLClient) GetCustomerMetaFields(customerID string) (*CustomerMetaFields
 
 	query := fmt.Sprintf(`query GetCustomerMetaFields($id: ID!) {
   customer(id: $id) {
-id
-metafields(first: 200) {
-      edges {
-        node {
-          %s
-        }
+    id
+    metafields(first: 200) {
+      nodes {
+        %s
       }
     }
   }
@@ -128,10 +141,10 @@ func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Customer: The operation failed with error: %s", out.Errors.Error())
+		return nil, fmt.Errorf("customerCreate: The operation failed with error: %s", out.Errors.Error())
 	}
 	if len(out.Data.CustomerCreate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Customer: The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
+		return nil, fmt.Errorf("customerCreate: The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
 	}
 	return &out.Data.CustomerCreate, nil
 }
@@ -166,10 +179,10 @@ func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		return nil, err
 	}
 	if len(out.Errors) > 0 {
-		return nil, fmt.Errorf("Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+		return nil, fmt.Errorf("customerUpdate: Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
 	}
 	if len(out.Data.CustomerUpdate.UserErrors) > 0 {
-		return nil, fmt.Errorf("Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerUpdate.UserErrors.Error())
+		return nil, fmt.Errorf("customerUpdate: Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerUpdate.UserErrors.Error())
 	}
 	return &out.Data.CustomerUpdate, nil
 }

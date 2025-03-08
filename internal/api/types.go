@@ -126,13 +126,6 @@ type CustomerCreateResponse struct {
 	UserErrors UserErrors      `json:"userErrors"`
 }
 
-type CustomerResponse struct {
-	Data struct {
-		Customer schema.Customer `json:"customer"`
-	} `json:"data"`
-	Errors Errors `json:"errors"`
-}
-
 type CustomersResponse struct {
 	Data struct {
 		Customers CustomerData `json:"customers"`
@@ -142,17 +135,17 @@ type CustomersResponse struct {
 }
 
 type CustomerData struct {
-	Edges []struct {
-		Node schema.Customer `json:"node"`
-	} `json:"edges"`
-	PageInfo schema.PageInfo `json:"pageInfo"`
+	Nodes    []schema.Customer `json:"nodes"`
+	PageInfo schema.PageInfo   `json:"pageInfo"`
 }
 
 type CustomerMetaFieldsResponse struct {
 	Data struct {
 		Customer struct {
-			ID         string                `json:"id"`
-			MetaFields ProductMetafieldsData `json:"metafields"`
+			ID         string `json:"id"`
+			Metafields struct {
+				Nodes []schema.Metafield `json:"nodes"`
+			} `json:"metafields"`
 		} `json:"customer"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`

@@ -84,13 +84,13 @@ func (r *Runner) backup(limit int, after *string) {
 	}()
 
 	for customers := range customersCh {
-		r.stats.Count += len(customers.Data.Customers.Edges)
+		r.stats.Count += len(customers.Data.Customers.Nodes)
 
-		for _, customer := range customers.Data.Customers.Edges {
-			cid := engine.ExtractNumericID(customer.Node.ID)
+		for _, customer := range customers.Data.Customers.Nodes {
+			cid := engine.ExtractNumericID(customer.ID)
 			hash := engine.GetHashDir(cid)
 
-			created, err := time.Parse(time.RFC3339, customer.Node.CreatedAt)
+			created, err := time.Parse(time.RFC3339, customer.CreatedAt)
 			if err != nil {
 				r.logger.Error("error when parsing created time", "customerId", cid, "error", err)
 				continue
@@ -98,8 +98,8 @@ func (r *Runner) backup(limit int, after *string) {
 			path := filepath.Join(engine.Customer.RootDir(), fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, cid)
 			r.logger.V(tlog.VL2).Infof("Customer %s: registering backup to path %s/%s", cid, r.bkpEng.Dir(), path)
 
-			customerFn := &provider.Customer{Customer: &customer.Node}
-			metafieldFn := &provider.MetaField{Client: r.client, Logger: r.logger, CustomerID: customer.Node.ID}
+			customerFn := &provider.Customer{Customer: &customer}
+			metafieldFn := &provider.MetaField{Client: r.client, Logger: r.logger, CustomerID: customer.ID}
 
 			r.eng.Add(engine.Customer, engine.ResourceCollection{
 				engine.NewResource(engine.Customer, path, customerFn),

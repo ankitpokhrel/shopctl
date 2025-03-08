@@ -166,3 +166,16 @@ type CreateMediaInput struct {
 	Alt              *string          `json:"alt,omitempty"`
 	MediaContentType MediaContentType `json:"mediaContentType"`
 }
+
+type MailingAddressInput struct {
+	Address1     *string      `json:"address1,omitempty"`
+	Address2     *string      `json:"address2,omitempty"`
+	City         *string      `json:"city,omitempty"`
+	Company      *string      `json:"company,omitempty"`
+	CountryCode  *CountryCode `json:"countryCode,omitempty"`
+	FirstName    *string      `json:"firstName,omitempty"`
+	LastName     *string      `json:"lastName,omitempty"`
+	Phone        *string      `json:"phone,omitempty"`
+	ProvinceCode *string      `json:"provinceCode,omitempty"`
+	Zip          *string      `json:"zip,omitempty"`
+}
