@@ -139,14 +139,28 @@ type CustomerData struct {
 	PageInfo schema.PageInfo   `json:"pageInfo"`
 }
 
+type CustomerMetafieldsData struct {
+	CustomerID string `json:"id"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	Metafields struct {
+		Nodes []schema.Metafield `json:"nodes"`
+	} `json:"metafields"`
+}
+
 type CustomerMetaFieldsResponse struct {
 	Data struct {
-		Customer struct {
-			ID         string `json:"id"`
-			Metafields struct {
-				Nodes []schema.Metafield `json:"nodes"`
-			} `json:"metafields"`
-		} `json:"customer"`
+		Customer CustomerMetafieldsData `json:"customer"`
+	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
+}
+
+type CustomersMetaFieldsResponse struct {
+	Data struct {
+		Customers struct {
+			Nodes []CustomerMetafieldsData `json:"nodes"`
+		} `json:"customers"`
 	} `json:"data"`
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`

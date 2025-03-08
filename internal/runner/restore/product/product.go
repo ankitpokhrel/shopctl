@@ -75,7 +75,7 @@ func (r *Runner) restore() error {
 	// This is the max number of resources we're expecting to process.
 	const maxNumResources = 5
 
-	// When adding resource to the resource collection we need to maintain the
+	// When adding resource to the resource collection we need to maintain
 	// following order: Product -> Options -> Metafields -> Variants -> Media
 	const (
 		Product = iota
@@ -89,14 +89,14 @@ func (r *Runner) restore() error {
 	resources := make(map[string][]engine.ResourceCollection)
 
 	for f := range foundFiles {
-		currentID, err := extractID(f.Path)
-		if err != nil {
-			return err
-		}
-
 		if f.Err != nil {
 			r.logger.Warn("Skipping file due to read err", "file", f.Path, "error", f.Err)
 			continue
+		}
+
+		currentID, err := extractID(f.Path)
+		if err != nil {
+			return err
 		}
 
 		if _, exists := resources[currentID]; !exists {

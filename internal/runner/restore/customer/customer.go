@@ -2,6 +2,8 @@ package customer
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
@@ -65,10 +67,23 @@ func (r *Runner) Run() error {
 }
 
 func (r *Runner) restore() error {
-	foundFiles, err := registry.FindFilesInDir(r.path, fmt.Sprintf("%s.json", engine.Customer))
+	foundFiles, err := registry.GetAllInDir(r.path, ".json")
 	if err != nil {
 		return err
 	}
+
+	// This is the max number of resources we're expecting to process.
+	const maxNumResources = 2
+
+	// When adding resource to the resource collection we need to maintain
+	// following order: Customer -> Metafields
+	const (
+		Customer = iota
+		Metafields
+	)
+
+	// Initialize resources with fixed slots for ordering.
+	resources := make(map[string][]engine.ResourceCollection)
 
 	for f := range foundFiles {
 		if f.Err != nil {
@@ -76,17 +91,53 @@ func (r *Runner) restore() error {
 			continue
 		}
 
-		customerFn := &handler.Customer{Client: r.client, File: f, Logger: r.logger}
+		currentID, err := extractID(f.Path)
+		if err != nil {
+			return err
+		}
 
-		r.eng.Add(engine.Customer, engine.ResourceCollection{
-			engine.NewResource(engine.Product, r.path, customerFn),
-		})
+		if _, exists := resources[currentID]; !exists {
+			resources[currentID] = make([]engine.ResourceCollection, maxNumResources)
+		}
+
+		switch filepath.Base(f.Path) {
+		case "customer.json":
+			customerFn := &handler.Customer{Client: r.client, File: f, Logger: r.logger}
+			resources[currentID][Customer] = append(
+				resources[currentID][Customer],
+				engine.NewResource(engine.Customer, r.path, customerFn),
+			)
+		case "metafields.json":
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
+			resources[currentID][Metafields] = append(
+				resources[currentID][Metafields],
+				engine.NewResource(engine.CustomerMetaField, r.path, metafieldFn),
+			)
+
+		}
 	}
 
+	// Flatten resources for each currentID in the defined order.
+	for _, orderedResources := range resources {
+		var flattened engine.ResourceCollection
+		for _, rc := range orderedResources {
+			flattened = append(flattened, rc...)
+		}
+		r.eng.Add(engine.Customer, flattened)
+	}
 	return nil
 }
 
 // TODO.
 func (r *Runner) Stats() *runner.Summary {
 	return &runner.Summary{}
+}
+
+func extractID(path string) (string, error) {
+	parts := strings.Split(filepath.Clean(path), string(filepath.Separator))
+
+	if len(parts) < 2 {
+		return "", fmt.Errorf("path does not have enough elements")
+	}
+	return parts[len(parts)-2], nil
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -22,26 +23,34 @@ func (h Metafield) Handle() (any, error) {
 		return nil, err
 	}
 
-	var meta api.ProductMetafieldsData
+	var meta api.CustomerMetafieldsData
 	if err = json.Unmarshal(metaRaw, &meta); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
 
+	keyme := func(namespace, key string) string {
+		return fmt.Sprintf("%s.%s", namespace, key)
+	}
+
 	// Get upstream metafields.
-	currentMetafields, err := h.Client.GetProductMetaFields(meta.ProductID)
+	currentMetafields, err := h.Client.GetCustomerMetaFieldsByEmailOrPhone(&meta.Email, &meta.Phone)
 	if err != nil {
 		return nil, err
 	}
+	currentMetaNode := currentMetafields.Data.Customers.Nodes[0]
+	updatedCustomerID := currentMetaNode.CustomerID
 
-	currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetafields.Data.Product.Metafields.Nodes))
-	for _, opt := range currentMetafields.Data.Product.Metafields.Nodes {
-		currentMetafieldsMap[opt.ID] = &opt
+	currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetaNode.Metafields.Nodes))
+	for _, m := range currentMetaNode.Metafields.Nodes {
+		key := keyme(m.Namespace, m.Key)
+		currentMetafieldsMap[key] = &m
 	}
 
 	backupMetafieldsMap := make(map[string]*schema.Metafield, len(meta.Metafields.Nodes))
 	for _, m := range meta.Metafields.Nodes {
-		backupMetafieldsMap[m.ID] = &m
+		key := keyme(m.Namespace, m.Key)
+		backupMetafieldsMap[key] = &m
 	}
 
 	toAdd := make([]*schema.Metafield, 0)
@@ -60,23 +69,23 @@ func (h Metafield) Handle() (any, error) {
 		}
 	}
 
-	attemptSync := func(pid string) error {
-		if _, err := h.handleProductMetaFieldsSet(pid, toAdd); err != nil {
+	attemptSync := func(cid string) error {
+		if _, err := h.handleCustomerMetaFieldsSet(cid, toAdd); err != nil {
 			return err
 		}
-		if _, err := h.handleProductMetaFieldsDelete(pid, toDelete); err != nil {
+		if _, err := h.handleCustomerMetaFieldsDelete(cid, toDelete); err != nil {
 			return err
 		}
 		return nil
 	}
-	err = attemptSync(meta.ProductID)
+	err = attemptSync(updatedCustomerID)
 	if err != nil {
-		h.Logger.Error("Failed to sync product metafields", "id", meta.ProductID)
+		h.Logger.Error("Failed to sync customer metafields", "oldID", meta.CustomerID, "upstreamID", updatedCustomerID)
 	}
 	return nil, err
 }
 
-func (h Metafield) handleProductMetaFieldsSet(productID string, toAdd []*schema.Metafield) (*api.MetafieldSetResponse, error) {
+func (h Metafield) handleCustomerMetaFieldsSet(customerID string, toAdd []*schema.Metafield) (*api.MetafieldSetResponse, error) {
 	if len(toAdd) == 0 {
 		return nil, nil
 	}
@@ -87,15 +96,15 @@ func (h Metafield) handleProductMetaFieldsSet(productID string, toAdd []*schema.
 			Namespace: &m.Namespace,
 			Key:       m.Key,
 			Value:     m.Value,
-			OwnerID:   productID,
+			OwnerID:   customerID,
 			Type:      &m.Type,
 		})
 	}
-	h.Logger.V(2).Info("Attempting to set product metafields", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to set customer metafields", "id", customerID)
 	return h.Client.SetMetafields(metafields)
 }
 
-func (h Metafield) handleProductMetaFieldsDelete(productID string, toDelete []*schema.Metafield) (*api.MetafieldDeleteResponse, error) {
+func (h Metafield) handleCustomerMetaFieldsDelete(customerID string, toDelete []*schema.Metafield) (*api.MetafieldDeleteResponse, error) {
 	if len(toDelete) == 0 {
 		return nil, nil
 	}
@@ -105,9 +114,9 @@ func (h Metafield) handleProductMetaFieldsDelete(productID string, toDelete []*s
 		metafields = append(metafields, schema.MetafieldIdentifierInput{
 			Key:       m.Key,
 			Namespace: m.Namespace,
-			OwnerID:   productID,
+			OwnerID:   customerID,
 		})
 	}
-	h.Logger.V(2).Info("Attempting to delete product metafields", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to delete customer metafields", "id", customerID)
 	return h.Client.DeleteMetafields(metafields)
 }
