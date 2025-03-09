@@ -49,7 +49,7 @@ See 'shopctl config set-strategy --help' for more info.`
 
 	if dir == "" || len(resources) == 0 {
 		cmdutil.ExitOnErr(
-			fmt.Errorf("Error: backup directory and resources to backup are required.\n\n%s", usage),
+			fmt.Errorf("error: backup directory and resources to backup are required.\n\n%s", usage),
 		)
 	}
 
@@ -89,11 +89,10 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ctx := shopCfg.GetContext(shopCfg.CurrentContext())
-	if ctx == nil {
-		return fmt.Errorf("current-context is not set")
+	ctx, err := cmdutil.GetContext(cmd, shopCfg)
+	if err != nil {
+		return err
 	}
-
 	storeCfg, err := config.NewStoreConfig(ctx.Store, ctx.Alias)
 	if err != nil {
 		return err
@@ -110,7 +109,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := storeCfg.Save(); err != nil {
 		return err
 	}
-
 	cmdutil.Success("Strategy updated successfully")
 	return nil
 }
