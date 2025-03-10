@@ -101,7 +101,7 @@ func (f *flag) parse(cmd *cobra.Command) {
 
 	if len(resources) == 0 && !all {
 		cmdutil.ExitOnErr(
-			fmt.Errorf(`Error: please specify resources to restore or use '--all' to restore everything.
+			fmt.Errorf(`error: please specify resources to restore or use '--all' to restore everything.
 
 Usage:
 
@@ -114,7 +114,7 @@ Usage:
   # Restore some products and all customers from the given backup id
   $ shopctl restore run --backup-id 3820045c0c -r product="id:id1,id2,id3" -r customer
 
-  See 'shopctl restore run --help' for more info.`),
+  See 'shopctl restore run --help' for more info`),
 		)
 	}
 
@@ -136,10 +136,10 @@ func NewCmdRun() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"start", "exec"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			shopCfg := cmd.Context().Value("shopCfg").(*config.ShopConfig)
-			ctx := cmd.Context().Value("context").(*config.StoreContext)
-			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-			logger := cmd.Context().Value("logger").(*tlog.Logger)
+			shopCfg := cmd.Context().Value(cmdutil.KeyShopConfig).(*config.ShopConfig)
+			ctx := cmd.Context().Value(cmdutil.KeyContext).(*config.StoreContext)
+			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
+			logger := cmd.Context().Value(cmdutil.KeyLogger).(*tlog.Logger)
 
 			cmdutil.ExitOnErr(run(cmd, client, shopCfg, ctx, logger))
 			return nil

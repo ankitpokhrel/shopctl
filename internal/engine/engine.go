@@ -67,7 +67,7 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 	}
 
 	out := make(chan Result, numWorkers)
-	for i := 0; i < numWorkers; i++ {
+	for range numWorkers {
 		wg.Add(1)
 
 		go func() {

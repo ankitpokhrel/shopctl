@@ -36,7 +36,7 @@ type fragment struct {
 
 func newBlankFragment(n int) fragment {
 	var buf strings.Builder
-	for i := 0; i < n; i++ {
+	for range n {
 		buf.WriteRune('\n')
 	}
 	return fragment{
@@ -381,10 +381,7 @@ func (f Formatter) media() string {
 	}
 	maxFilenameLen = min(maxFilenameLen, 41) //nolint:mnd
 	maxAltTextLen = min(maxAltTextLen, 61)   //nolint:mnd
-
-	if maxAltTextLen < defaultTitleLen {
-		maxAltTextLen = defaultTitleLen
-	}
+	maxAltTextLen = max(maxAltTextLen, defaultTitleLen)
 
 	s.WriteString(
 		cmdutil.Gray(

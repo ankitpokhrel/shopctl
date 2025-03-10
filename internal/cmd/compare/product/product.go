@@ -75,12 +75,12 @@ See 'shopctl cmp product --help' for more info.`
 
 	if id == "" {
 		cmdutil.ExitOnErr(
-			fmt.Errorf("Error: a valid product ID is required. \n\n%s", usage),
+			fmt.Errorf("error: a valid product ID is required. \n\n%s", usage),
 		)
 	}
 	if with == "" {
 		cmdutil.ExitOnErr(
-			fmt.Errorf("Error: path to the backup to compare with is required. \n\n%s", usage),
+			fmt.Errorf("error: path to the backup to compare with is required. \n\n%s", usage),
 		)
 	}
 
@@ -98,8 +98,8 @@ func NewCmdProduct() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
-			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
+			strategy := cmd.Context().Value(cmdutil.KeyStrategy).(*config.BackupStrategy)
+			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 
 			cmdutil.ExitOnErr(compare(cmd, client, strategy))
 			return nil

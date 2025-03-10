@@ -28,8 +28,8 @@ func NewCmdList() *cobra.Command {
 		Long:    helpText,
 		Aliases: []string{"ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			shopCfg := cmd.Context().Value("shopCfg").(*config.ShopConfig)
-			ctx := cmd.Context().Value("context").(*config.StoreContext)
+			shopCfg := cmd.Context().Value(cmdutil.KeyShopConfig).(*config.ShopConfig)
+			ctx := cmd.Context().Value(cmdutil.KeyContext).(*config.StoreContext)
 
 			cmdutil.ExitOnErr(run(cmd, shopCfg, ctx))
 			return nil

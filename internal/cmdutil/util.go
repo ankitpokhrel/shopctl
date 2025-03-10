@@ -16,6 +16,18 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
+// ContextValue is a string type to use as a key for `context.SetValue`.
+// This helps avoid conflicts with the default `string` type.
+type ContextValue string
+
+const (
+	KeyContext    ContextValue = "context"
+	KeyStrategy   ContextValue = "strategy"
+	KeyGQLClient  ContextValue = "gqlClient"
+	KeyShopConfig ContextValue = "shopCfg"
+	KeyLogger     ContextValue = "logger"
+)
+
 // ExitOnErr exits the program if an error is not nil.
 func ExitOnErr(err error) {
 	if err != nil {

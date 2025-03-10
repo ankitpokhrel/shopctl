@@ -22,6 +22,11 @@ func NewCmdAuth() *cobra.Command {
 		login.NewCmdLogin(),
 	)
 
+	cmd.SetHelpFunc(func(c *cobra.Command, s []string) {
+		_ = c.Flags().MarkHidden("context")
+		c.Root().HelpFunc()(c, s)
+	})
+
 	return &cmd
 }
 

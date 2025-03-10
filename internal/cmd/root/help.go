@@ -35,7 +35,7 @@ func getEntries(cmd *cobra.Command) []helpEntry {
 
 	var entries []helpEntry
 
-	appendIfNotEmpty := func(b interface{}, t string) {
+	appendIfNotEmpty := func(b any, t string) {
 		switch d := b.(type) {
 		case string:
 			if b != "" {

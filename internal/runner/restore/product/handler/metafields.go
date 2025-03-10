@@ -91,7 +91,7 @@ func (h Metafield) handleProductMetaFieldsSet(productID string, toAdd []*schema.
 			Type:      &m.Type,
 		})
 	}
-	h.Logger.V(2).Info("Attempting to set product metafields", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to set product metafields", "id", productID)
 	return h.Client.SetMetafields(metafields)
 }
 
@@ -108,6 +108,6 @@ func (h Metafield) handleProductMetaFieldsDelete(productID string, toDelete []*s
 			OwnerID:   productID,
 		})
 	}
-	h.Logger.V(2).Info("Attempting to delete product metafields", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to delete product metafields", "id", productID)
 	return h.Client.DeleteMetafields(metafields)
 }

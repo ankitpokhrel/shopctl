@@ -62,9 +62,9 @@ func preRun(cmd *cobra.Command, _ []string) error {
 	}
 
 	gqlClient := api.NewGQLClient(ctx.Store)
-	cmd.SetContext(context.WithValue(cmd.Context(), "context", ctx))
-	cmd.SetContext(context.WithValue(cmd.Context(), "strategy", strategy))
-	cmd.SetContext(context.WithValue(cmd.Context(), "gqlClient", gqlClient))
+	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyContext, ctx))
+	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyStrategy, strategy))
+	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyGQLClient, gqlClient))
 
 	return nil
 }

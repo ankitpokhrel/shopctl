@@ -134,10 +134,10 @@ func (h Variant) createOrUpdateProductVariants(productID string, variants []*sch
 	}
 
 	if isUpdate {
-		h.Logger.V(2).Info("Attempting to update product variant", "id", productID)
+		h.Logger.V(tlog.VL2).Info("Attempting to update product variant", "id", productID)
 		return h.Client.UpdateProductVariants(productID, variantsInput)
 	}
-	h.Logger.V(2).Info("Attempting to create product variant", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to create product variant", "id", productID)
 	return h.Client.CreateProductVariants(productID, variantsInput)
 }
 

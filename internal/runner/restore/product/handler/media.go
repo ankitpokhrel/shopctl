@@ -28,7 +28,7 @@ func (h *Media) Handle() (any, error) {
 		return nil, err
 	}
 
-	h.Logger.V(2).Info("Attempting to set product media", "id", media.ProductID)
+	h.Logger.V(tlog.VL2).Info("Attempting to set product media", "id", media.ProductID)
 	return updateProductMedia(&media, h.Client)
 }
 

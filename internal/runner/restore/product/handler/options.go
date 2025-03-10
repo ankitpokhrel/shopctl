@@ -118,7 +118,7 @@ func (h Option) handleProductOptionAdd(productID string, toAdd []*schema.Product
 			})
 		}
 	}
-	h.Logger.V(2).Info("Attempting to create product options", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to create product options", "id", productID)
 	return h.Client.CreateProductOptions(productID, options)
 }
 
@@ -132,7 +132,7 @@ func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map
 		updateErrors    = make([]error, 0)
 	)
 
-	h.Logger.V(2).Info("Attempting to update product options", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to update product options", "id", productID)
 	for _, opt := range toUpdate {
 		option := schema.OptionUpdateInput{
 			ID:       opt.ID,
@@ -206,6 +206,6 @@ func (h Option) handleProductOptionDelete(productID string, toDelete []string) (
 	if len(toDelete) == 0 {
 		return nil, nil
 	}
-	h.Logger.V(2).Info("Attempting to delete product options", "id", productID)
+	h.Logger.V(tlog.VL2).Info("Attempting to delete product options", "id", productID)
 	return h.Client.DeleteProductOptions(productID, toDelete)
 }

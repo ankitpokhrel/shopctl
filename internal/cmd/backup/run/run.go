@@ -93,10 +93,10 @@ func NewCmdRun() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"start", "exec"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			shopCfg := cmd.Context().Value("shopCfg").(*config.ShopConfig)
-			ctx := cmd.Context().Value("context").(*config.StoreContext)
-			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
-			logger := cmd.Context().Value("logger").(*tlog.Logger)
+			shopCfg := cmd.Context().Value(cmdutil.KeyShopConfig).(*config.ShopConfig)
+			ctx := cmd.Context().Value(cmdutil.KeyContext).(*config.StoreContext)
+			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
+			logger := cmd.Context().Value(cmdutil.KeyLogger).(*tlog.Logger)
 
 			cmdutil.ExitOnErr(run(cmd, client, shopCfg, ctx, logger))
 			return nil

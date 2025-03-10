@@ -27,6 +27,7 @@ $ shopctl peek product <product_id>
 $ shopctl peek product <product_id> -b <backup_id>
 
 # Peek a product from the backup folder
+# Context and strategy is skipped for direct path
 $ shopctl peek product <product_id> --from </path/to/backup>`
 )
 
@@ -69,9 +70,9 @@ func NewCmdProduct() *cobra.Command {
 		Args:    cobra.MinimumNArgs(1),
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context().Value("context").(*config.StoreContext)
-			strategy := cmd.Context().Value("strategy").(*config.BackupStrategy)
-			client := cmd.Context().Value("gqlClient").(*api.GQLClient)
+			ctx := cmd.Context().Value(cmdutil.KeyContext).(*config.StoreContext)
+			strategy := cmd.Context().Value(cmdutil.KeyStrategy).(*config.BackupStrategy)
+			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 
 			cmdutil.ExitOnErr(run(cmd, args, ctx, strategy, client))
 			return nil
