@@ -21,15 +21,15 @@ func (r ResourceType) File() string {
 	case ProductOption:
 		return "product"
 	case ProductVariant:
-		return "variants"
+		return "product_variants"
 	case ProductMedia:
-		return "media"
+		return "product_media"
 	case ProductMetaField:
-		return "metafields"
+		return "product_metafields"
 	case Customer:
 		return "customer"
 	case CustomerMetaField:
-		return "metafields"
+		return "customer_metafields"
 	}
 	panic("unknown resource type")
 }
@@ -73,6 +73,14 @@ func NewResource(rt ResourceType, path string, rh ResourceHandler) Resource {
 
 // ResourceCollection is a collection of resources.
 type ResourceCollection []Resource
+
+// GetPrimaryResourceTypes returns primary resource types.
+func GetPrimaryResourceTypes() []ResourceType {
+	return []ResourceType{
+		Product,
+		Customer,
+	}
+}
 
 // GetProductResourceTypes returns product resource types in order.
 func GetProductResourceTypes() []ResourceType {

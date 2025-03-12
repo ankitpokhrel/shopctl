@@ -129,7 +129,7 @@ func (r *Runner) restore() error {
 				engine.NewResource(engine.Product, r.path, productFn),
 				engine.NewResource(engine.ProductOption, r.path, optionsFn),
 			)
-		case "metafields.json":
+		case "product_metafields.json":
 			r.stats[engine.ProductMetaField].Count += 1
 
 			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
@@ -137,7 +137,7 @@ func (r *Runner) restore() error {
 				resources[currentID][Metafields],
 				engine.NewResource(engine.ProductMetaField, r.path, metafieldFn),
 			)
-		case "variants.json":
+		case "product_variants.json":
 			r.stats[engine.ProductVariant].Count += 1
 
 			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger}
@@ -145,7 +145,7 @@ func (r *Runner) restore() error {
 				resources[currentID][Variants],
 				engine.NewResource(engine.ProductVariant, r.path, variantFn),
 			)
-		case "media.json":
+		case "product_media.json":
 			r.stats[engine.ProductMedia].Count += 1
 
 			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger}

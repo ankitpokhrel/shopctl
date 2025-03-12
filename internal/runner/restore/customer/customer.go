@@ -119,7 +119,7 @@ func (r *Runner) restore() error {
 				resources[currentID][Customer],
 				engine.NewResource(engine.Customer, r.path, customerFn),
 			)
-		case "metafields.json":
+		case "customer_metafields.json":
 			r.stats[engine.CustomerMetaField].Count += 1
 
 			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}

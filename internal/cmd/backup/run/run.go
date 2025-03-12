@@ -286,16 +286,12 @@ File: %s.tar.gz
 	for _, rnr := range runners {
 		fmt.Println()
 		stats := rnr.Stats()
-		for _, rt := range engine.GetAllResourceTypes() {
+		for _, rt := range engine.GetPrimaryResourceTypes() {
 			st, ok := stats[rt]
 			if !ok {
 				continue
 			}
-			if rt.IsPrimary() {
-				cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
-			} else {
-				cmdutil.SummarySubtitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashesSM)
-			}
+			cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
 			fmt.Println(st.String())
 			fmt.Println()
 		}
@@ -324,16 +320,12 @@ File: %s.tar.gz
 	for _, rnr := range runners {
 		fmt.Println()
 		stats := rnr.Stats()
-		for _, rt := range engine.GetAllResourceTypes() {
+		for _, rt := range engine.GetPrimaryResourceTypes() {
 			st, ok := stats[rt]
 			if !ok {
 				continue
 			}
-			if rt.IsPrimary() {
-				cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
-			} else {
-				cmdutil.SummarySubtitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashesSM)
-			}
+			cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
 			fmt.Println(st.String())
 			fmt.Println()
 		}
