@@ -2,12 +2,12 @@ package schema
 
 import "encoding/json"
 
+type checkerFunc func(data any) bool
+
 func (p Product) MarshalJSON() ([]byte, error) {
 	type patch Product
 
 	rmAlways := []string{
-		"media",
-		"variants",
 		"bundleComponents",
 		"collections",
 		"events",
@@ -28,7 +28,30 @@ func (p Product) MarshalJSON() ([]byte, error) {
 		"combinedListing",
 		"contextualPricing",
 	}
-	return sanitizeAndMarshal(patch(p), rmAlways, rmIfNil)
+	rmSpecial := map[string]checkerFunc{
+		"media": func(data any) bool {
+			val := data.(map[string]any)
+			return val["edges"] == nil && val["nodes"] == nil
+		},
+		"variants": func(data any) bool {
+			val := data.(map[string]any)
+			return val["edges"] == nil && val["nodes"] == nil
+		},
+	}
+
+	return sanitizeAndMarshal(patch(p), rmAlways, rmIfNil, rmSpecial)
+}
+
+func (i ProductVariantConnection) MarshalJSON() ([]byte, error) {
+	type patch ProductVariantConnection
+
+	rmAlways := []string{
+		"pageInfo",
+	}
+	rmIfNil := []string{
+		"edges",
+	}
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil, nil)
 }
 
 func (p ProductVariant) MarshalJSON() ([]byte, error) {
@@ -48,7 +71,7 @@ func (p ProductVariant) MarshalJSON() ([]byte, error) {
 	rmIfNil := []string{
 		"contextualPricing",
 	}
-	return sanitizeAndMarshal(patch(p), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(p), rmAlways, rmIfNil, nil)
 }
 
 func (i InventoryItem) MarshalJSON() ([]byte, error) {
@@ -62,7 +85,19 @@ func (i InventoryItem) MarshalJSON() ([]byte, error) {
 	rmIfNil := []string{
 		"variant",
 	}
-	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil, nil)
+}
+
+func (i MediaConnection) MarshalJSON() ([]byte, error) {
+	type patch MediaConnection
+
+	rmAlways := []string{
+		"pageInfo",
+	}
+	rmIfNil := []string{
+		"edges",
+	}
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil, nil)
 }
 
 func (i Image) MarshalJSON() ([]byte, error) {
@@ -74,7 +109,7 @@ func (i Image) MarshalJSON() ([]byte, error) {
 	rmIfNil := []string{
 		"metafield",
 	}
-	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil, nil)
 }
 
 func (m Metafield) MarshalJSON() ([]byte, error) {
@@ -87,7 +122,7 @@ func (m Metafield) MarshalJSON() ([]byte, error) {
 		"references",
 		"definition",
 	}
-	return sanitizeAndMarshal(patch(m), rmAlways, nil)
+	return sanitizeAndMarshal(patch(m), rmAlways, nil, nil)
 }
 
 func (m MetafieldDefinition) MarshalJSON() ([]byte, error) {
@@ -101,7 +136,7 @@ func (m MetafieldDefinition) MarshalJSON() ([]byte, error) {
 		"validationStatus",
 		"standardTemplate",
 	}
-	return sanitizeAndMarshal(patch(m), rmAlways, nil)
+	return sanitizeAndMarshal(patch(m), rmAlways, nil, nil)
 }
 
 func (c Customer) MarshalJSON() ([]byte, error) {
@@ -122,7 +157,7 @@ func (c Customer) MarshalJSON() ([]byte, error) {
 		"lastOrder",
 		"metafield",
 	}
-	return sanitizeAndMarshal(patch(c), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(c), rmAlways, rmIfNil, nil)
 }
 
 func (m MailingAddressConnection) MarshalJSON() ([]byte, error) {
@@ -132,7 +167,7 @@ func (m MailingAddressConnection) MarshalJSON() ([]byte, error) {
 		"edges",
 		"pageInfo",
 	}
-	return sanitizeAndMarshal(patch(m), rmAlways, nil)
+	return sanitizeAndMarshal(patch(m), rmAlways, nil, nil)
 }
 
 func (i ProductInput) MarshalJSON() ([]byte, error) {
@@ -144,7 +179,7 @@ func (i ProductInput) MarshalJSON() ([]byte, error) {
 		"collectionsToJoin",
 		"collectionsToLeave",
 	}
-	return sanitizeAndMarshal(patch(i), nil, rmIfNil)
+	return sanitizeAndMarshal(patch(i), nil, rmIfNil, nil)
 }
 
 func (i CustomerInput) MarshalJSON() ([]byte, error) {
@@ -155,7 +190,7 @@ func (i CustomerInput) MarshalJSON() ([]byte, error) {
 		"metafields",
 		"taxExemptions",
 	}
-	return sanitizeAndMarshal(patch(i), nil, rmIfNil)
+	return sanitizeAndMarshal(patch(i), nil, rmIfNil, nil)
 }
 
 func (i ProductVariantsBulkInput) MarshalJSON() ([]byte, error) {
@@ -168,10 +203,10 @@ func (i ProductVariantsBulkInput) MarshalJSON() ([]byte, error) {
 		"metafields",
 		"inventoryQuantities",
 	}
-	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil)
+	return sanitizeAndMarshal(patch(i), rmAlways, rmIfNil, nil)
 }
 
-func sanitizeAndMarshal(input any, rmAlways, rmIfNil []string) ([]byte, error) {
+func sanitizeAndMarshal(input any, rmAlways, rmIfNil []string, rmSpecial map[string]checkerFunc) ([]byte, error) {
 	b, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
@@ -187,6 +222,11 @@ func sanitizeAndMarshal(input any, rmAlways, rmIfNil []string) ([]byte, error) {
 	}
 	for _, f := range rmIfNil {
 		if val, ok := m[f]; ok && val == nil {
+			delete(m, f)
+		}
+	}
+	for f, fn := range rmSpecial {
+		if fn(m[f]) {
 			delete(m, f)
 		}
 	}

@@ -14,6 +14,7 @@ import (
 
 	"github.com/mholt/archives"
 
+	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
@@ -61,19 +62,45 @@ func (r *Registry) GetProductByID(id string) (*schema.Product, error) {
 	}
 
 	var product schema.Product
-
 	if err := json.Unmarshal(productRaw, &product); err != nil {
 		return nil, fmt.Errorf("error unmarshalling product: %w", err)
 	}
+
+	// Skip if we don't find variants file.
+	variantsRaw, _ := ReadFileContents(filepath.Join(loc, "variants.json"))
+	if len(variantsRaw) > 0 {
+		var variants api.ProductVariantData
+		if err := json.Unmarshal(variantsRaw, &variants); err != nil {
+			return nil, fmt.Errorf("error unmarshalling product variants: %w", err)
+		}
+		product.Variants.Nodes = variants.Variants.Nodes
+	}
+
+	// Skip if we don't find media file.
+	mediasRaw, _ := ReadFileContents(filepath.Join(loc, "media.json"))
+	if len(mediasRaw) > 0 {
+		var medias api.ProductMediaData
+		if err := json.Unmarshal(mediasRaw, &medias); err != nil {
+			return nil, fmt.Errorf("error unmarshalling product medias: %w", err)
+		}
+		var nodes []any
+		for _, n := range medias.Media.Nodes {
+			nodes = append(nodes, n)
+		}
+		product.Media.Nodes = nodes
+	}
+
 	return &product, nil
 }
 
 func (r *Registry) getProductByIDFromZip(id string) (*schema.Product, error) {
 	var (
-		product *schema.Product
-		format  archives.Tar
+		product        *schema.Product
+		productVariant []schema.ProductVariant
+		productMedia   []any
+		format         archives.Tar
 
-		pattern = fmt.Sprintf(`products/.*/%s/product\.json`, regexp.QuoteMeta(id))
+		pattern = fmt.Sprintf(`products/.*/%s/.*\.json$`, regexp.QuoteMeta(id))
 	)
 
 	matcher, err := regexp.Compile(pattern)
@@ -104,20 +131,52 @@ func (r *Registry) getProductByIDFromZip(id string) (*schema.Product, error) {
 		}
 		defer func() { _ = file.Close() }()
 
-		productRaw, err := io.ReadAll(file)
-		if err != nil {
-			return err
-		}
-		if err := json.Unmarshal(productRaw, &product); err != nil {
-			return fmt.Errorf("error unmarshalling product: %w", err)
+		switch f.Name() {
+		case "product.json":
+			productRaw, err := io.ReadAll(file)
+			if err != nil {
+				return err
+			}
+			if err := json.Unmarshal(productRaw, &product); err != nil {
+				return fmt.Errorf("error unmarshalling product: %w", err)
+			}
+		case "variants.json":
+			variantsRaw, _ := io.ReadAll(file)
+			if len(variantsRaw) > 0 {
+				var variants api.ProductVariantData
+				if err := json.Unmarshal(variantsRaw, &variants); err != nil {
+					return fmt.Errorf("error unmarshalling product variants: %w", err)
+				}
+				productVariant = variants.Variants.Nodes
+			}
+		case "media.json":
+			mediasRaw, _ := io.ReadAll(file)
+			if len(mediasRaw) > 0 {
+				var medias api.ProductMediaData
+				if err := json.Unmarshal(mediasRaw, &medias); err != nil {
+					return fmt.Errorf("error unmarshalling product medias: %w", err)
+				}
+				var nodes []any
+				for _, n := range medias.Media.Nodes {
+					nodes = append(nodes, n)
+				}
+				productMedia = nodes
+			}
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	if product == nil {
 		return nil, fmt.Errorf("product not found")
+	}
+	if productVariant != nil {
+		product.Variants.Nodes = productVariant
+	}
+	if productMedia != nil {
+		product.Media.Nodes = productMedia
 	}
 	return product, nil
 }

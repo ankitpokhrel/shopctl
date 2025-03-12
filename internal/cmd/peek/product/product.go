@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -112,7 +111,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, strategy *
 		}
 		product, err = reg.GetProductByID(cmdutil.ExtractNumericID(flag.id))
 	case flag.from != "":
-		reg, err = registry.NewRegistry(filepath.Join(flag.from, "products"))
+		reg, err = registry.NewRegistry(flag.from)
 		if err != nil {
 			return err
 		}

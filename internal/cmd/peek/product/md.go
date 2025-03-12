@@ -1,6 +1,7 @@
 package product
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 
+	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
@@ -364,20 +366,26 @@ func (f Formatter) media() string {
 
 	medias := make([]media, 0, len(f.product.Media.Nodes))
 	for _, node := range f.product.Media.Nodes {
-		m := node.(map[string]any)
-		p := (m["preview"].(map[string]any))["image"].(map[string]any)
+		var m api.ProductMediaNode
+		if n, ok := node.(api.ProductMediaNode); ok {
+			m = n
+		} else {
+			n := node.(map[string]any)
+			jsonData, _ := json.Marshal(n)
+			_ = json.Unmarshal(jsonData, &m)
+		}
 
 		media := media{
-			id:         m["id"].(string),
-			mimeType:   m["mediaContentType"].(string),
-			previewURL: p["url"].(string),
-			alt:        m["alt"].(string),
-			status:     m["status"].(string),
+			id:         m.ID,
+			mimeType:   string(m.MediaContentType),
+			previewURL: m.Preview.Image.URL,
+			alt:        *m.Preview.Image.AltText,
+			status:     string(m.Status),
 		}
 		medias = append(medias, media)
 
-		maxFilenameLen = max(maxFilenameLen, len(getFileName(p["url"].(string))))
-		maxAltTextLen = max(maxAltTextLen, len(m["alt"].(string)))
+		maxFilenameLen = max(maxFilenameLen, len(getFileName(m.Preview.Image.URL)))
+		maxAltTextLen = max(maxAltTextLen, len(*m.Preview.Image.AltText))
 	}
 	maxFilenameLen = min(maxFilenameLen, 41) //nolint:mnd
 	maxAltTextLen = min(maxAltTextLen, 61)   //nolint:mnd

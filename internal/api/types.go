@@ -76,17 +76,19 @@ type ProductMediasResponse struct {
 	Extensions Extensions `json:"extensions"`
 }
 
+type ProductMediaNode struct {
+	ID               string                   `json:"id"`
+	Status           schema.MediaStatus       `json:"status"`
+	Preview          schema.MediaPreviewImage `json:"preview"`
+	MediaContentType schema.MediaContentType  `json:"mediaContentType"`
+	MediaErrors      []any                    `json:"mediaErrors,omitempty"`
+	MediaWarnings    []any                    `json:"mediaWarnings,omitempty"`
+}
+
 type ProductMediaData struct {
 	ProductID string `json:"id"`
 	Media     struct {
-		Nodes []struct {
-			ID               string                   `json:"id"`
-			Status           schema.MediaStatus       `json:"status"`
-			Preview          schema.MediaPreviewImage `json:"preview"`
-			MediaContentType schema.MediaContentType  `json:"mediaContentType"`
-			MediaErrors      []any                    `json:"mediaErrors,omitempty"`
-			MediaWarnings    []any                    `json:"mediaWarnings,omitempty"`
-		} `json:"nodes"`
+		Nodes []ProductMediaNode `json:"nodes"`
 	} `json:"media"`
 }
 
