@@ -21,11 +21,17 @@ type Runner struct {
 	rstEng *engine.Restore
 	client *api.GQLClient
 	logger *tlog.Logger
+	stats  map[engine.ResourceType]*runner.Summary
 }
 
 // NewRunner constructs a new restore runner.
 func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
 	rstEng := eng.Doer().(*engine.Restore)
+
+	stats := make(map[engine.ResourceType]*runner.Summary)
+	for _, rt := range engine.GetCustomerResourceTypes() {
+		stats[rt] = &runner.Summary{}
+	}
 
 	return &Runner{
 		path:   path,
@@ -33,6 +39,7 @@ func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *t
 		rstEng: rstEng,
 		client: client,
 		logger: logger,
+		stats:  stats,
 	}
 }
 
@@ -55,7 +62,10 @@ func (r *Runner) Run() error {
 
 	for res := range r.eng.Run(engine.Customer) {
 		if res.Err != nil {
+			r.stats[res.ResourceType].Failed += 1
 			r.logger.Errorf("Failed to restore resource %s: %v\n", res.ResourceType, res.Err)
+		} else {
+			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
@@ -102,12 +112,16 @@ func (r *Runner) restore() error {
 
 		switch filepath.Base(f.Path) {
 		case "customer.json":
+			r.stats[engine.Customer].Count += 1
+
 			customerFn := &handler.Customer{Client: r.client, File: f, Logger: r.logger}
 			resources[currentID][Customer] = append(
 				resources[currentID][Customer],
 				engine.NewResource(engine.Customer, r.path, customerFn),
 			)
 		case "metafields.json":
+			r.stats[engine.CustomerMetaField].Count += 1
+
 			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
 			resources[currentID][Metafields] = append(
 				resources[currentID][Metafields],
@@ -128,9 +142,9 @@ func (r *Runner) restore() error {
 	return nil
 }
 
-// TODO.
-func (r *Runner) Stats() *runner.Summary {
-	return &runner.Summary{}
+// Stats returns runner stats.
+func (r *Runner) Stats() map[engine.ResourceType]*runner.Summary {
+	return r.stats
 }
 
 func extractID(path string) (string, error) {

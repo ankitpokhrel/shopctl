@@ -13,7 +13,16 @@ import (
 	"github.com/mgutz/ansi"
 )
 
-const wordWrap = 120
+const (
+	wordWrap = 120
+
+	RepeatedDashes = "" +
+		"-------------------------------"
+	RepeatedDashesSM = "" +
+		"-------------------"
+	RepeatedEquals = "" +
+		"==============================="
+)
 
 // MDRenderer constructs markdown renderer.
 func MDRenderer() (*glamour.TermRenderer, error) {
@@ -47,6 +56,16 @@ func ShortenAndPad(msg string, limit int) string {
 		return msg[0:limit-1] + "…"
 	}
 	return Pad(msg, limit)
+}
+
+// SummaryTitle displays msg between separators.
+func SummaryTitle(msg string, sep string) {
+	fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
+}
+
+// SummarySubtitle displays msg and a separator underneath.
+func SummarySubtitle(msg string, sep string) {
+	fmt.Printf("%s\n%s\n", msg, sep)
 }
 
 // Success prints success message in stdout.

@@ -245,6 +245,8 @@ func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, 
 
 	wg.Wait()
 	logger.Infof("Restore complete in %s", time.Since(start))
+
+	summarize(ctx.Store, id, bkpPath, runners)
 	return nil
 }
 
@@ -275,6 +277,61 @@ func getBackupIDAndPath(flag *flag, strategy *config.BackupStrategy) (string, st
 		return "", "", fmt.Errorf("unable to find backup with id %q in strategy %q", flag.id, strategy.Name)
 	}
 	return id, path, nil
+}
+
+func summarize(store string, id string, bkpPath string, runners []runner.Runner) {
+	var counter int
+
+	for _, rnr := range runners {
+		stats := rnr.Stats()
+		if s, ok := stats[rnr.Kind()]; ok {
+			counter += s.Count
+		}
+	}
+
+	if counter == 0 {
+		return
+	}
+
+	resources := make([]string, 0, len(runners))
+	for _, rnr := range runners {
+		resources = append(resources, string(rnr.Kind()))
+	}
+
+	fmt.Println()
+	cmdutil.SummaryTitle("RESTORE SUMMARY", cmdutil.RepeatedEquals)
+	fmt.Printf(`ID: %s
+Store: %s
+Path used: %s
+Resources: %s
+`,
+		id, store, bkpPath,
+		strings.Join(resources, ","),
+	)
+
+	for _, rnr := range runners {
+		fmt.Println()
+		stats := rnr.Stats()
+		for _, rt := range engine.GetAllResourceTypes() {
+			// ProductOption count is not accurate as
+			// we started andling them separately now.
+			// TODO: Better summary implementation.
+			if rt == engine.ProductOption {
+				continue
+			}
+			st, ok := stats[rt]
+			if !ok {
+				continue
+			}
+			if rt.IsPrimary() {
+				cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
+			} else {
+				cmdutil.SummarySubtitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashesSM)
+			}
+			fmt.Println(st.String())
+			fmt.Println()
+		}
+	}
 }
 
 func helpErrorf(msg string) error {

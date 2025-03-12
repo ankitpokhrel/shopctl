@@ -2,6 +2,7 @@ package engine
 
 const (
 	Product           ResourceType = "product"
+	ProductOption     ResourceType = "product_option"
 	ProductVariant    ResourceType = "product_variant"
 	ProductMedia      ResourceType = "product_media"
 	ProductMetaField  ResourceType = "product_metafield"
@@ -16,6 +17,8 @@ type ResourceType string
 func (r ResourceType) File() string {
 	switch r {
 	case Product:
+		return "product"
+	case ProductOption:
 		return "product"
 	case ProductVariant:
 		return "variants"
@@ -42,6 +45,11 @@ func (r ResourceType) RootDir() string {
 	panic("unknown root resource type")
 }
 
+// IsPrimary checks if the resource type is primary.
+func (r ResourceType) IsPrimary() bool {
+	return r == Product || r == Customer
+}
+
 // ResourceHandler is a handler for a resource.
 type ResourceHandler interface {
 	Handle() (any, error)
@@ -65,3 +73,35 @@ func NewResource(rt ResourceType, path string, rh ResourceHandler) Resource {
 
 // ResourceCollection is a collection of resources.
 type ResourceCollection []Resource
+
+// GetProductResourceTypes returns product resource types in order.
+func GetProductResourceTypes() []ResourceType {
+	return []ResourceType{
+		Product,
+		ProductOption,
+		ProductVariant,
+		ProductMetaField,
+		ProductMedia,
+	}
+}
+
+// GetCustomerResourceTypes returns all resource types in order.
+func GetCustomerResourceTypes() []ResourceType {
+	return []ResourceType{
+		Customer,
+		CustomerMetaField,
+	}
+}
+
+// GetAllResourceTypes returns all resource types in order.
+func GetAllResourceTypes() []ResourceType {
+	return []ResourceType{
+		Product,
+		ProductOption,
+		ProductVariant,
+		ProductMetaField,
+		ProductMedia,
+		Customer,
+		CustomerMetaField,
+	}
+}

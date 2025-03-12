@@ -42,11 +42,6 @@ $ shopctl backup run -c mycontext -r product="tag:on-sale AND tag:premium" -r cu
 $ shopctl backup run --dry-run
 $ shopctl backup run --dry-run -vvv
 `
-
-	repeatedDashes = "" +
-		"-------------------------------"
-	repeatedEquals = "" +
-		"==============================="
 )
 
 type flag struct {
@@ -228,7 +223,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, 
 
 	for _, rnr := range runners {
 		stats := rnr.Stats()
-		counter += stats.Count
+		counter += stats[rnr.Kind()].Count
 	}
 
 	if counter == 0 {
@@ -269,48 +264,79 @@ func saveRootMeta(bkpEng *engine.Backup, strategy *config.BackupStrategy) (*conf
 }
 
 func summarize(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners []runner.Runner) {
-	title := func(msg string, sep string) {
-		fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
-	}
-
 	fmt.Println()
-	title("BACKUP SUMMARY", repeatedEquals)
+	cmdutil.SummaryTitle("BACKUP SUMMARY", cmdutil.RepeatedEquals)
 	fmt.Printf(`ID: %s
+Store: %s
 Strategy: %s
-Store: %s
-Type: %s
+Resources: %s
 Path: %s
 File: %s.tar.gz
 `,
-		bkpEng.ID(), strategy.Name, bkpEng.Store(),
-		strategy.Kind, strategy.BkpDir, bkpEng.Dir(),
-	)
-	for _, rnr := range runners {
-		fmt.Println()
-		title(strings.ToTitle(string(rnr.Kind())), repeatedDashes)
-		fmt.Println(rnr.Stats())
-	}
-}
-
-func summarizeAdhoc(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners []runner.Runner) {
-	title := func(msg string, sep string) {
-		fmt.Printf("%s\n%s\n%s\n", sep, msg, sep)
-	}
-
-	fmt.Println()
-	title("BACKUP SUMMARY", repeatedEquals)
-	fmt.Printf(`ID: %s
-Store: %s
-Path: %s
-File: %s.tar.gz
-`,
-		bkpEng.ID(), bkpEng.Store(),
+		bkpEng.ID(), bkpEng.Store(), strategy.Name,
+		func() string {
+			resources := make([]string, 0, len(strategy.Resources))
+			for _, r := range strategy.Resources {
+				resources = append(resources, r.Resource)
+			}
+			return strings.Join(resources, ",")
+		}(),
 		strategy.BkpDir, bkpEng.Dir(),
 	)
 	for _, rnr := range runners {
 		fmt.Println()
-		title(strings.ToTitle(string(rnr.Kind())), repeatedDashes)
-		fmt.Println(rnr.Stats())
+		stats := rnr.Stats()
+		for _, rt := range engine.GetAllResourceTypes() {
+			st, ok := stats[rt]
+			if !ok {
+				continue
+			}
+			if rt.IsPrimary() {
+				cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
+			} else {
+				cmdutil.SummarySubtitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashesSM)
+			}
+			fmt.Println(st.String())
+			fmt.Println()
+		}
+	}
+}
+
+func summarizeAdhoc(strategy *config.BackupStrategy, bkpEng *engine.Backup, runners []runner.Runner) {
+	fmt.Println()
+	cmdutil.SummaryTitle("BACKUP SUMMARY", cmdutil.RepeatedEquals)
+	fmt.Printf(`ID: %s
+Store: %s
+Resources: %s
+Path: %s
+File: %s.tar.gz
+`,
+		bkpEng.ID(), bkpEng.Store(),
+		func() string {
+			resources := make([]string, 0, len(strategy.Resources))
+			for _, r := range strategy.Resources {
+				resources = append(resources, r.Resource)
+			}
+			return strings.Join(resources, ",")
+		}(),
+		strategy.BkpDir, bkpEng.Dir(),
+	)
+	for _, rnr := range runners {
+		fmt.Println()
+		stats := rnr.Stats()
+		for _, rt := range engine.GetAllResourceTypes() {
+			st, ok := stats[rt]
+			if !ok {
+				continue
+			}
+			if rt.IsPrimary() {
+				cmdutil.SummaryTitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashes)
+			} else {
+				cmdutil.SummarySubtitle(strings.ToTitle(string(rt)), cmdutil.RepeatedDashesSM)
+			}
+			fmt.Println(st.String())
+			fmt.Println()
+		}
 	}
 }
 

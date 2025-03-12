@@ -20,19 +20,24 @@ type Runner struct {
 	bkpEng *engine.Backup
 	client *api.GQLClient
 	logger *tlog.Logger
-	stats  *runner.Summary
+	stats  map[engine.ResourceType]*runner.Summary
 }
 
 // NewRunner constructs a new backup runner.
 func NewRunner(eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
 	bkpEng := eng.Doer().(*engine.Backup)
 
+	stats := make(map[engine.ResourceType]*runner.Summary)
+	for _, rt := range engine.GetCustomerResourceTypes() {
+		stats[rt] = &runner.Summary{}
+	}
+
 	return &Runner{
 		eng:    eng,
 		bkpEng: bkpEng,
 		client: client,
 		logger: logger,
-		stats:  &runner.Summary{},
+		stats:  stats,
 	}
 }
 
@@ -42,7 +47,7 @@ func (r *Runner) Kind() engine.ResourceType {
 }
 
 // Stats returns runner stats.
-func (r *Runner) Stats() *runner.Summary {
+func (r *Runner) Stats() map[engine.ResourceType]*runner.Summary {
 	return r.stats
 }
 
@@ -58,10 +63,10 @@ func (r *Runner) Run() error {
 
 	for res := range r.eng.Run(engine.Customer) {
 		if res.Err != nil {
-			r.stats.Failed += 1
+			r.stats[res.ResourceType].Failed += 1
 			r.logger.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
 		} else if res.ResourceType == engine.Customer {
-			r.stats.Passed += 1
+			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
@@ -84,7 +89,7 @@ func (r *Runner) backup(limit int, after *string) {
 	}()
 
 	for customers := range customersCh {
-		r.stats.Count += len(customers.Data.Customers.Nodes)
+		r.stats[r.Kind()].Count += len(customers.Data.Customers.Nodes)
 
 		for _, customer := range customers.Data.Customers.Nodes {
 			cid := engine.ExtractNumericID(customer.ID)

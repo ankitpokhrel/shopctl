@@ -21,7 +21,7 @@ type Runner struct {
 	client *api.GQLClient
 	filter *string
 	logger *tlog.Logger
-	stats  *runner.Summary
+	stats  map[engine.ResourceType]*runner.Summary
 }
 
 // NewRunner constructs a new backup runner.
@@ -33,13 +33,18 @@ func NewRunner(eng *engine.Engine, client *api.GQLClient, filter string, logger 
 		f = &filter
 	}
 
+	stats := make(map[engine.ResourceType]*runner.Summary)
+	for _, rt := range engine.GetProductResourceTypes() {
+		stats[rt] = &runner.Summary{}
+	}
+
 	return &Runner{
 		eng:    eng,
 		bkpEng: bkpEng,
 		client: client,
 		filter: f,
 		logger: logger,
-		stats:  &runner.Summary{},
+		stats:  stats,
 	}
 }
 
@@ -49,7 +54,7 @@ func (r *Runner) Kind() engine.ResourceType {
 }
 
 // Stats returns runner stats.
-func (r *Runner) Stats() *runner.Summary {
+func (r *Runner) Stats() map[engine.ResourceType]*runner.Summary {
 	return r.stats
 }
 
@@ -65,10 +70,10 @@ func (r *Runner) Run() error {
 
 	for res := range r.eng.Run(engine.Product) {
 		if res.Err != nil {
-			r.stats.Failed += 1
+			r.stats[res.ResourceType].Failed += 1
 			r.logger.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
 		} else if res.ResourceType == engine.Product {
-			r.stats.Passed += 1
+			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
@@ -91,7 +96,7 @@ func (r *Runner) backup(limit int, after *string, query *string) {
 	}()
 
 	for products := range productsCh {
-		r.stats.Count += len(products.Data.Products.Edges)
+		r.stats[r.Kind()].Count += len(products.Data.Products.Edges)
 
 		for _, product := range products.Data.Products.Edges {
 			pid := engine.ExtractNumericID(product.Node.ID)
