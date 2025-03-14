@@ -116,18 +116,19 @@ func (b *Backup) Timestamp() time.Time {
 
 // Do starts the backup process.
 // Implements `engine.Doer` interface.
-func (b *Backup) Do(rs Resource) error {
+func (b *Backup) Do(rs Resource, data any) (any, error) {
 	dir := filepath.Join(b.root, rs.Path)
 	if err := os.MkdirAll(dir, modeDir); err != nil {
-		return err
+		return nil, err
 	}
 	dest := filepath.Join(dir, rs.Type.File())
 
-	data, err := rs.Handler.Handle()
+	data, err := rs.Handler.Handle(nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return b.saveJSON(dest, data)
+	err = b.saveJSON(dest, data)
+	return nil, err
 }
 
 // saveJSON saves data to a JSON file.

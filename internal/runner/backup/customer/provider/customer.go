@@ -6,6 +6,6 @@ type Customer struct {
 	Customer *schema.Customer
 }
 
-func (c *Customer) Handle() (any, error) {
+func (c *Customer) Handle(_ any) (any, error) {
 	return c.Customer, nil
 }

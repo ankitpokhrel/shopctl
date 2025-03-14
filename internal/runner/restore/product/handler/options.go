@@ -11,13 +11,14 @@ import (
 )
 
 type Option struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	DryRun bool
+	ProductID string
+	Client    *api.GQLClient
+	Logger    *tlog.Logger
+	File      registry.File
+	DryRun    bool
 }
 
-func (h Option) Handle() (any, error) {
+func (h Option) Handle(data any) (any, error) {
 	productRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)

@@ -11,7 +11,7 @@ type Media struct {
 	ProductID string
 }
 
-func (m *Media) Handle() (any, error) {
+func (m *Media) Handle(_ any) (any, error) {
 	m.Logger.Infof("Product %s: processing media items", m.ProductID)
 
 	medias, err := m.Client.GetProductMedias(m.ProductID)

@@ -14,7 +14,7 @@ type mockHandler struct {
 	dataFile string
 }
 
-func (m *mockHandler) Handle() (any, error) {
+func (m *mockHandler) Handle(data any) (any, error) {
 	content, err := os.ReadFile(m.dataFile)
 	if err != nil {
 		return nil, err

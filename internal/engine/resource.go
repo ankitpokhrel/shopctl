@@ -52,7 +52,7 @@ func (r ResourceType) IsPrimary() bool {
 
 // ResourceHandler is a handler for a resource.
 type ResourceHandler interface {
-	Handle() (any, error)
+	Handle(data any) (any, error)
 }
 
 // Resource represents a backup resource.

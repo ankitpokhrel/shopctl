@@ -20,7 +20,7 @@ func NewRestore(store string) *Restore {
 
 // Do starts the restoration process.
 // Implements `engine.Doer` interface.
-func (r *Restore) Do(rs Resource) error {
-	_, err := rs.Handler.Handle()
-	return err
+func (r *Restore) Do(rs Resource, data any) (any, error) {
+	data, err := rs.Handler.Handle(data)
+	return data, err
 }

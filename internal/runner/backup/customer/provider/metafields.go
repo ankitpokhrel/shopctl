@@ -11,7 +11,7 @@ type MetaField struct {
 	CustomerID string
 }
 
-func (m *MetaField) Handle() (any, error) {
+func (m *MetaField) Handle(_ any) (any, error) {
 	m.Logger.Infof("Customer %s: processing meta fields", m.CustomerID)
 
 	metafields, err := m.Client.GetCustomerMetaFields(m.CustomerID)

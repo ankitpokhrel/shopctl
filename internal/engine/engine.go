@@ -16,7 +16,7 @@ type Result struct {
 
 // Doer is an interface that defines the handler of the engine.
 type Doer interface {
-	Do(Resource) error
+	Do(Resource, any) (any, error)
 }
 
 // Engine is an execution engine.
@@ -61,10 +61,14 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 	var wg sync.WaitGroup
 
 	run := func(rc ResourceCollection, out chan<- Result) {
-		err := e.doer.Do(*rc.Parent)
+		var id string
+		res, err := e.doer.Do(*rc.Parent, nil)
+		if rid, ok := res.(string); ok {
+			id = rid
+		}
 		if err == nil {
 			for _, r := range rc.Children {
-				err := e.doer.Do(r)
+				_, err := e.doer.Do(r, id)
 				out <- Result{ParentResourceType: rc.Parent.Type, ResourceType: r.Type, Err: err}
 			}
 		}

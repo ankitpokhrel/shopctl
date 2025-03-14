@@ -11,7 +11,7 @@ type Variant struct {
 	ProductID string
 }
 
-func (v *Variant) Handle() (any, error) {
+func (v *Variant) Handle(_ any) (any, error) {
 	v.Logger.Infof("Product %s: processing variants", v.ProductID)
 
 	variants, err := v.Client.GetProductVariants(v.ProductID)

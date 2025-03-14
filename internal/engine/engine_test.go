@@ -9,21 +9,21 @@ import (
 
 // MockDoer is a mock implementation of the Doer interface.
 type MockDoer struct {
-	doFunc func(Resource) error
+	doFunc func(Resource, any) (any, error)
 }
 
 // Do mocks the Do method.
-func (m *MockDoer) Do(r Resource) error {
-	return m.doFunc(r)
+func (m *MockDoer) Do(r Resource, d any) (any, error) {
+	return m.doFunc(r, d)
 }
 
 func TestEngine_Run(t *testing.T) {
 	doer := &MockDoer{
-		doFunc: func(r Resource) error {
+		doFunc: func(r Resource, d any) (any, error) {
 			if r.Type == "fail" {
-				return errors.New("mock error")
+				return nil, errors.New("mock error")
 			}
-			return nil
+			return nil, nil
 		},
 	}
 

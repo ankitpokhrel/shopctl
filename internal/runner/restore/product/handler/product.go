@@ -16,7 +16,7 @@ type Product struct {
 	DryRun bool
 }
 
-func (h *Product) Handle() (any, error) {
+func (h *Product) Handle(data any) (any, error) {
 	product, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -33,7 +33,11 @@ func (h *Product) Handle() (any, error) {
 		h.Logger.V(tlog.VL3).Warn("Skipping product sync")
 		return &api.ProductCreateResponse{}, nil
 	}
-	return createOrUpdateProduct(&prod, h.Client, h.Logger)
+	res, err := createOrUpdateProduct(&prod, h.Client, h.Logger)
+	if err != nil {
+		return nil, err
+	}
+	return res.Product.ID, nil
 }
 
 func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *tlog.Logger) (*api.ProductCreateResponse, error) {

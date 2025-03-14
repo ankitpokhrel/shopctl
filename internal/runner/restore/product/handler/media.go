@@ -16,7 +16,7 @@ type Media struct {
 	DryRun bool
 }
 
-func (h *Media) Handle() (any, error) {
+func (h *Media) Handle(data any) (any, error) {
 	mediaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -35,7 +35,11 @@ func (h *Media) Handle() (any, error) {
 		h.Logger.V(tlog.VL3).Warn("Skipping product media sync")
 		return &api.ProductCreateResponse{}, nil
 	}
-	return updateProductMedia(&media, h.Client)
+	cr, err := updateProductMedia(&media, h.Client)
+	if err != nil {
+		return nil, err
+	}
+	return cr.Product.ID, nil
 }
 
 func updateProductMedia(media *api.ProductMediaData, client *api.GQLClient) (*api.ProductCreateResponse, error) {

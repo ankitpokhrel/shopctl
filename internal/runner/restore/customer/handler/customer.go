@@ -16,7 +16,7 @@ type Customer struct {
 	DryRun bool
 }
 
-func (h *Customer) Handle() (any, error) {
+func (h *Customer) Handle(data any) (any, error) {
 	customerRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)

@@ -16,7 +16,7 @@ type Variant struct {
 	DryRun bool
 }
 
-func (h *Variant) Handle() (any, error) {
+func (h *Variant) Handle(data any) (any, error) {
 	variantsRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)

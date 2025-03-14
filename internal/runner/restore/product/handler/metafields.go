@@ -16,7 +16,7 @@ type Metafield struct {
 	DryRun bool
 }
 
-func (h Metafield) Handle() (any, error) {
+func (h Metafield) Handle(data any) (any, error) {
 	metaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
