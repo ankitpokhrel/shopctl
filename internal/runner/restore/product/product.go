@@ -163,6 +163,7 @@ func (r *Runner) restore() error {
 
 		if len(orderedResources[Product]) > 0 {
 			flattened.Parent = &orderedResources[Product][0]
+			flattened.Children = append(flattened.Children, orderedResources[Product][1]) // Product options.
 		}
 
 		for idx, rc := range orderedResources {

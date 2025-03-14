@@ -17,6 +17,10 @@ type Variant struct {
 }
 
 func (h *Variant) Handle(data any) (any, error) {
+	var realProductID string
+	if id, ok := data.(string); ok {
+		realProductID = id
+	}
 	variantsRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -30,7 +34,7 @@ func (h *Variant) Handle(data any) (any, error) {
 	}
 
 	// Get upstream variants.
-	currentVariants, err := h.Client.GetProductVariants(product.ProductID)
+	currentVariants, err := h.Client.GetProductVariants(realProductID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,15 +73,15 @@ func (h *Variant) Handle(data any) (any, error) {
 		return nil
 	}
 
-	h.Logger.V(1).Info("Attempting to sync product variants", "id", product.ProductID)
+	h.Logger.V(1).Info("Attempting to sync product variants", "oldID", product.ProductID, "upstreamID", realProductID)
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product variants to sync - add: %d, update: %d", len(toAdd), len(toUpdate))
 		h.Logger.V(tlog.VL3).Warn("Skipping product variants sync")
 		return nil, nil
 	}
-	err = attemptSync(product.ProductID)
+	err = attemptSync(realProductID)
 	if err != nil {
-		h.Logger.Error("Failed to sync product variants", "id", product.ProductID)
+		h.Logger.Error("Failed to sync product variants", "oldID", product.ProductID, "upstreamID", realProductID)
 	}
 	return nil, err
 }

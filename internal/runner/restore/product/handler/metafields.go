@@ -17,6 +17,10 @@ type Metafield struct {
 }
 
 func (h Metafield) Handle(data any) (any, error) {
+	var realProductID string
+	if id, ok := data.(string); ok {
+		realProductID = id
+	}
 	metaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -30,7 +34,7 @@ func (h Metafield) Handle(data any) (any, error) {
 	}
 
 	// Get upstream metafields.
-	currentMetafields, err := h.Client.GetProductMetaFields(meta.ProductID)
+	currentMetafields, err := h.Client.GetProductMetaFields(realProductID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +79,9 @@ func (h Metafield) Handle(data any) (any, error) {
 		h.Logger.V(tlog.VL3).Warn("Skipping product metafields sync")
 		return nil, nil
 	}
-	err = attemptSync(meta.ProductID)
+	err = attemptSync(realProductID)
 	if err != nil {
-		h.Logger.Error("Failed to sync product metafields", "id", meta.ProductID)
+		h.Logger.Error("Failed to sync product metafields", "oldID", meta.ProductID, "upstreamID", realProductID)
 	}
 	return nil, err
 }

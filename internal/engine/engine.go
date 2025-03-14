@@ -61,14 +61,10 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 	var wg sync.WaitGroup
 
 	run := func(rc ResourceCollection, out chan<- Result) {
-		var id string
-		res, err := e.doer.Do(*rc.Parent, nil)
-		if rid, ok := res.(string); ok {
-			id = rid
-		}
+		data, err := e.doer.Do(*rc.Parent, nil)
 		if err == nil {
 			for _, r := range rc.Children {
-				_, err := e.doer.Do(r, id)
+				_, err := e.doer.Do(r, data)
 				out <- Result{ParentResourceType: rc.Parent.Type, ResourceType: r.Type, Err: err}
 			}
 		}

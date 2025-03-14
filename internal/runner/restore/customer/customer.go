@@ -148,7 +148,7 @@ func (r *Runner) restore() error {
 			flattened.Children = append(flattened.Children, rc...)
 		}
 		if flattened.Parent != nil {
-			r.eng.Add(engine.Product, flattened)
+			r.eng.Add(engine.Customer, flattened)
 		}
 	}
 	return nil

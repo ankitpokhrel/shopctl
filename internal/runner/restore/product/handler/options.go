@@ -19,6 +19,10 @@ type Option struct {
 }
 
 func (h Option) Handle(data any) (any, error) {
+	var realProductID string
+	if id, ok := data.(string); ok {
+		realProductID = id
+	}
 	productRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -32,7 +36,7 @@ func (h Option) Handle(data any) (any, error) {
 	}
 
 	// Get upstream options.
-	currentOptions, err := h.Client.GetProductOptions(product.ID)
+	currentOptions, err := h.Client.GetProductOptions(realProductID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,15 +81,15 @@ func (h Option) Handle(data any) (any, error) {
 		return nil
 	}
 
-	h.Logger.V(1).Info("Attempting to sync product options", "id", product.ID)
+	h.Logger.V(1).Info("Attempting to sync product options", "oldID", product.ID, "upstreamID", realProductID)
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product options to sync - add: %d, update: %d, remove: %d", len(toAdd), len(toUpdate), len(toDelete))
 		h.Logger.V(tlog.VL3).Warn("Skipping product options sync")
 		return &api.ProductOptionSyncResponse{}, nil
 	}
-	err = attemptSync(product.ID)
+	err = attemptSync(realProductID)
 	if err != nil {
-		h.Logger.Error("Failed to sync product options", "id", product.ID)
+		h.Logger.Error("Failed to sync product options", "oldID", product.ID, "upstreamID", realProductID)
 	}
 	return nil, err
 }
