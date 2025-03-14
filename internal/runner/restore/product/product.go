@@ -16,16 +16,17 @@ import (
 
 // Runner is a product restore runner.
 type Runner struct {
-	path   string
-	eng    *engine.Engine
-	rstEng *engine.Restore
-	client *api.GQLClient
-	logger *tlog.Logger
-	stats  map[engine.ResourceType]*runner.Summary
+	path     string
+	eng      *engine.Engine
+	rstEng   *engine.Restore
+	client   *api.GQLClient
+	logger   *tlog.Logger
+	stats    map[engine.ResourceType]*runner.Summary
+	isDryRun bool
 }
 
 // NewRunner constructs a new restore runner.
-func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
+func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger, isDryRun bool) *Runner {
 	rstEng := eng.Doer().(*engine.Restore)
 
 	stats := make(map[engine.ResourceType]*runner.Summary)
@@ -34,12 +35,13 @@ func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *t
 	}
 
 	return &Runner{
-		path:   path,
-		eng:    eng,
-		rstEng: rstEng,
-		client: client,
-		logger: logger,
-		stats:  stats,
+		path:     path,
+		eng:      eng,
+		rstEng:   rstEng,
+		client:   client,
+		logger:   logger,
+		stats:    stats,
+		isDryRun: isDryRun,
 	}
 }
 
@@ -122,8 +124,8 @@ func (r *Runner) restore() error {
 		case "product.json":
 			r.stats[engine.Product].Count += 1
 
-			productFn := &handler.Product{Client: r.client, File: f, Logger: r.logger}
-			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger}
+			productFn := &handler.Product{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Product] = append(
 				resources[currentID][Product],
 				engine.NewResource(engine.Product, r.path, productFn),
@@ -132,7 +134,7 @@ func (r *Runner) restore() error {
 		case "product_metafields.json":
 			r.stats[engine.ProductMetaField].Count += 1
 
-			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Metafields] = append(
 				resources[currentID][Metafields],
 				engine.NewResource(engine.ProductMetaField, r.path, metafieldFn),
@@ -140,7 +142,7 @@ func (r *Runner) restore() error {
 		case "product_variants.json":
 			r.stats[engine.ProductVariant].Count += 1
 
-			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger}
+			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Variants] = append(
 				resources[currentID][Variants],
 				engine.NewResource(engine.ProductVariant, r.path, variantFn),
@@ -148,7 +150,7 @@ func (r *Runner) restore() error {
 		case "product_media.json":
 			r.stats[engine.ProductMedia].Count += 1
 
-			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger}
+			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Media] = append(
 				resources[currentID][Media],
 				engine.NewResource(engine.ProductMedia, r.path, mediaFn),

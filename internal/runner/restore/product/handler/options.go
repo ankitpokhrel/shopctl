@@ -14,6 +14,7 @@ type Option struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h Option) Handle() (any, error) {
@@ -76,6 +77,11 @@ func (h Option) Handle() (any, error) {
 	}
 
 	h.Logger.V(1).Info("Attempting to sync product options", "id", product.ID)
+	if h.DryRun {
+		h.Logger.V(tlog.VL2).Infof("Product options to sync - add: %d, update: %d, remove: %d", len(toAdd), len(toUpdate), len(toDelete))
+		h.Logger.V(tlog.VL3).Warn("Skipping product options sync")
+		return &api.ProductOptionSyncResponse{}, nil
+	}
 	err = attemptSync(product.ID)
 	if err != nil {
 		h.Logger.Error("Failed to sync product options", "id", product.ID)

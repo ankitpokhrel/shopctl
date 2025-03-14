@@ -217,9 +217,9 @@ func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, 
 		toRestore = append(toRestore, resource.Resource)
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
-			rnr = product.NewRunner(bkpPath, eng, client, logger)
+			rnr = product.NewRunner(bkpPath, eng, client, logger, flag.dryRun)
 		case engine.Customer:
-			rnr = customer.NewRunner(bkpPath, eng, client, logger)
+			rnr = customer.NewRunner(bkpPath, eng, client, logger, flag.dryRun)
 		default:
 			logger.V(tlog.VL1).Warnf("Skipping '%s': Invalid resource", resource)
 			continue
@@ -227,6 +227,9 @@ func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, 
 		runners = append(runners, rnr)
 	}
 
+	if flag.dryRun {
+		logger.Warn("This is a dry run. CRUD mutations won't be executed.")
+	}
 	logger.Infof("Starting restore for store: %s", ctx.Store)
 	logger.Infof("Resources to restore: %s", strings.Join(toRestore, ","))
 
@@ -314,7 +317,7 @@ Resources: %s
 		stats := rnr.Stats()
 		for _, rt := range engine.GetAllResourceTypes() {
 			// ProductOption count is not accurate as
-			// we started andling them separately now.
+			// we are handling them separately now.
 			// TODO: Better summary implementation.
 			if rt == engine.ProductOption {
 				continue

@@ -13,6 +13,7 @@ type Variant struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h *Variant) Handle() (any, error) {
@@ -69,6 +70,11 @@ func (h *Variant) Handle() (any, error) {
 	}
 
 	h.Logger.V(1).Info("Attempting to sync product variants", "id", product.ProductID)
+	if h.DryRun {
+		h.Logger.V(tlog.VL2).Infof("Product variants to sync - add: %d, update: %d", len(toAdd), len(toUpdate))
+		h.Logger.V(tlog.VL3).Warn("Skipping product variants sync")
+		return nil, nil
+	}
 	err = attemptSync(product.ProductID)
 	if err != nil {
 		h.Logger.Error("Failed to sync product variants", "id", product.ProductID)

@@ -14,6 +14,7 @@ type Metafield struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h Metafield) Handle() (any, error) {
@@ -77,6 +78,11 @@ func (h Metafield) Handle() (any, error) {
 			return err
 		}
 		return nil
+	}
+	if h.DryRun {
+		h.Logger.V(tlog.VL2).Infof("Customer metafields to sync - add: %d, remove: %d", len(toAdd), len(toDelete))
+		h.Logger.V(tlog.VL3).Warn("Skipping customer metafields sync")
+		return nil, nil
 	}
 	err = attemptSync(updatedCustomerID)
 	if err != nil {

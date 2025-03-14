@@ -13,6 +13,7 @@ type Product struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h *Product) Handle() (any, error) {
@@ -28,11 +29,11 @@ func (h *Product) Handle() (any, error) {
 		return nil, err
 	}
 
-	res, err := createOrUpdateProduct(&prod, h.Client, h.Logger)
-	if err != nil {
-		return nil, err
+	if h.DryRun {
+		h.Logger.V(tlog.VL3).Warn("Skipping product sync")
+		return &api.ProductCreateResponse{}, nil
 	}
-	return res, nil
+	return createOrUpdateProduct(&prod, h.Client, h.Logger)
 }
 
 func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *tlog.Logger) (*api.ProductCreateResponse, error) {

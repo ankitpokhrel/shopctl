@@ -16,16 +16,17 @@ import (
 
 // Runner is a product restore runner.
 type Runner struct {
-	path   string
-	eng    *engine.Engine
-	rstEng *engine.Restore
-	client *api.GQLClient
-	logger *tlog.Logger
-	stats  map[engine.ResourceType]*runner.Summary
+	path     string
+	eng      *engine.Engine
+	rstEng   *engine.Restore
+	client   *api.GQLClient
+	logger   *tlog.Logger
+	stats    map[engine.ResourceType]*runner.Summary
+	isDryRun bool
 }
 
 // NewRunner constructs a new restore runner.
-func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger) *Runner {
+func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger, isDryRun bool) *Runner {
 	rstEng := eng.Doer().(*engine.Restore)
 
 	stats := make(map[engine.ResourceType]*runner.Summary)
@@ -34,12 +35,13 @@ func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *t
 	}
 
 	return &Runner{
-		path:   path,
-		eng:    eng,
-		rstEng: rstEng,
-		client: client,
-		logger: logger,
-		stats:  stats,
+		path:     path,
+		eng:      eng,
+		rstEng:   rstEng,
+		client:   client,
+		logger:   logger,
+		stats:    stats,
+		isDryRun: isDryRun,
 	}
 }
 
@@ -114,7 +116,7 @@ func (r *Runner) restore() error {
 		case "customer.json":
 			r.stats[engine.Customer].Count += 1
 
-			customerFn := &handler.Customer{Client: r.client, File: f, Logger: r.logger}
+			customerFn := &handler.Customer{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Customer] = append(
 				resources[currentID][Customer],
 				engine.NewResource(engine.Customer, r.path, customerFn),
@@ -122,7 +124,7 @@ func (r *Runner) restore() error {
 		case "customer_metafields.json":
 			r.stats[engine.CustomerMetaField].Count += 1
 
-			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger}
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Metafields] = append(
 				resources[currentID][Metafields],
 				engine.NewResource(engine.CustomerMetaField, r.path, metafieldFn),

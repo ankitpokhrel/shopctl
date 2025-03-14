@@ -13,6 +13,7 @@ type Media struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h *Media) Handle() (any, error) {
@@ -29,6 +30,11 @@ func (h *Media) Handle() (any, error) {
 	}
 
 	h.Logger.V(tlog.VL2).Info("Attempting to set product media", "id", media.ProductID)
+	if h.DryRun {
+		h.Logger.V(tlog.VL2).Infof("Product media to sync - add: %d", len(media.Media.Nodes))
+		h.Logger.V(tlog.VL3).Warn("Skipping product media sync")
+		return &api.ProductCreateResponse{}, nil
+	}
 	return updateProductMedia(&media, h.Client)
 }
 

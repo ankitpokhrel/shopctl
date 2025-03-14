@@ -13,6 +13,7 @@ type Customer struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	DryRun bool
 }
 
 func (h *Customer) Handle() (any, error) {
@@ -28,6 +29,10 @@ func (h *Customer) Handle() (any, error) {
 		return nil, err
 	}
 
+	if h.DryRun {
+		h.Logger.V(tlog.VL3).Warn("Skipping customer sync")
+		return &api.CustomerCreateResponse{}, nil
+	}
 	res, err := createOrUpdateCustomer(&customer, h.Client, h.Logger)
 	if err != nil {
 		return nil, err
