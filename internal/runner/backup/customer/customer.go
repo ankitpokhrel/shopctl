@@ -106,9 +106,13 @@ func (r *Runner) backup(limit int, after *string) {
 			customerFn := &provider.Customer{Customer: &customer}
 			metafieldFn := &provider.MetaField{Client: r.client, Logger: r.logger, CustomerID: customer.ID}
 
+			parent := engine.NewResource(engine.Customer, path, customerFn)
+
 			r.eng.Add(engine.Customer, engine.ResourceCollection{
-				engine.NewResource(engine.Customer, path, customerFn),
-				engine.NewResource(engine.CustomerMetaField, path, metafieldFn),
+				Parent: &parent,
+				Children: []engine.Resource{
+					engine.NewResource(engine.CustomerMetaField, path, metafieldFn),
+				},
 			})
 		}
 	}

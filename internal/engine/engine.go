@@ -9,8 +9,9 @@ const (
 
 // Result is a result of the engine operation.
 type Result struct {
-	ResourceType ResourceType
-	Err          error
+	ParentResourceType ResourceType
+	ResourceType       ResourceType
+	Err                error
 }
 
 // Doer is an interface that defines the handler of the engine.
@@ -60,10 +61,14 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 	var wg sync.WaitGroup
 
 	run := func(rc ResourceCollection, out chan<- Result) {
-		for _, r := range rc {
-			err := e.doer.Do(r)
-			out <- Result{ResourceType: r.Type, Err: err}
+		err := e.doer.Do(*rc.Parent)
+		if err == nil {
+			for _, r := range rc.Children {
+				err := e.doer.Do(r)
+				out <- Result{ParentResourceType: rc.Parent.Type, ResourceType: r.Type, Err: err}
+			}
 		}
+		out <- Result{ResourceType: rc.Parent.Type, Err: err}
 	}
 
 	out := make(chan Result, numWorkers)

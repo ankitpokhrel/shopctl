@@ -41,45 +41,58 @@ func TestBackup_Do(t *testing.T) {
 
 	jobs := []ResourceCollection{
 		{
-			NewResource(
-				Product,
-				"2024/11/6d/8737843216608",
-				&mockHandler{dataFile: "./testdata/product.json"},
-			),
-			NewResource(
-				ProductVariant,
-				"2024/11/6d/8737843216608",
-				&mockHandler{dataFile: "./testdata/variants.json"},
-			),
-			NewResource(
-				ProductMedia,
-				"2024/11/6d/8737843216608",
-				&mockHandler{dataFile: "./testdata/media.json"},
-			),
+			Parent: func() *Resource {
+				r := NewResource(
+					Product,
+					"2024/11/6d/8737843216608",
+					&mockHandler{dataFile: "./testdata/product.json"},
+				)
+				return &r
+			}(),
+			Children: []Resource{
+				NewResource(
+					ProductVariant,
+					"2024/11/6d/8737843216608",
+					&mockHandler{dataFile: "./testdata/variants.json"},
+				),
+				NewResource(
+					ProductMedia,
+					"2024/11/6d/8737843216608",
+					&mockHandler{dataFile: "./testdata/media.json"},
+				),
+			},
 		},
 		{
-			NewResource(
-				Product,
-				"2024/11/6d/8737843347680",
-				&mockHandler{dataFile: "./testdata/empty.json"},
-			),
-			NewResource(
-				ProductVariant,
-				"2024/11/6d/8737843347680",
-				&mockHandler{dataFile: "./testdata/empty.json"},
-			),
-			NewResource(
-				ProductMedia,
-				"2024/11/6d/8737843347680",
-				&mockHandler{dataFile: "./testdata/empty.json"},
-			),
+			Parent: func() *Resource {
+				r := NewResource(
+					Product,
+					"2024/11/6d/8737843347680",
+					&mockHandler{dataFile: "./testdata/empty.json"},
+				)
+				return &r
+			}(),
+			Children: []Resource{
+				NewResource(
+					ProductVariant,
+					"2024/11/6d/8737843347680",
+					&mockHandler{dataFile: "./testdata/empty.json"},
+				),
+				NewResource(
+					ProductMedia,
+					"2024/11/6d/8737843347680",
+					&mockHandler{dataFile: "./testdata/empty.json"},
+				),
+			},
 		},
 		{
-			NewResource(
-				ProductMedia,
-				"2024/12/ae/8773308023008",
-				&mockHandler{dataFile: "./testdata/empty.json"},
-			),
+			Parent: func() *Resource {
+				r := NewResource(
+					ProductMedia,
+					"2024/12/ae/8773308023008",
+					&mockHandler{dataFile: "./testdata/empty.json"},
+				)
+				return &r
+			}(),
 		},
 	}
 

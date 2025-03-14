@@ -127,7 +127,6 @@ func (b *Backup) Do(rs Resource) error {
 	if err != nil {
 		return err
 	}
-
 	return b.saveJSON(dest, data)
 }
 

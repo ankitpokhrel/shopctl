@@ -34,9 +34,14 @@ func TestEngine_Run(t *testing.T) {
 	go func() {
 		defer close(done)
 		engine.Add(Product, ResourceCollection{
-			Resource{Type: Product},
-			Resource{Type: ProductVariant},
-			Resource{Type: "fail"},
+			Parent: func() *Resource {
+				r := Resource{Type: Product}
+				return &r
+			}(),
+			Children: []Resource{
+				{Type: ProductVariant},
+				{Type: "fail"},
+			},
 		})
 		engine.Done(Product)
 	}()

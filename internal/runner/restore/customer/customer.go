@@ -95,7 +95,7 @@ func (r *Runner) restore() error {
 	)
 
 	// Initialize resources with fixed slots for ordering.
-	resources := make(map[string][]engine.ResourceCollection)
+	resources := make(map[string][][]engine.Resource)
 
 	for f := range foundFiles {
 		if f.Err != nil {
@@ -109,7 +109,7 @@ func (r *Runner) restore() error {
 		}
 
 		if _, exists := resources[currentID]; !exists {
-			resources[currentID] = make([]engine.ResourceCollection, maxNumResources)
+			resources[currentID] = make([][]engine.Resource, maxNumResources)
 		}
 
 		switch filepath.Base(f.Path) {
@@ -136,10 +136,20 @@ func (r *Runner) restore() error {
 	// Flatten resources for each currentID in the defined order.
 	for _, orderedResources := range resources {
 		var flattened engine.ResourceCollection
-		for _, rc := range orderedResources {
-			flattened = append(flattened, rc...)
+
+		if len(orderedResources[Customer]) > 0 {
+			flattened.Parent = &orderedResources[Customer][0]
 		}
-		r.eng.Add(engine.Customer, flattened)
+
+		for idx, rc := range orderedResources {
+			if idx == Customer {
+				continue
+			}
+			flattened.Children = append(flattened.Children, rc...)
+		}
+		if flattened.Parent != nil {
+			r.eng.Add(engine.Product, flattened)
+		}
 	}
 	return nil
 }

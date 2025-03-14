@@ -72,7 +72,10 @@ func NewResource(rt ResourceType, path string, rh ResourceHandler) Resource {
 }
 
 // ResourceCollection is a collection of resources.
-type ResourceCollection []Resource
+type ResourceCollection struct {
+	Parent   *Resource
+	Children []Resource
+}
 
 // GetPrimaryResourceTypes returns primary resource types.
 func GetPrimaryResourceTypes() []ResourceType {

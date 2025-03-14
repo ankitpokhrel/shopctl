@@ -115,11 +115,15 @@ func (r *Runner) backup(limit int, after *string, query *string) {
 			mediaFn := &provider.Media{Client: r.client, Logger: r.logger, ProductID: product.Node.ID}
 			metafieldFn := &provider.MetaField{Client: r.client, Logger: r.logger, ProductID: product.Node.ID}
 
+			parent := engine.NewResource(engine.Product, path, productFn)
+
 			r.eng.Add(engine.Product, engine.ResourceCollection{
-				engine.NewResource(engine.Product, path, productFn),
-				engine.NewResource(engine.ProductVariant, path, variantFn),
-				engine.NewResource(engine.ProductMedia, path, mediaFn),
-				engine.NewResource(engine.ProductMetaField, path, metafieldFn),
+				Parent: &parent,
+				Children: []engine.Resource{
+					engine.NewResource(engine.ProductVariant, path, variantFn),
+					engine.NewResource(engine.ProductMedia, path, mediaFn),
+					engine.NewResource(engine.ProductMetaField, path, metafieldFn),
+				},
 			})
 		}
 	}
