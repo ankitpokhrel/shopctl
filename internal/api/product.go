@@ -692,3 +692,46 @@ func (c GQLClient) DeleteProductVariants(productID string, variants []string) (*
 	}
 	return &out.Data.ProductVariantBulkDelete, nil
 }
+
+// DeleteProductMedias detaches one or more product medias.
+func (c GQLClient) DeleteProductMedias(productID string, medias []string) (*ProductMediaDeleteResponse, error) {
+	var out struct {
+		Data struct {
+			ProductMediaDelete ProductMediaDeleteResponse `json:"productDeleteMedia"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation productMediasDelete($mediaIds: [ID!]!, $productId: ID!) {
+      productDeleteMedia(mediaIds: $mediaIds, productId: $productId) {
+        deletedMediaIds
+        product {
+          id
+        }
+        mediaUserErrors {
+          field
+          message
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+			"mediaIds":  medias,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productMediasDelete: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductMediaDelete.UserErrors) > 0 {
+		return nil, fmt.Errorf("productMediasDelete: the operation failed with user error: %s", out.Data.ProductMediaDelete.UserErrors.Error())
+	}
+	return &out.Data.ProductMediaDelete, nil
+}

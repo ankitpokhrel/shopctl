@@ -92,6 +92,14 @@ type ProductMediaData struct {
 	} `json:"media"`
 }
 
+type ProductMediaDeleteResponse struct {
+	Product struct {
+		ID string `json:"id"`
+	} `json:"product"`
+	DeletedMediaIDs []string   `json:"deletedMediaIds"`
+	UserErrors      UserErrors `json:"mediaUserErrors"`
+}
+
 type ProductCreateResponse struct {
 	Product    schema.Product `json:"product"`
 	UserErrors UserErrors     `json:"userErrors"`
