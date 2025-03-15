@@ -22,17 +22,17 @@ func TestRender(t *testing.T) {
 			expected: "",
 		},
 		{
-			name: "diffs with no sort order",
+			name: "diffs with all elements in sort order",
 			diffs: map[string]string{
 				"str": "--- a/str",
 				"num": "--- a/num",
 				"f64": "--- a/f64",
 			},
-			order:    []string{},
+			order:    []string{"str", "num", "f64"},
 			expected: "--- a/str\n--- a/num\n--- a/f64\n",
 		},
 		{
-			name: "diffs with sort order",
+			name: "diffs with some elements in sort order",
 			diffs: map[string]string{
 				"str": "--- a/str",
 				"num": "--- a/num",

@@ -39,6 +39,7 @@ func TestEngine_Run(t *testing.T) {
 				return &r
 			}(),
 			Children: []Resource{
+				{Type: ProductOption},
 				{Type: ProductVariant},
 				{Type: "fail"},
 			},
@@ -55,13 +56,15 @@ func TestEngine_Run(t *testing.T) {
 		collected = append(collected, res)
 	}
 
-	assert.Len(t, collected, 3)
+	assert.Len(t, collected, 4)
 	assert.Equal(t, "product", string(collected[0].ResourceType))
 	assert.Nil(t, collected[0].Err)
-	assert.Equal(t, "product_variant", string(collected[1].ResourceType))
+	assert.Equal(t, "product_option", string(collected[1].ResourceType))
 	assert.Nil(t, collected[1].Err)
-	assert.Equal(t, "fail", string(collected[2].ResourceType))
-	assert.NotNil(t, collected[2].Err)
+	assert.Equal(t, "product_variant", string(collected[2].ResourceType))
+	assert.Nil(t, collected[2].Err)
+	assert.Equal(t, "fail", string(collected[3].ResourceType))
+	assert.NotNil(t, collected[3].Err)
 
 	<-done
 }

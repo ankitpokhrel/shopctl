@@ -62,13 +62,13 @@ func (e *Engine) Run(rt ResourceType) chan Result {
 
 	run := func(rc ResourceCollection, out chan<- Result) {
 		data, err := e.doer.Do(*rc.Parent, nil)
+		out <- Result{ResourceType: rc.Parent.Type, Err: err}
 		if err == nil {
 			for _, r := range rc.Children {
 				_, err := e.doer.Do(r, data)
 				out <- Result{ParentResourceType: rc.Parent.Type, ResourceType: r.Type, Err: err}
 			}
 		}
-		out <- Result{ResourceType: rc.Parent.Type, Err: err}
 	}
 
 	out := make(chan Result, numWorkers)

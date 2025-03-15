@@ -119,14 +119,14 @@ func TestBackup_Do(t *testing.T) {
 	assert.DirExists(t, root+"/2024/12/ae/8773308023008")
 
 	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843216608/variants.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843216608/media.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product_variants.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product_media.json")
 
 	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843347680/variants.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843347680/media.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product_variants.json")
+	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product_media.json")
 
-	assert.FileExists(t, root+"/2024/12/ae/8773308023008/media.json")
+	assert.FileExists(t, root+"/2024/12/ae/8773308023008/product_media.json")
 
 	// Assert file contents.
 	content, err := os.ReadFile(root + "/2024/11/6d/8737843216608/product.json")
@@ -137,14 +137,14 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/variants.json")
+	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/product_variants.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
 		`{"id":"gid://shopify/Product/8737843216608","variants":{"edges":[{"node":{"availableForSale":true,"createdAt":"2024-04-12T18:27:08Z","displayName":"Test Product"}}]}}`,
 		string(content))
 
-	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/media.json")
+	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/product_media.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -152,7 +152,7 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(root + "/2024/12/ae/8773308023008/media.json")
+	content, err = os.ReadFile(root + "/2024/12/ae/8773308023008/product_media.json")
 	assert.NoError(t, err)
 	assert.Equal(t, "{}", string(content))
 
