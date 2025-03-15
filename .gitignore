@@ -1,0 +1,13 @@
+*~
+*.out
+*.swp
+
+.DS_Store
+.idea/
+.vscode/
+.gocache/
+
+/dist
+/bin
+/coverage
+/vendor

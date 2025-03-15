@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2a2f38, #1b1f27);
+            color: #262525;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #f6f5f5;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 560px;
+            min-height: ;
+        }
+
+        .container h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        a.button {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        a.button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Authentication Complete</h1>
+        <p>
+            You are successfully authenticated to <a href="https://github.com/ankitpokhrel/shopctl">ShopCTL</a>.
+            <br />
+            You may now close this window and return to your CLI app.
+        </p>
+        <a class="button" href="about:blank" onclick="window.close(); return false;">Close this window</a>
+    </div>
+</body>
+
+</html>

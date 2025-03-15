@@ -1,0 +1,14 @@
+{
+  "id": "gid://shopify/Product/8737843216608",
+  "variants": {
+    "edges": [
+      {
+        "node": {
+          "availableForSale": true,
+          "createdAt": "2024-04-12T18:27:08Z",
+          "displayName": "Test Product"
+        }
+      }
+    ]
+  }
+}
