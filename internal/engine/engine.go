@@ -1,11 +1,17 @@
 package engine
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 const (
 	// TODO: Decide number of workers.
 	numWorkers = 3
 )
+
+// ErrSkipChildren is an event that signals the engine to skip processing children.
+var ErrSkipChildren = fmt.Errorf("skip processing children")
 
 // Result is a result of the engine operation.
 type Result struct {

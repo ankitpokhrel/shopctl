@@ -26,8 +26,8 @@ const (
 	examples = `# Restore everything for the context from the latest backup
 $ shopctl restore run --latest --all
 
-# Restore some products for the context from the latest backup
-$ shopctl restore run --latest -r product="id1,id2,id3"
+# Restore some products on status DRAFT for the context from the latest backup
+$ shopctl restore run --latest -r product="id:id1,id2,id3 AND status:DRAFT"
 
 # Restore everything for the context from the given backup id
 $ shopctl restore run --backup-id 3820045c0c --all
@@ -38,8 +38,8 @@ $ shopctl restore run -c mycontext --backup-id 3820045c0c -r product
 # Restore specific products from the latest backup of the given context and strategy
 $ shopctl restore run -c mycontext -s mystrategy --latest -r product="id:id1,id2,id3"
 
-# Restore specific products and all customers from the latest backup
-$ shopctl restore run --latest -r product="id:id1,id2,id3" -r customer
+# Restore specific products and verified customers from the latest backup
+$ shopctl restore run --latest -r product="tags:premium,on-sale" -r customer="verifiedemail:true"
 
 # Restore products and customers directly from the given backup path
 $ shopctl restore run --backup-path /path/to/unzipped/bkp -r product -r customer
@@ -157,6 +157,7 @@ func NewCmdRun() *cobra.Command {
 	return &cmd
 }
 
+//nolint:gocyclo
 func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, ctx *config.StoreContext, logger *tlog.Logger) error {
 	var strategy *config.BackupStrategy
 
@@ -214,12 +215,22 @@ func run(cmd *cobra.Command, client *api.GQLClient, shopCfg *config.ShopConfig, 
 
 	toRestore := make([]string, 0, len(flag.resources))
 	for _, resource := range flag.resources {
+		var filters runner.RestoreFilter
+		if resource.Query != "" {
+			conditions, separators, err := cmdutil.ParseRestoreFilters(resource.Query)
+			if err != nil {
+				return err
+			}
+			filters.Filters = conditions
+			filters.Separators = separators
+		}
+
 		toRestore = append(toRestore, resource.Resource)
 		switch engine.ResourceType(resource.Resource) {
 		case engine.Product:
-			rnr = product.NewRunner(bkpPath, eng, client, logger, flag.dryRun)
+			rnr = product.NewRunner(bkpPath, eng, client, logger, &filters, flag.dryRun)
 		case engine.Customer:
-			rnr = customer.NewRunner(bkpPath, eng, client, logger, flag.dryRun)
+			rnr = customer.NewRunner(bkpPath, eng, client, logger, &filters, flag.dryRun)
 		default:
 			logger.V(tlog.VL1).Warnf("Skipping '%s': Invalid resource", resource)
 			continue

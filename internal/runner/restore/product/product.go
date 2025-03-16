@@ -1,6 +1,7 @@
 package product
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -22,11 +23,12 @@ type Runner struct {
 	client   *api.GQLClient
 	logger   *tlog.Logger
 	stats    map[engine.ResourceType]*runner.Summary
+	filters  *runner.RestoreFilter
 	isDryRun bool
 }
 
 // NewRunner constructs a new restore runner.
-func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger, isDryRun bool) *Runner {
+func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *tlog.Logger, filters *runner.RestoreFilter, isDryRun bool) *Runner {
 	rstEng := eng.Doer().(*engine.Restore)
 
 	stats := make(map[engine.ResourceType]*runner.Summary)
@@ -41,6 +43,7 @@ func NewRunner(path string, eng *engine.Engine, client *api.GQLClient, logger *t
 		client:   client,
 		logger:   logger,
 		stats:    stats,
+		filters:  filters,
 		isDryRun: isDryRun,
 	}
 }
@@ -68,6 +71,10 @@ func (r *Runner) Run() error {
 	}()
 
 	for res := range r.eng.Run(engine.Product) {
+		if res.Err != nil && errors.Is(res.Err, engine.ErrSkipChildren) {
+			r.stats[res.ResourceType].Skipped += 1
+			continue
+		}
 		if res.Err != nil {
 			r.stats[res.ResourceType].Failed += 1
 			r.logger.Errorf("Failed to restore resource %s: %v\n", res.ResourceType, res.Err)
@@ -124,7 +131,7 @@ func (r *Runner) restore() error {
 		case "product.json":
 			r.stats[engine.Product].Count += 1
 
-			productFn := &handler.Product{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			productFn := &handler.Product{Client: r.client, File: f, Filter: r.filters, Logger: r.logger, DryRun: r.isDryRun}
 			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Product] = append(
 				resources[currentID][Product],

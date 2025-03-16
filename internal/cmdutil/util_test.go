@@ -222,6 +222,121 @@ func TestParseBackupResource(t *testing.T) {
 	}
 }
 
+func TestParseRestoreFilters(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		result map[string][]string
+		sep    []string
+		err    bool
+	}{
+		{
+			name:  "single expression",
+			input: "tag:premium",
+			result: map[string][]string{
+				"tag": {"premium"},
+			},
+			sep: nil,
+			err: false,
+		},
+		{
+			name:  "single expression, multiple vaules",
+			input: "tag:premium,on-sale",
+			result: map[string][]string{
+				"tag": {"premium", "on-sale"},
+			},
+			sep: nil,
+			err: false,
+		},
+		{
+			name:  "simple AND",
+			input: "tag:premium AND status:draft",
+			result: map[string][]string{
+				"tag":    {"premium"},
+				"status": {"draft"},
+			},
+			sep: []string{"AND"},
+			err: false,
+		},
+		{
+			name:  "simple OR",
+			input: "tag:premium OR status:draft",
+			result: map[string][]string{
+				"tag":    {"premium"},
+				"status": {"draft"},
+			},
+			sep: []string{"OR"},
+			err: false,
+		},
+		{
+			name:  "multiple AND and OR",
+			input: "tag:premium,on-sale AND status:draft OR category:books",
+			result: map[string][]string{
+				"tag":      {"premium", "on-sale"},
+				"status":   {"draft"},
+				"category": {"books"},
+			},
+			sep: []string{"AND", "OR"},
+			err: false,
+		},
+		{
+			name:  "space separated values",
+			input: "title:'first title,second title' AND status:draft",
+			result: map[string][]string{
+				"title":  {"first title", "second title"},
+				"status": {"draft"},
+			},
+			sep: []string{"AND"},
+			err: false,
+		},
+		{
+			name:  "repeated keys",
+			input: "tag:premium OR tag:basic AND status:active",
+			result: map[string][]string{
+				"tag":    {"premium", "basic"},
+				"status": {"active"},
+			},
+			sep: []string{"OR", "AND"},
+			err: false,
+		},
+		{
+			name:   "invalid separator",
+			input:  "tag:premium XOR status:draft",
+			result: nil,
+			sep:    nil,
+			err:    true,
+		},
+		{
+			name:   "invalid condition format",
+			input:  "tag-premium AND status:draft",
+			result: nil,
+			sep:    nil,
+			err:    true,
+		},
+		{
+			name:   "empty input",
+			input:  "",
+			result: nil,
+			sep:    nil,
+			err:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result, sep, err := ParseRestoreFilters(tc.input)
+
+			if tc.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tc.result, result)
+			assert.Equal(t, tc.sep, sep)
+		})
+	}
+}
+
 func TestGetBackupIDFromName(t *testing.T) {
 	tests := []struct {
 		name     string

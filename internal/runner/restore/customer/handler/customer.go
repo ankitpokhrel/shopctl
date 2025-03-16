@@ -2,9 +2,15 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
+	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
@@ -13,6 +19,7 @@ type Customer struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	Filter *runner.RestoreFilter
 	DryRun bool
 }
 
@@ -27,6 +34,12 @@ func (h *Customer) Handle(data any) (any, error) {
 	if err = json.Unmarshal(customerRaw, &customer); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
 		return nil, err
+	}
+
+	// Filter customer.
+	matched, err := matchesFilters(&customer, h.Filter)
+	if err != nil || !matched {
+		return nil, engine.ErrSkipChildren
 	}
 
 	if h.DryRun {
@@ -98,4 +111,74 @@ func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lg
 
 	lgr.Info("Creating customer", "id", customer.ID)
 	return client.CreateCustomer(input)
+}
+
+//nolint:gocyclo
+func matchesFilters(customer *schema.Customer, rf *runner.RestoreFilter) (bool, error) {
+	containsAny := func(s []any, v any) bool { return slices.Contains(s, v) } //nolint:gocritic
+
+	results := []bool{}
+	for key, values := range rf.Filters {
+		switch strings.ToLower(key) {
+		case "id":
+			matched := slices.Contains(values, cmdutil.ExtractNumericID(customer.ID))
+			results = append(results, matched)
+		case "email":
+			matched := false
+			if customer.Email != nil {
+				matched = slices.Contains(values, *customer.Email)
+			}
+			results = append(results, matched)
+		case "phone":
+			matched := slices.Contains(values, *customer.Phone)
+			results = append(results, matched)
+		case "firstname":
+			matched := false
+			if customer.FirstName != nil {
+				matched = slices.Contains(values, *customer.FirstName)
+			}
+			results = append(results, matched)
+		case "lastname":
+			matched := false
+			if customer.FirstName != nil {
+				matched = slices.Contains(values, *customer.LastName)
+			}
+			results = append(results, matched)
+		case "tags":
+			matched := false
+			for _, tag := range values {
+				if containsAny(customer.Tags, tag) {
+					matched = true
+					break
+				}
+			}
+			results = append(results, matched)
+		case "state":
+			matched := slices.Contains(values, strings.ToLower(string(customer.State)))
+			results = append(results, matched)
+		case "verifiedemail":
+			matched := slices.Contains(values, "true")
+			results = append(results, matched)
+		default:
+			return false, fmt.Errorf("unsupported filter key: %s", key)
+		}
+	}
+
+	if len(results) == 0 {
+		return false, nil
+	}
+
+	// Combine results using separators
+	finalResult := results[0]
+	for i, sep := range rf.Separators {
+		switch strings.ToLower(sep) {
+		case "and":
+			finalResult = finalResult && results[i+1]
+		case "or":
+			finalResult = finalResult || results[i+1]
+		default:
+			return false, fmt.Errorf("unsupported separator: %s", sep)
+		}
+	}
+	return finalResult, nil
 }

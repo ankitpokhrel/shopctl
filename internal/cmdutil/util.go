@@ -167,6 +167,53 @@ func ParseBackupResource(resources []string) []config.BackupResource {
 	return bkpResources
 }
 
+// ParseRestoreFilters parses resource filters.
+func ParseRestoreFilters(input string) (map[string][]string, []string, error) {
+	grammar := regexp.MustCompile(`^(\w+:(?:'[^']*'|"[^"]*"|[\w,-]+))( (?i)(AND|OR) \w+:(?:'[^']*'|"[^"]*"|[\w,-]+))*$`)
+	if !grammar.MatchString(input) {
+		return nil, nil, fmt.Errorf("invalid input format: %s", input)
+	}
+
+	conditionRegex := regexp.MustCompile(`(\w+):(?:'([^']*)'|"([^"]*)"|([\w,-]+))`)
+	separatorRegex := regexp.MustCompile(` (?i)(AND|OR) `)
+
+	parts := separatorRegex.Split(input, -1)
+	separators := separatorRegex.FindAllString(input, -1)
+
+	result := make(map[string][]string)
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		matches := conditionRegex.FindStringSubmatch(part)
+		if len(matches) < 5 { //nolint:mnd
+			return nil, nil, fmt.Errorf("invalid filter format: %s", part)
+		}
+
+		key := matches[1]
+		var value string
+		switch {
+		case matches[2] != "":
+			// Single-quoted value.
+			value = matches[2]
+		case matches[3] != "":
+			// Double-quoted value.
+			value = matches[3]
+		default:
+			// Unquoted value.
+			value = matches[4]
+		}
+
+		values := strings.Split(value, ",")
+		for _, v := range values {
+			result[key] = append(result[key], strings.TrimSpace(v))
+		}
+	}
+
+	for i := range separators {
+		separators[i] = strings.ToUpper(strings.TrimSpace(separators[i]))
+	}
+	return result, separators, nil
+}
+
 // GetBackupIDFromName extracts backup id from the file name.
 func GetBackupIDFromName(name string) string {
 	name = strings.TrimSuffix(name, ".tar.gz")
@@ -186,13 +233,11 @@ func stripProtocol(url string) string {
 	if len(url) < 8 /* Max protocol length */ { //nolint:mnd
 		return url
 	}
-
 	if url[:7] == "http://" {
 		return url[7:]
 	}
 	if url[:8] == "https://" {
 		return url[8:]
 	}
-
 	return url
 }

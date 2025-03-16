@@ -2,9 +2,15 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
+	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
@@ -13,6 +19,7 @@ type Product struct {
 	Client *api.GQLClient
 	Logger *tlog.Logger
 	File   registry.File
+	Filter *runner.RestoreFilter
 	DryRun bool
 }
 
@@ -27,6 +34,12 @@ func (h *Product) Handle(data any) (any, error) {
 	if err = json.Unmarshal(product, &prod); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
 		return nil, err
+	}
+
+	// Filter product.
+	matched, err := matchesFilters(&prod, h.Filter)
+	if err != nil || !matched {
+		return nil, engine.ErrSkipChildren
 	}
 
 	if h.DryRun {
@@ -106,4 +119,64 @@ func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *
 
 	lgr.Info("Creating product", "id", product.ID)
 	return client.CreateProduct(input)
+}
+
+func matchesFilters(product *schema.Product, rf *runner.RestoreFilter) (bool, error) {
+	containsAny := func(s []any, v any) bool { return slices.Contains(s, v) } //nolint:gocritic
+
+	results := []bool{}
+	for key, values := range rf.Filters {
+		switch strings.ToLower(key) {
+		case "id":
+			matched := slices.Contains(values, cmdutil.ExtractNumericID(product.ID))
+			results = append(results, matched)
+		case "handle":
+			matched := slices.Contains(values, string(product.Handle))
+			results = append(results, matched)
+		case "title":
+			matched := slices.Contains(values, string(product.Title))
+			results = append(results, matched)
+		case "tags":
+			matched := false
+			for _, tag := range values {
+				if containsAny(product.Tags, tag) {
+					matched = true
+					break
+				}
+			}
+			results = append(results, matched)
+		case "status":
+			matched := slices.Contains(values, strings.ToLower(string(product.Status)))
+			results = append(results, matched)
+		case "producttype":
+			matched := slices.Contains(values, strings.ToLower(string(product.ProductType)))
+			results = append(results, matched)
+		case "category":
+			matched := false
+			if product.Category != nil {
+				matched = slices.Contains(values, strings.ToLower(product.Category.Name))
+			}
+			results = append(results, matched)
+		default:
+			return false, fmt.Errorf("unsupported filter key: %s", key)
+		}
+	}
+
+	if len(results) == 0 {
+		return false, nil
+	}
+
+	// Combine results using separators
+	finalResult := results[0]
+	for i, sep := range rf.Separators {
+		switch strings.ToLower(sep) {
+		case "and":
+			finalResult = finalResult && results[i+1]
+		case "or":
+			finalResult = finalResult || results[i+1]
+		default:
+			return false, fmt.Errorf("unsupported separator: %s", sep)
+		}
+	}
+	return finalResult, nil
 }
