@@ -16,40 +16,49 @@ import (
 )
 
 type Product struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	Filter *runner.RestoreFilter
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Filter  *runner.RestoreFilter
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h *Product) Handle(data any) (any, error) {
-	product, err := registry.ReadFileContents(h.File.Path)
+	productRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
-	var prod schema.Product
-	if err = json.Unmarshal(product, &prod); err != nil {
+	var product schema.Product
+	if err = json.Unmarshal(productRaw, &product); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
 	// Filter product.
-	matched, err := matchesFilters(&prod, h.Filter)
-	if err != nil || !matched {
-		return nil, engine.ErrSkipChildren
+	if len(h.Filter.Filters) > 0 {
+		matched, err := matchesFilters(&product, h.Filter)
+		if err != nil || !matched {
+			h.Summary.Skipped += 1
+			return nil, engine.ErrSkipChildren
+		}
 	}
 
 	if h.DryRun {
 		h.Logger.V(tlog.VL3).Warn("Skipping product sync")
-		return &api.ProductCreateResponse{}, nil
+		h.Summary.Passed += 1
+		return product.ID, nil
 	}
-	res, err := createOrUpdateProduct(&prod, h.Client, h.Logger)
+	res, err := createOrUpdateProduct(&product, h.Client, h.Logger)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
+	h.Summary.Passed += 1
 	return res.Product.ID, nil
 }
 

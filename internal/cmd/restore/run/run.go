@@ -294,19 +294,6 @@ func getBackupIDAndPath(flag *flag, strategy *config.BackupStrategy) (string, st
 }
 
 func summarize(store string, id string, bkpPath string, runners []runner.Runner) {
-	var counter int
-
-	for _, rnr := range runners {
-		stats := rnr.Stats()
-		if s, ok := stats[rnr.Kind()]; ok {
-			counter += s.Count
-		}
-	}
-
-	if counter == 0 {
-		return
-	}
-
 	resources := make([]string, 0, len(runners))
 	for _, rnr := range runners {
 		resources = append(resources, string(rnr.Kind()))

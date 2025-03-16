@@ -5,15 +5,17 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 type Metafield struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h Metafield) Handle(data any) (any, error) {
@@ -26,16 +28,19 @@ func (h Metafield) Handle(data any) (any, error) {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
 	var meta api.ProductMetafieldsData
 	if err = json.Unmarshal(metaRaw, &meta); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
 	// Get upstream metafields.
 	currentMetafields, err := h.Client.GetProductMetaFields(realProductID)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
@@ -74,16 +79,21 @@ func (h Metafield) Handle(data any) (any, error) {
 		}
 		return nil
 	}
+	h.Logger.V(1).Info("Attempting to sync product metafileds", "oldID", meta.ProductID, "upstreamID", realProductID)
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product metafields to sync - add: %d, remove: %d", len(toAdd), len(toDelete))
 		h.Logger.V(tlog.VL3).Warn("Skipping product metafields sync")
+		h.Summary.Passed += 1
 		return nil, nil
 	}
 	err = attemptSync(realProductID)
 	if err != nil {
 		h.Logger.Error("Failed to sync product metafields", "oldID", meta.ProductID, "upstreamID", realProductID)
+		h.Summary.Failed += 1
+		return nil, err
 	}
-	return nil, err
+	h.Summary.Passed += 1
+	return nil, nil
 }
 
 func (h Metafield) handleProductMetaFieldsSet(productID string, toAdd []*schema.Metafield) (*api.MetafieldSetResponse, error) {

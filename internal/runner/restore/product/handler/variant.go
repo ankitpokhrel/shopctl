@@ -5,15 +5,17 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 type Variant struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h *Variant) Handle(data any) (any, error) {
@@ -26,16 +28,19 @@ func (h *Variant) Handle(data any) (any, error) {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
 	var product api.ProductVariantData
 	if err = json.Unmarshal(variantsRaw, &product); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
 	// Get upstream variants.
 	currentVariants, err := h.Client.GetProductVariants(realProductID)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
@@ -77,13 +82,17 @@ func (h *Variant) Handle(data any) (any, error) {
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product variants to sync - add: %d, update: %d", len(toAdd), len(toUpdate))
 		h.Logger.V(tlog.VL3).Warn("Skipping product variants sync")
+		h.Summary.Passed += 1
 		return nil, nil
 	}
 	err = attemptSync(realProductID)
 	if err != nil {
 		h.Logger.Error("Failed to sync product variants", "oldID", product.ProductID, "upstreamID", realProductID)
+		h.Summary.Failed += 1
+		return nil, err
 	}
-	return nil, err
+	h.Summary.Passed += 1
+	return nil, nil
 }
 
 func (h Variant) handleProductVariantAdd(productID string, toAdd []*schema.ProductVariant) (*api.ProductVariantsSyncResponse, error) {

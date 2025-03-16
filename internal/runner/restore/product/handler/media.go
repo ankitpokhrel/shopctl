@@ -5,15 +5,17 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 type Media struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h *Media) Handle(data any) (any, error) {
@@ -26,16 +28,19 @@ func (h *Media) Handle(data any) (any, error) {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
 	var media api.ProductMediaData
 	if err = json.Unmarshal(mediaRaw, &media); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
 	// Get upstream medias.
 	currentMedias, err := h.Client.GetProductMedias(realProductID)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
@@ -77,13 +82,17 @@ func (h *Media) Handle(data any) (any, error) {
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product media to sync - add: %d, remove: %d", len(toAdd), len(toDelete))
 		h.Logger.V(tlog.VL3).Warn("Skipping product media sync")
-		return &api.ProductCreateResponse{}, nil
+		h.Summary.Passed += 1
+		return nil, nil
 	}
 	err = attemptSync(realProductID)
 	if err != nil {
 		h.Logger.Error("Failed to sync product medias", "oldID", media.ProductID, "upstreamID", realProductID)
+		h.Summary.Failed += 1
+		return nil, err
 	}
-	return nil, err
+	h.Summary.Passed += 1
+	return nil, nil
 }
 
 func (h Media) handleProductMediaAdd(productID string, toAdd []*api.ProductMediaNode) (*api.ProductCreateResponse, error) {

@@ -71,15 +71,8 @@ func (r *Runner) Run() error {
 	}()
 
 	for res := range r.eng.Run(engine.Product) {
-		if res.Err != nil && errors.Is(res.Err, engine.ErrSkipChildren) {
-			r.stats[res.ResourceType].Skipped += 1
-			continue
-		}
-		if res.Err != nil {
-			r.stats[res.ResourceType].Failed += 1
+		if res.Err != nil && !errors.Is(res.Err, engine.ErrSkipChildren) {
 			r.logger.Errorf("Failed to restore resource %s: %v\n", res.ResourceType, res.Err)
-		} else {
-			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
@@ -129,9 +122,7 @@ func (r *Runner) restore() error {
 
 		switch filepath.Base(f.Path) {
 		case "product.json":
-			r.stats[engine.Product].Count += 1
-
-			productFn := &handler.Product{Client: r.client, File: f, Filter: r.filters, Logger: r.logger, DryRun: r.isDryRun}
+			productFn := &handler.Product{Client: r.client, File: f, Filter: r.filters, Logger: r.logger, Summary: r.stats[engine.Product], DryRun: r.isDryRun}
 			optionsFn := &handler.Option{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
 			resources[currentID][Product] = append(
 				resources[currentID][Product],
@@ -139,25 +130,19 @@ func (r *Runner) restore() error {
 				engine.NewResource(engine.ProductOption, r.path, optionsFn),
 			)
 		case "product_metafields.json":
-			r.stats[engine.ProductMetaField].Count += 1
-
-			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, Summary: r.stats[engine.ProductMetaField], DryRun: r.isDryRun}
 			resources[currentID][Metafields] = append(
 				resources[currentID][Metafields],
 				engine.NewResource(engine.ProductMetaField, r.path, metafieldFn),
 			)
 		case "product_variants.json":
-			r.stats[engine.ProductVariant].Count += 1
-
-			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			variantFn := &handler.Variant{Client: r.client, File: f, Logger: r.logger, Summary: r.stats[engine.ProductVariant], DryRun: r.isDryRun}
 			resources[currentID][Variants] = append(
 				resources[currentID][Variants],
 				engine.NewResource(engine.ProductVariant, r.path, variantFn),
 			)
 		case "product_media.json":
-			r.stats[engine.ProductMedia].Count += 1
-
-			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			mediaFn := &handler.Media{Client: r.client, File: f, Logger: r.logger, Summary: r.stats[engine.ProductMedia], DryRun: r.isDryRun}
 			resources[currentID][Media] = append(
 				resources[currentID][Media],
 				engine.NewResource(engine.ProductMedia, r.path, mediaFn),

@@ -16,11 +16,12 @@ import (
 )
 
 type Customer struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	Filter *runner.RestoreFilter
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Filter  *runner.RestoreFilter
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h *Customer) Handle(data any) (any, error) {
@@ -29,28 +30,37 @@ func (h *Customer) Handle(data any) (any, error) {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
 	var customer schema.Customer
 	if err = json.Unmarshal(customerRaw, &customer); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
 	// Filter customer.
-	matched, err := matchesFilters(&customer, h.Filter)
-	if err != nil || !matched {
-		return nil, engine.ErrSkipChildren
+	if len(h.Filter.Filters) > 0 {
+		matched, err := matchesFilters(&customer, h.Filter)
+		if err != nil || !matched {
+			h.Summary.Skipped += 1
+			return nil, engine.ErrSkipChildren
+		}
 	}
+	println("processing")
 
 	if h.DryRun {
 		h.Logger.V(tlog.VL3).Warn("Skipping customer sync")
-		return &api.CustomerCreateResponse{}, nil
+		h.Summary.Passed += 1
+		return customer.ID, nil
 	}
 	res, err := createOrUpdateCustomer(&customer, h.Client, h.Logger)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
-	return res, nil
+	h.Summary.Passed += 1
+	return res.Customer.ID, nil
 }
 
 func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lgr *tlog.Logger) (*api.CustomerCreateResponse, error) {

@@ -66,15 +66,9 @@ func (r *Runner) Run() error {
 	}()
 
 	for res := range r.eng.Run(engine.Customer) {
-		if res.Err != nil && errors.Is(res.Err, engine.ErrSkipChildren) {
-			r.stats[res.ResourceType].Skipped += 1
-			continue
-		}
-		if res.Err != nil {
+		if res.Err != nil && !errors.Is(res.Err, engine.ErrSkipChildren) {
 			r.stats[res.ResourceType].Failed += 1
 			r.logger.Errorf("Failed to restore resource %s: %v\n", res.ResourceType, res.Err)
-		} else {
-			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
@@ -121,17 +115,13 @@ func (r *Runner) restore() error {
 
 		switch filepath.Base(f.Path) {
 		case "customer.json":
-			r.stats[engine.Customer].Count += 1
-
-			customerFn := &handler.Customer{Client: r.client, File: f, Filter: r.filters, Logger: r.logger, DryRun: r.isDryRun}
+			customerFn := &handler.Customer{Client: r.client, File: f, Filter: r.filters, Logger: r.logger, Summary: r.stats[engine.Customer], DryRun: r.isDryRun}
 			resources[currentID][Customer] = append(
 				resources[currentID][Customer],
 				engine.NewResource(engine.Customer, r.path, customerFn),
 			)
 		case "customer_metafields.json":
-			r.stats[engine.CustomerMetaField].Count += 1
-
-			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, DryRun: r.isDryRun}
+			metafieldFn := &handler.Metafield{Client: r.client, File: f, Logger: r.logger, Summary: r.stats[engine.CustomerMetaField], DryRun: r.isDryRun}
 			resources[currentID][Metafields] = append(
 				resources[currentID][Metafields],
 				engine.NewResource(engine.CustomerMetaField, r.path, metafieldFn),

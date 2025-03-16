@@ -85,7 +85,7 @@ func (h Option) Handle(data any) (any, error) {
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Product options to sync - add: %d, update: %d, remove: %d", len(toAdd), len(toUpdate), len(toDelete))
 		h.Logger.V(tlog.VL3).Warn("Skipping product options sync")
-		return &api.ProductOptionSyncResponse{}, nil
+		return nil, nil
 	}
 	err = attemptSync(realProductID)
 	if err != nil {

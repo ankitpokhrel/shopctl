@@ -6,15 +6,17 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/internal/runner"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 type Metafield struct {
-	Client *api.GQLClient
-	Logger *tlog.Logger
-	File   registry.File
-	DryRun bool
+	Client  *api.GQLClient
+	Logger  *tlog.Logger
+	File    registry.File
+	Summary *runner.Summary
+	DryRun  bool
 }
 
 func (h Metafield) Handle(data any) (any, error) {
@@ -23,10 +25,12 @@ func (h Metafield) Handle(data any) (any, error) {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
 		return nil, err
 	}
+	h.Summary.Count += 1
 
 	var meta api.CustomerMetafieldsData
 	if err = json.Unmarshal(metaRaw, &meta); err != nil {
 		h.Logger.Error("Unable to marshal contents", "file", h.File.Path, "error", err)
+		h.Summary.Failed += 1
 		return nil, err
 	}
 
@@ -37,6 +41,7 @@ func (h Metafield) Handle(data any) (any, error) {
 	// Get upstream metafields.
 	currentMetafields, err := h.Client.GetCustomerMetaFieldsByEmailOrPhone(&meta.Email, &meta.Phone)
 	if err != nil {
+		h.Summary.Failed += 1
 		return nil, err
 	}
 	currentMetaNode := currentMetafields.Data.Customers.Nodes[0]
@@ -82,12 +87,16 @@ func (h Metafield) Handle(data any) (any, error) {
 	if h.DryRun {
 		h.Logger.V(tlog.VL2).Infof("Customer metafields to sync - add: %d, remove: %d", len(toAdd), len(toDelete))
 		h.Logger.V(tlog.VL3).Warn("Skipping customer metafields sync")
+		h.Summary.Passed += 1
 		return nil, nil
 	}
 	err = attemptSync(updatedCustomerID)
 	if err != nil {
 		h.Logger.Error("Failed to sync customer metafields", "oldID", meta.CustomerID, "upstreamID", updatedCustomerID)
+		h.Summary.Failed += 1
+		return nil, err
 	}
+	h.Summary.Passed += 1
 	return nil, err
 }
 
