@@ -55,7 +55,7 @@ func getChunks(a, b any) []chunk {
 	aval := reflect.ValueOf(a)
 	bval := reflect.ValueOf(b)
 
-	for i := 0; i < atyp.NumField(); i++ {
+	for i := range atyp.NumField() {
 		field := atyp.Field(i)
 
 		diffs = append(diffs, chunk{
@@ -65,7 +65,6 @@ func getChunks(a, b any) []chunk {
 			To:    aval.Field(i),
 		})
 	}
-
 	return diffs
 }
 
@@ -77,7 +76,6 @@ func doDiff(file, a, b string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return w.String(), nil
 }
 
@@ -135,44 +133,64 @@ func serializeFloat(data any) string {
 }
 
 func serializeSlice(data any) string {
-	v := data.(reflect.Value)
+	v, ok := data.(reflect.Value)
+	if !ok {
+		v = reflect.ValueOf(data)
+	}
 
 	var items []string
-	for i := 0; i < v.Len(); i++ {
+	for i := range v.Len() {
 		val := v.Index(i)
+		if !val.CanInterface() {
+			items = append(items, fmt.Sprintf("%d: %x", i, val))
+			continue
+		}
 		kind := reflect.TypeOf(val.Interface()).Kind()
 
 		item := serialize(kind, val)
 		if item != "" {
-			items = append(items, item)
+			items = append(items, fmt.Sprintf("%d.%s", i, item))
 		}
 	}
 	return strings.Join(items, "\n")
 }
 
 func serializePtr(data any) string {
-	v := data.(reflect.Value)
+	v, ok := data.(reflect.Value)
+	if !ok {
+		v = reflect.ValueOf(data)
+	}
 
 	if v.IsNil() {
 		return ""
 	}
-
 	elm := v.Elem()
+
+	if !v.CanInterface() {
+		return serialize(elm.Kind(), elm)
+	}
 	return serialize(elm.Kind(), elm.Interface())
 }
 
 func serializeStruct(data any) string {
-	v := reflect.ValueOf(data)
+	v, ok := data.(reflect.Value)
+	if !ok {
+		v = reflect.ValueOf(data)
+	}
 	t := v.Type()
 
 	var items []string
-	for i := 0; i < v.Type().NumField(); i++ {
+	for i := range v.Type().NumField() {
+		var kind reflect.Kind
+
 		field := t.Field(i)
 		val := v.Field(i)
-		if !val.CanInterface() {
-			continue
+
+		if val.CanInterface() {
+			kind = reflect.TypeOf(val.Interface()).Kind()
+		} else {
+			kind = field.Type.Kind()
 		}
-		kind := reflect.TypeOf(val.Interface()).Kind()
 
 		item := serialize(kind, val)
 		if item != "" {
