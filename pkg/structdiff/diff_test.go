@@ -225,7 +225,8 @@ func TestGetDiff(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, Get(tc.b, tc.a))
+			d := New(tc.b, tc.a)
+			assert.Equal(t, tc.expected, d.Get())
 		})
 	}
 }

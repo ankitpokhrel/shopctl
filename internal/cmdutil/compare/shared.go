@@ -31,21 +31,3 @@ func Render(diffs map[string]string, sortOrder []string) error {
 
 	return cmdutil.DiffOut(out.String())
 }
-
-// Trim removes items from diffs that are in cutset.
-func Trim(diffs map[string]string, cutset []string) {
-	for k := range diffs {
-		if isIgnored(k, cutset) {
-			delete(diffs, k)
-		}
-	}
-}
-
-func isIgnored(field string, ignored []string) bool {
-	for _, f := range ignored {
-		if f == field {
-			return true
-		}
-	}
-	return false
-}

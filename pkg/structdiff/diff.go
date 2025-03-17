@@ -9,6 +9,36 @@ import (
 	myers "github.com/pkg/diff"
 )
 
+// Diff is a struct differ.
+type Diff struct {
+	a      any
+	b      any
+	ignore []string
+}
+
+// DiffOption is functional opt for Diff.
+type DiffOption func(*Diff)
+
+// New constructs a new Diff.
+func New(a, b any, opts ...DiffOption) *Diff {
+	d := Diff{
+		a: a,
+		b: b,
+	}
+
+	for _, o := range opts {
+		o(&d)
+	}
+	return &d
+}
+
+// WithIgnoreList updates the field path to ignore.
+func WithIgnoreList(ig []string) DiffOption {
+	return func(d *Diff) {
+		d.ignore = ig
+	}
+}
+
 type chunk struct {
 	Field string
 	Typ   reflect.Kind
@@ -25,20 +55,25 @@ func (c *chunk) diff() string {
 }
 
 // Get returns the diff between two structs.
-func Get(a, b any) map[string]string {
+func (d *Diff) Get() map[string]string {
 	diffs := make(map[string]string)
 
-	if a == nil || b == nil {
+	if d.a == nil || d.b == nil {
 		return diffs
 	}
-	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+	if reflect.TypeOf(d.a) != reflect.TypeOf(d.b) {
 		return diffs
 	}
-	if reflect.TypeOf(a).Kind() != reflect.Struct {
+	if reflect.TypeOf(d.a).Kind() != reflect.Struct {
 		return diffs
 	}
 
-	chunks := getChunks(a, b)
+	ignoreList := map[string]struct{}{}
+	for _, f := range d.ignore {
+		ignoreList[f] = struct{}{}
+	}
+
+	chunks := getChunks(d.a, d.b, ignoreList)
 	for _, c := range chunks {
 		d := c.diff()
 		if !isEmptyDiff(d) {
@@ -48,15 +83,27 @@ func Get(a, b any) map[string]string {
 	return diffs
 }
 
-func getChunks(a, b any) []chunk {
+func getChunks(a, b any, ignore map[string]struct{}) []chunk {
 	diffs := make([]chunk, 0)
 
 	atyp := reflect.TypeOf(a)
+	if atyp == nil {
+		return diffs
+	}
 	aval := reflect.ValueOf(a)
 	bval := reflect.ValueOf(b)
 
 	for i := range atyp.NumField() {
 		field := atyp.Field(i)
+		afield := aval.Field(i)
+		bfield := bval.Field(i)
+
+		if !afield.IsValid() || !bfield.IsValid() {
+			continue
+		}
+		if _, ok := ignore[field.Name]; ok {
+			continue
+		}
 
 		diffs = append(diffs, chunk{
 			Field: field.Name,
@@ -137,6 +184,9 @@ func serializeSlice(data any) string {
 	if !ok {
 		v = reflect.ValueOf(data)
 	}
+	if !v.IsValid() {
+		return ""
+	}
 
 	var items []string
 	for i := range v.Len() {
@@ -160,6 +210,9 @@ func serializePtr(data any) string {
 	if !ok {
 		v = reflect.ValueOf(data)
 	}
+	if !v.IsValid() {
+		return ""
+	}
 
 	if v.IsNil() {
 		return ""
@@ -176,6 +229,9 @@ func serializeStruct(data any) string {
 	v, ok := data.(reflect.Value)
 	if !ok {
 		v = reflect.ValueOf(data)
+	}
+	if !v.IsValid() {
+		return ""
 	}
 	t := v.Type()
 

@@ -42,9 +42,12 @@ var (
 	}
 
 	ignoreFields = []string{
+		"DefaultCursor",
 		"Description",
 		"MediaCount",
 		"VariantsCount",
+		"Edges",
+		"PageInfo",
 	}
 )
 
@@ -152,10 +155,8 @@ func compare(cmd *cobra.Command, client *api.GQLClient, strategy *config.BackupS
 		return err
 	}
 
-	diffs := structdiff.Get(*product, *backedProduct)
-
-	// Remove ignored fields.
-	cmputil.Trim(diffs, ignoreFields)
+	diff := structdiff.New(*product, *backedProduct, structdiff.WithIgnoreList(ignoreFields))
+	diffs := diff.Get()
 
 	if len(diffs) == 0 {
 		fmt.Println("No differences found.")
