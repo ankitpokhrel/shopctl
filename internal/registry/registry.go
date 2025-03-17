@@ -67,7 +67,7 @@ func (r *Registry) GetProductByID(id string) (*schema.Product, error) {
 	}
 
 	// Skip if we don't find variants file.
-	variantsRaw, _ := ReadFileContents(filepath.Join(loc, "variants.json"))
+	variantsRaw, _ := ReadFileContents(filepath.Join(loc, "product_variants.json"))
 	if len(variantsRaw) > 0 {
 		var variants api.ProductVariantData
 		if err := json.Unmarshal(variantsRaw, &variants); err != nil {
@@ -77,7 +77,7 @@ func (r *Registry) GetProductByID(id string) (*schema.Product, error) {
 	}
 
 	// Skip if we don't find media file.
-	mediasRaw, _ := ReadFileContents(filepath.Join(loc, "media.json"))
+	mediasRaw, _ := ReadFileContents(filepath.Join(loc, "product_media.json"))
 	if len(mediasRaw) > 0 {
 		var medias api.ProductMediaData
 		if err := json.Unmarshal(mediasRaw, &medias); err != nil {
@@ -140,7 +140,7 @@ func (r *Registry) getProductByIDFromZip(id string) (*schema.Product, error) {
 			if err := json.Unmarshal(productRaw, &product); err != nil {
 				return fmt.Errorf("error unmarshalling product: %w", err)
 			}
-		case "variants.json":
+		case "product_variants.json":
 			variantsRaw, _ := io.ReadAll(file)
 			if len(variantsRaw) > 0 {
 				var variants api.ProductVariantData
@@ -149,7 +149,7 @@ func (r *Registry) getProductByIDFromZip(id string) (*schema.Product, error) {
 				}
 				productVariant = variants.Variants.Nodes
 			}
-		case "media.json":
+		case "product_media.json":
 			mediasRaw, _ := io.ReadAll(file)
 			if len(mediasRaw) > 0 {
 				var medias api.ProductMediaData
