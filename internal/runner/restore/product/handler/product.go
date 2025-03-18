@@ -63,7 +63,7 @@ func (h *Product) Handle(data any) (any, error) {
 }
 
 func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *tlog.Logger) (*api.ProductCreateResponse, error) {
-	res, err := client.CheckProductByID(product.ID)
+	res, err := client.CheckProductByHandle(product.Handle)
 	if err != nil {
 		return nil, err
 	}
@@ -116,17 +116,17 @@ func createOrUpdateProduct(product *schema.Product, client *api.GQLClient, lgr *
 		ClaimOwnership:         nil, // No way to get this value.
 	}
 
-	if res.Data.Product.ID != "" {
-		input.ID = &product.ID
+	if res.ID != "" {
+		input.ID = &res.ID
 
-		lgr.Warn("Product already exists, updating", "id", product.ID)
+		lgr.Warn("Product already exists, updating", "id", res.ID, "handle", res.Handle)
 		return client.UpdateProduct(input, nil)
 	}
 
 	// Some fields can only be specified during create.
 	input.ProductOptions = options // Note that UI may not display all options unless there is a variant with that option.
 
-	lgr.Info("Creating product", "id", product.ID)
+	lgr.Info("Creating product", "oldID", product.ID, "handle", product.Handle)
 	return client.CreateProduct(input)
 }
 

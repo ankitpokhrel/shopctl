@@ -9,7 +9,7 @@ import (
 )
 
 // CheckProductByID fetches a product by ID without additional details.
-func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
+func (c GQLClient) CheckProductByID(id string) (*schema.Product, error) {
 	var (
 		query = `query CheckProductByID($id: ID!) { product(id: $id) { id } }`
 
@@ -24,7 +24,35 @@ func (c GQLClient) CheckProductByID(id string) (*ProductResponse, error) {
 	if err = c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": id}, &out); err != nil {
 		return nil, err
 	}
-	return out, err
+	return &out.Data.Product, err
+}
+
+// CheckProductByHandle fetches a product by Handle without additional details.
+func (c GQLClient) CheckProductByHandle(handle string) (*schema.Product, error) {
+	var out struct {
+		Data struct {
+			Product schema.Product `json:"productByIdentifier"`
+		} `json:"data"`
+		Errors Errors `json:"errors"`
+	}
+
+	query := `query GetProductByHandle($identifier: ProductIdentifierInput!) {
+  productByIdentifier(identifier: $identifier) {
+    id
+    handle
+  }
+}`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"identifier": map[string]string{"handle": handle},
+		},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.Data.Product, nil
 }
 
 // GetProductByID fetches a product by ID.
