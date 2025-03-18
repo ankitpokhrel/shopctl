@@ -56,10 +56,13 @@ func (h *Variant) Handle(data any) (any, error) {
 
 	toAdd := make([]*schema.ProductVariant, 0)
 	toUpdate := make([]*schema.ProductVariant, 0)
+	toDelete := make([]string, 0)
 
 	for id := range currentVariantsMap {
 		if opt, ok := backupVariantsMap[id]; ok {
 			toUpdate = append(toUpdate, opt)
+		} else {
+			toDelete = append(toDelete, id)
 		}
 	}
 	for id, opt := range backupVariantsMap {
@@ -69,6 +72,9 @@ func (h *Variant) Handle(data any) (any, error) {
 	}
 
 	attemptSync := func(pid string) error {
+		if _, err := h.handleProductVariantDelete(pid, toDelete); err != nil {
+			return err
+		}
 		if _, err := h.handleProductVariantAdd(pid, toAdd); err != nil {
 			return err
 		}
@@ -93,6 +99,13 @@ func (h *Variant) Handle(data any) (any, error) {
 	}
 	h.Summary.Passed += 1
 	return nil, nil
+}
+
+func (h Variant) handleProductVariantDelete(productID string, toDelete []string) (*api.ProductVariantsSyncResponse, error) {
+	if len(toDelete) == 0 {
+		return nil, nil
+	}
+	return h.Client.DeleteProductVariants(productID, toDelete)
 }
 
 func (h Variant) handleProductVariantAdd(productID string, toAdd []*schema.ProductVariant) (*api.ProductVariantsSyncResponse, error) {
