@@ -39,9 +39,13 @@ var (
 		"Category",
 		"Tags",
 		"Vendor",
+		"Options",
+		"Variants",
 	}
 
 	ignoreFields = []string{
+		"ID",
+		"LegacyResourceID",
 		"DefaultCursor",
 		"Description",
 		"MediaCount",

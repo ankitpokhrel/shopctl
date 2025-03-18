@@ -90,14 +90,13 @@ func TestGetDiff(t *testing.T) {
 			expected: map[string]string{
 				"slice": `--- a/slice
 +++ b/slice
-@@ -1,3 +0,0 @@
--0: 1
--1: 2
--2: 3
-@@ -0,0 +1,3 @@
-+0: 3
-+1: 4
-+2: 5
+@@ -3,3 +3,3 @@
+-1
++3
+-2
++4
+-3
++5
 `,
 			},
 		},
@@ -183,19 +182,76 @@ func TestGetDiff(t *testing.T) {
 		{
 			name: "indirect nested types",
 			a: struct {
+				Nested []struct {
+					B bool
+					c rune
+					D float64
+				}
+			}{Nested: []struct {
+				B bool
+				c rune
+				D float64
+			}{{B: false, D: 3.14}, {B: true, D: 42}}},
+			b: struct {
+				Nested []struct {
+					B bool
+					c rune
+					D float64
+				}
+			}{
+				Nested: []struct {
+					B bool
+					c rune
+					D float64
+				}{{B: false}},
+			},
+			expected: map[string]string{
+				"Nested": `--- a/Nested
++++ b/Nested
+@@ -3,3 +1,1 @@
+-D: 3.14
++D: 0
+-B: true
+-D: 42
+`,
+			},
+		},
+		{
+			name: "indirect nested types 2",
+			a: struct {
 				str        string
 				num        int
 				unexported struct{ B bool }
-				Nested     []struct{ B bool }
-			}{str: "test", num: 1, Nested: []struct{ B bool }{{B: false}}},
+				Nested     []struct {
+					B bool
+					c rune
+					D float64
+				}
+			}{str: "test", num: 1, Nested: []struct {
+				B bool
+				c rune
+				D float64
+			}{{B: false, D: 3.14}}},
 			b: struct {
 				str        string
 				num        int
 				unexported struct{ B bool }
 				Nested     []struct {
 					B bool
+					c rune
+					D float64
 				}
-			}{str: "test 123", num: 5, Nested: []struct{ B bool }{{B: true}, {B: false}}},
+			}{
+				str: "test 123",
+				num: 5,
+				Nested: []struct {
+					B bool
+					c rune
+					D float64
+				}{
+					{B: true, c: 'c', D: 3.159}, {B: false},
+				},
+			},
 			expected: map[string]string{
 				"str": `--- a/str
 +++ b/str
@@ -213,11 +269,13 @@ func TestGetDiff(t *testing.T) {
 `,
 				"Nested": `--- a/Nested
 +++ b/Nested
-@@ -1,1 +0,0 @@
--0.B: false
-@@ -0,0 +1,2 @@
-+0.B: true
-+1.B: false
+@@ -2,2 +4,4 @@
+-B: false
+-D: 3.14
++B: true
++D: 3.159
++B: false
++D: 0
 `,
 			},
 		},
