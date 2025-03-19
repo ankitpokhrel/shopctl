@@ -3,6 +3,7 @@ package root
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl/internal/cmd/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
 
@@ -26,6 +27,7 @@ func NewCmdRoot() *cobra.Command {
 
 func addChildCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
+		config.NewCmdConfig(),
 		version.NewCmdVersion(),
 	)
 }
