@@ -23,13 +23,12 @@ import (
 
 var (
 	// Client ID for the Shopify app.
-	oauthClientID = "<id>" // TODO: Replace me.
+	oauthClientID = os.Getenv("SHOPCTL_CLIENT_ID")
 	// For ease of use, we'll embed the client secret in the code to simplify the setup process.
 	// Users don’t need to create and configure their own OAuth app just to use the Shopify app.
 	//
 	// This value is considered safe for the version control for a way this app is designed.
-	// However, we'll try to get it from somewhere else later instead of hard-coding the value.
-	oauthClientSecret = "<secret>" // TODO: Replace me.
+	oauthClientSecret = os.Getenv("SHOPCTL_CLIENT_SECRET")
 	// See https://shopify.dev/docs/api/usage/access-scopes#authenticated-access-scopes for
 	// the list of available scopes. Scopes will be added as necessary.
 	scopes = []string{
