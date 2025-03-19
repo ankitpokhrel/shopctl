@@ -95,6 +95,12 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, strategy *
 
 	switch {
 	case flag.bkpID != "":
+		if strategy == nil {
+			return fmt.Errorf(
+				"strategy not set/invalid; please select a valid strategy with %q or use %q flag",
+				"shopctl config use-strategy strategy-name", "-s",
+			)
+		}
 		var path string
 
 		path, err = registry.LookForDirWithSuffix(flag.bkpID, strategy.BkpDir)

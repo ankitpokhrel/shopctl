@@ -56,10 +56,8 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
-	if err != nil {
-		return err
-	}
+	// Strategy is not always required.
+	strategy, _ := cmdutil.GetStrategy(cmd, ctx, cfg)
 
 	gqlClient := api.NewGQLClient(ctx.Store)
 	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyContext, ctx))
