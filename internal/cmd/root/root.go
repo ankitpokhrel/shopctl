@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/compare"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/peek"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/restore"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
@@ -46,6 +47,7 @@ func addChildCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		auth.NewCmdAuth(),
 		config.NewCmdConfig(),
+		product.NewCmdProduct(),
 		backup.NewCmdBackup(),
 		restore.NewCmdRestore(),
 		peek.NewCmdPeek(),
