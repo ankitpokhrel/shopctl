@@ -63,7 +63,7 @@ func NewFlow(store string) *Flow {
 		cfg: &oauth2.Config{
 			ClientID:     oauthClientID,
 			ClientSecret: oauthClientSecret,
-			RedirectURL:  "http://127.0.0.1/shopctl/auth/callback",
+			RedirectURL:  "https://shopctl.app/api/auth/callback",
 			Endpoint:     shopEndpoint(store),
 			Scopes:       scopes,
 		},
