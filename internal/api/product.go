@@ -435,6 +435,45 @@ func (c GQLClient) UpdateProduct(input schema.ProductInput, media []schema.Creat
 	return &out.Data.ProductUpdate, nil
 }
 
+// DeleteProduct deletes a product.
+func (c GQLClient) DeleteProduct(productID string) (*ProductDeleteResponse, error) {
+	var out struct {
+		Data struct {
+			ProductDelete ProductDeleteResponse `json:"productDelete"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation deleteProduct($productId: ID!) {
+      productDelete(input: { id: $productId }) {
+        deletedProductId
+        userErrors {
+          field
+          message
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"productId": productID,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("productDelete: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.ProductDelete.UserErrors) > 0 {
+		return nil, fmt.Errorf("productDelete: the operation failed with user error: %s", out.Data.ProductDelete.UserErrors.Error())
+	}
+	return &out.Data.ProductDelete, nil
+}
+
 // CreateProductOptions creates one or more product options.
 func (c GQLClient) CreateProductOptions(productID string, options []schema.OptionCreateInput) (*ProductOptionSyncResponse, error) {
 	var out struct {

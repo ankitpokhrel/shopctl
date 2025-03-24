@@ -105,6 +105,11 @@ type ProductCreateResponse struct {
 	UserErrors UserErrors     `json:"userErrors"`
 }
 
+type ProductDeleteResponse struct {
+	DeletedProductID string     `json:"deletedProductId"`
+	UserErrors       UserErrors `json:"userErrors"`
+}
+
 type ProductOptionSyncResponse struct {
 	Product struct {
 		ID string `json:"id"`

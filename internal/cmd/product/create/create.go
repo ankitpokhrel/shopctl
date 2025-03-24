@@ -14,9 +14,7 @@ import (
 )
 
 const (
-	helpText = `Product lets you peek into the product data.
-
-Use this command to quickly look into the upstream or local product data.`
+	helpText = `Create lets you create a product.`
 
 	examples = `$ shopctl product create --title "Product title"
 
