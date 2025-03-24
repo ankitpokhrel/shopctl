@@ -366,6 +366,7 @@ func (c GQLClient) CreateProduct(input schema.ProductInput) (*ProductCreateRespo
 		productCreate(input: $input) {
 			product {
 				id
+                handle
 				title
 			}
 			userErrors {
