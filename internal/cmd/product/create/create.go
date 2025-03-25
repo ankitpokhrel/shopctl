@@ -21,7 +21,7 @@ const (
 # Create active product in the current context
 $ shopctl product create -tTitle -d"Product description" --status active
 
-# Create active product with tags in the current context
+# Create product with tags in the current context
 $ shopctl product create -tTitle -d"Product description" --tags tag1,tag2
 
 # Create product in another store
@@ -48,6 +48,10 @@ func (f *flag) parse(cmd *cobra.Command, _ []string) {
 
 	title, err := cmd.Flags().GetString("title")
 	cmdutil.ExitOnErr(err)
+
+	if title == "" {
+		cmdutil.ExitOnErr(helpErrorf("Product title cannot be blank"))
+	}
 
 	desc, err := cmd.Flags().GetString("desc")
 	cmdutil.ExitOnErr(err)
@@ -161,4 +165,12 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 	fmt.Println(adminURL)
 
 	return nil
+}
+
+func helpErrorf(msg string) error {
+	lines := strings.Split(examples, "\n")
+	for i, line := range lines {
+		lines[i] = "  " + line
+	}
+	return fmt.Errorf(msg+"\n\n\033[1mUsage:\033[0m\n\n%s", strings.Join(lines, "\n"))
 }
