@@ -406,6 +406,7 @@ func (c GQLClient) UpdateProduct(input schema.ProductInput, media []schema.Creat
         productUpdate(input: $input, media: $media) {
 			product {
 				id
+                handle
 				title
 			}
 			userErrors {
