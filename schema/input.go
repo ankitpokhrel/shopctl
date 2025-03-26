@@ -64,6 +64,13 @@ type CustomerSmsMarketingConsentInput struct {
 	ConsentUpdatedAt    *string                      `json:"consentUpdatedAt,omitempty"`
 }
 
+type ProductOptionCreateVariantStrategy string
+
+const (
+	ProductOptionCreateVariantStrategyLeaveAsIs ProductOptionCreateVariantStrategy = "LEAVE_AS_IS"
+	ProductOptionCreateVariantStrategyCreate    ProductOptionCreateVariantStrategy = "CREATE"
+)
+
 type OptionCreateInput struct {
 	Name            *string                     `json:"name,omitempty"`
 	Position        *int                        `json:"position,omitempty"`

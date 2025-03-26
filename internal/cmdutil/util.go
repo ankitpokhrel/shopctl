@@ -234,6 +234,15 @@ func GetBackupIDFromName(name string) string {
 	return matches[2]
 }
 
+// HelpErrorf prepares error message by appending its usage.
+func HelpErrorf(msg string, examples string) error {
+	lines := strings.Split(examples, "\n")
+	for i, line := range lines {
+		lines[i] = "  " + line
+	}
+	return fmt.Errorf(msg+"\n\n\033[1mUsage:\033[0m\n\n%s", strings.Join(lines, "\n"))
+}
+
 // stripProtocol strips the http protocol from a URL.
 func stripProtocol(url string) string {
 	if len(url) < 8 /* Max protocol length */ { //nolint:mnd
