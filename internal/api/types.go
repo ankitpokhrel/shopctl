@@ -112,10 +112,10 @@ type ProductDeleteResponse struct {
 
 type ProductOptionSyncResponse struct {
 	Product struct {
-		ID string `json:"id"`
+		ID      string                 `json:"id"`
+		Options []schema.ProductOption `json:"options"`
 	} `json:"product"`
-	Options    schema.ProductOption `json:"options"`
-	UserErrors UserErrors           `json:"userErrors"`
+	UserErrors UserErrors `json:"userErrors"`
 }
 
 type ProductVariantsSyncResponse struct {

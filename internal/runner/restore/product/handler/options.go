@@ -130,7 +130,7 @@ func (h Option) handleProductOptionAdd(productID string, toAdd []*schema.Product
 		}
 	}
 	h.Logger.V(tlog.VL2).Info("Attempting to create product options", "id", productID)
-	return h.Client.CreateProductOptions(productID, options)
+	return h.Client.CreateProductOptions(productID, options, schema.ProductOptionCreateVariantStrategyLeaveAsIs)
 }
 
 func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map[string]*schema.ProductOption, toUpdate []*schema.ProductOption) (*api.ProductOptionSyncResponse, error) {

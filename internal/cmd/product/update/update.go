@@ -20,13 +20,13 @@ const (
 	examples = `$ shopctl product update --title "Product title"
 
 # Update and activate a product
-$ shopctl product update -tTitle -d"Product description" --status active
+$ shopctl product update 8856145494 -tTitle -d"Product description" --status active
 
 # Update product to add tag1 and remove tag2
-$ shopctl product update -tTitle -d"Product description" --tags tag1,-tag2
+$ shopctl product update 8856145494 -tTitle -d"Product description" --tags tag1,-tag2
 
 # Update product in another store
-$ shopctl product update -c store2 -tTitle -d"Product description" --type Bags`
+$ shopctl product update 8856145494 -c store2 -tTitle -d"Product description" --type Bags`
 )
 
 // Flag wraps available command flags.

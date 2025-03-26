@@ -476,7 +476,11 @@ func (c GQLClient) DeleteProduct(productID string) (*ProductDeleteResponse, erro
 }
 
 // CreateProductOptions creates one or more product options.
-func (c GQLClient) CreateProductOptions(productID string, options []schema.OptionCreateInput) (*ProductOptionSyncResponse, error) {
+func (c GQLClient) CreateProductOptions(
+	productID string,
+	options []schema.OptionCreateInput,
+	strategy schema.ProductOptionCreateVariantStrategy,
+) (*ProductOptionSyncResponse, error) {
 	var out struct {
 		Data struct {
 			ProductOptionCreate ProductOptionSyncResponse `json:"productOptionsCreate"`
@@ -485,13 +489,14 @@ func (c GQLClient) CreateProductOptions(productID string, options []schema.Optio
 	}
 
 	query := `
-    mutation createOptions($productId: ID!, $options: [OptionCreateInput!]!) {
-      productOptionsCreate(productId: $productId, options: $options) {
+    mutation createOptions($productId: ID!, $options: [OptionCreateInput!]!, $strategy: ProductOptionCreateVariantStrategy) {
+      productOptionsCreate(productId: $productId, options: $options, variantStrategy: $strategy) {
         product {
           id
           options {
             id
             name
+            optionValues { name }
           }
         }
         userErrors {
@@ -507,6 +512,7 @@ func (c GQLClient) CreateProductOptions(productID string, options []schema.Optio
 		Variables: client.QueryVars{
 			"productId": productID,
 			"options":   options,
+			"strategy":  strategy,
 		},
 	}
 
