@@ -198,7 +198,7 @@ func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map
 			}
 		}
 
-		out, err := h.Client.UpdateProductOptions(productID, &option, optionValuesToAdd, optionValuesToUpdate, optionValuesToDelete)
+		out, err := h.Client.UpdateProductOptions(productID, &option, optionValuesToAdd, optionValuesToUpdate, optionValuesToDelete, schema.ProductOptionUpdateVariantStrategyManage)
 		if err != nil {
 			updateErrors = append(updateErrors, err)
 		} else {

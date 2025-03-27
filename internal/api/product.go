@@ -535,6 +535,7 @@ func (c GQLClient) UpdateProductOptions(
 	optionsToAdd []schema.OptionValueCreateInput,
 	optionsToUpdate []schema.OptionValueUpdateInput,
 	optionsToDelete []string,
+	strategy schema.ProductOptionUpdateVariantStrategy,
 ) (*ProductOptionSyncResponse, error) {
 	var out struct {
 		Data struct {
@@ -569,7 +570,7 @@ func (c GQLClient) UpdateProductOptions(
 			"optionValuesToAdd":    optionsToAdd,
 			"optionValuesToUpdate": optionsToUpdate,
 			"optionValuesToDelete": optionsToDelete,
-			"variantStrategy":      "MANAGE",
+			"variantStrategy":      strategy,
 		},
 	}
 

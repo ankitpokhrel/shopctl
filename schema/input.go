@@ -71,6 +71,13 @@ const (
 	ProductOptionCreateVariantStrategyCreate    ProductOptionCreateVariantStrategy = "CREATE"
 )
 
+type ProductOptionUpdateVariantStrategy string
+
+const (
+	ProductOptionUpdateVariantStrategyLeaveAsIs ProductOptionUpdateVariantStrategy = "LEAVE_AS_IS"
+	ProductOptionUpdateVariantStrategyManage    ProductOptionUpdateVariantStrategy = "MANAGE"
+)
+
 type OptionCreateInput struct {
 	Name            *string                     `json:"name,omitempty"`
 	Position        *int                        `json:"position,omitempty"`
