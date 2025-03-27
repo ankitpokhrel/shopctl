@@ -16,14 +16,14 @@ const (
 
 	examples = `$ shopct product option edit 8856145494 Size -l
 
-    # We can remove option values with '-'
-    # Edit option to remove size 'xs' and add size 's'
-    $ shopctl product option edit 8856145494 Size -l"-xs" -ls
+# We can remove option values with '-'
+# Edit option to remove size 'xs' and add size 's'
+$ shopctl product option edit 8856145494 Size -l"-xs" -ls
 
-    # Set variant strategy to MANAGE; default is LEAVE_AS_IS
-    # With '--manage' flag, variants are created and deleted according to the option values to add and delete
-    # See https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductOptionUpdateVariantStrategy
-    $ shopctl product option edit 8856145494 Style -nMood -lCasual -lFormal -l"-Informal" --manage`
+# Set variant strategy to MANAGE; default is LEAVE_AS_IS
+# With '--manage' flag, variants are created and deleted according to the option values to add and delete
+# See https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductOptionUpdateVariantStrategy
+$ shopctl product option edit 8856145494 Style -nMood -lCasual -lFormal -l"-Informal" --manage`
 )
 
 // Flag wraps available command flags.

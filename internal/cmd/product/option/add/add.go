@@ -13,13 +13,13 @@ const (
 
 	examples = `$ shopct product option add 8856145494 --name Title --value "Special product"
 
-    # Option with multiple values
-    $ shopctl product option add 8856145494 -nSize -lxs -lsm -lxl
+# Option with multiple values
+$ shopctl product option add 8856145494 -nSize -lxs -lsm -lxl
 
-    # Set variant strategy to CREATE; default is LEAVE_AS_IS
-    # With '--create' flag, existing variants are updated with the first option value
-    # See https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductOptionCreateVariantStrategy
-    $ shopctl product option add 8856145494 -nStyle -lCasual -lInformal --create`
+# Set variant strategy to CREATE; default is LEAVE_AS_IS
+# With '--create' flag, existing variants are updated with the first option value
+# See https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductOptionCreateVariantStrategy
+$ shopctl product option add 8856145494 -nStyle -lCasual -lInformal --create`
 )
 
 // Flag wraps available command flags.
