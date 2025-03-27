@@ -64,7 +64,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		strategy = schema.ProductOptionCreateVariantStrategyCreate
 	}
 
-	f.id = id
+	f.id = cmdutil.ShopifyProductID(id)
 	f.name = name
 	f.position = position
 	f.values = values
@@ -79,6 +79,7 @@ func NewCmdAdd() *cobra.Command {
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),
+		Aliases: []string{"create"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 
@@ -109,7 +110,7 @@ func run(cmd *cobra.Command, args []string, client *api.GQLClient) error {
 		})
 	}
 
-	res, err := client.CreateProductOptions(cmdutil.ShopifyProductID(flag.id), []schema.OptionCreateInput{opt}, flag.create)
+	res, err := client.CreateProductOptions(flag.id, []schema.OptionCreateInput{opt}, flag.create)
 	if err != nil {
 		return err
 	}

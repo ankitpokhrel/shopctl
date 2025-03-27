@@ -207,7 +207,7 @@ func hasAnythingToUpdate(input schema.ProductInput) bool {
 		input.DescriptionHtml != nil ||
 		input.ProductType != nil ||
 		input.Category != nil ||
-		len(input.Tags) == 0 ||
+		len(input.Tags) != 0 ||
 		input.Vendor != nil ||
 		input.Status != nil
 }
