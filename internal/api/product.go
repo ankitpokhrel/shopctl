@@ -476,6 +476,8 @@ func (c GQLClient) DeleteProduct(productID string) (*ProductDeleteResponse, erro
 }
 
 // CreateProductOptions creates one or more product options.
+//
+//nolint:dupl
 func (c GQLClient) CreateProductOptions(
 	productID string,
 	options []schema.OptionCreateInput,
@@ -636,7 +638,13 @@ func (c GQLClient) DeleteProductOptions(productID string, options []string) (*Pr
 }
 
 // CreateProductVariants creates one or more product variants.
-func (c GQLClient) CreateProductVariants(productID string, variants []schema.ProductVariantsBulkInput) (*ProductVariantsSyncResponse, error) {
+//
+//nolint:dupl
+func (c GQLClient) CreateProductVariants(
+	productID string,
+	variants []schema.ProductVariantsBulkInput,
+	strategy schema.ProductVariantsBulkCreateStrategy,
+) (*ProductVariantsSyncResponse, error) {
 	var out struct {
 		Data struct {
 			ProductVariantsBulkCreate ProductVariantsSyncResponse `json:"productVariantsBulkCreate"`
@@ -663,7 +671,7 @@ func (c GQLClient) CreateProductVariants(productID string, variants []schema.Pro
 		Variables: client.QueryVars{
 			"productId": productID,
 			"variants":  variants,
-			"strategy":  "REMOVE_STANDALONE_VARIANT",
+			"strategy":  strategy,
 		},
 	}
 

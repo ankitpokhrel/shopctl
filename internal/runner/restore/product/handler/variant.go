@@ -170,7 +170,7 @@ func (h Variant) createOrUpdateProductVariants(productID string, variants []*sch
 		return h.Client.UpdateProductVariants(productID, variantsInput)
 	}
 	h.Logger.V(tlog.VL2).Info("Attempting to create product variant", "id", productID)
-	return h.Client.CreateProductVariants(productID, variantsInput)
+	return h.Client.CreateProductVariants(productID, variantsInput, schema.ProductVariantsBulkCreateStrategyRemoveStandaloneVariant)
 }
 
 func getOptions(options []any) []any {
