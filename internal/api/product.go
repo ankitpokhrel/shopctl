@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -286,6 +287,73 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 		return nil, fmt.Errorf("%s", out.Errors)
 	}
 	return out, nil
+}
+
+// GetProductVariantByID returns product variant by its id.
+func (c GQLClient) GetProductVariantByID(variantID string) (*schema.ProductVariant, error) {
+	var out struct {
+		Data struct {
+			Node schema.ProductVariant `json:"node"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := fmt.Sprintf(`query GetProductVariantById($id: ID!) {
+  node(id: $id) {
+    ... on ProductVariant {
+        %s
+    }
+  }
+}`, fieldsVariant)
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": variantID},
+	}
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": variantID}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return &out.Data.Node, nil
+}
+
+// GetProductVariantByTitle returns variant matching the given title.
+//
+// Shopify limits 100 variants per product so we should be good to fetch them all at once.
+// We will revisit this if we run into any issues even with the limit.
+func (c GQLClient) GetProductVariantByTitle(productID string, title string) (*schema.ProductVariant, error) {
+	var out *ProductVariantsResponse
+
+	query := `query GetProductVariants($id: ID!) {
+  product(id: $id) {
+    id
+    variants(first: 100) {
+      nodes {
+        id
+        title
+      }
+    }
+  }
+}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": productID},
+	}
+	if err := c.Execute(context.Background(), req, client.Header{"X-ShopCTL-Resource-ID": productID}, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	for _, v := range out.Data.Product.Variants.Nodes {
+		if strings.EqualFold(v.Title, title) {
+			return c.GetProductVariantByID(v.ID)
+		}
+	}
+	return nil, fmt.Errorf("variant with the given title not found")
 }
 
 // GetProductMetaFields fetches medias of a product.
@@ -688,7 +756,7 @@ func (c GQLClient) CreateProductVariants(
 }
 
 // UpdateProductVariants creates one or more product variants.
-func (c GQLClient) UpdateProductVariants(productID string, variants []schema.ProductVariantsBulkInput) (*ProductVariantsSyncResponse, error) {
+func (c GQLClient) UpdateProductVariants(productID string, variants []schema.ProductVariantsBulkInput, partialUpdate bool) (*ProductVariantsSyncResponse, error) {
 	var out struct {
 		Data struct {
 			ProductVariantsBulkUpdate ProductVariantsSyncResponse `json:"productVariantsBulkUpdate"`
@@ -697,8 +765,8 @@ func (c GQLClient) UpdateProductVariants(productID string, variants []schema.Pro
 	}
 
 	query := `
-    mutation ProductVariantsUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+    mutation ProductVariantsUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!, $allowPartialUpdates: Boolean!) {
+      productVariantsBulkUpdate(productId: $productId, variants: $variants, allowPartialUpdates: $allowPartialUpdates) {
         product {
           id
         }
@@ -713,8 +781,9 @@ func (c GQLClient) UpdateProductVariants(productID string, variants []schema.Pro
 	req := client.GQLRequest{
 		Query: query,
 		Variables: client.QueryVars{
-			"productId": productID,
-			"variants":  variants,
+			"productId":           productID,
+			"variants":            variants,
+			"allowPartialUpdates": partialUpdate,
 		},
 	}
 

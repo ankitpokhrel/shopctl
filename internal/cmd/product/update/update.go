@@ -44,8 +44,6 @@ type flag struct {
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
-	id := args[0]
-
 	handle, err := cmd.Flags().GetString("handle")
 	cmdutil.ExitOnErr(err)
 
@@ -73,7 +71,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	web, err := cmd.Flags().GetBool("web")
 	cmdutil.ExitOnErr(err)
 
-	f.id = id
+	f.id = cmdutil.ShopifyProductID(args[0])
 	f.handle = handle
 	f.title = title
 	f.descHtml = desc
@@ -146,9 +144,6 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 
 func getInput(f flag, p *schema.Product) *schema.ProductInput {
 	id := f.id
-	if !strings.HasPrefix(id, "gid://") {
-		id = "gid://shopify/Product/" + id
-	}
 
 	tagSet := make(map[string]struct{})
 	for _, tag := range p.Tags {

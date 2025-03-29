@@ -87,7 +87,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 				cmdutil.HelpErrorf("Weight should be in the folowing format Unit:Value, eg: GRAMS:3.14", examples),
 			)
 		}
-		unit = strings.ToLower(unit)
+		unit = strings.ToUpper(unit)
 		if !slices.Contains(units, unit) {
 			cmdutil.Fail("Weight unit should be one of: %s", strings.Join(units, ", "))
 			os.Exit(1)
