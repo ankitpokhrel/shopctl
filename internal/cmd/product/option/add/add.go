@@ -11,7 +11,7 @@ import (
 const (
 	helpText = `Add product options.`
 
-	examples = `$ shopct product option add 8856145494 --name Title --value "Special product"
+	examples = `$ shopctl product option add 8856145494 --name Title --value "Special product"
 
 # Option with multiple values
 $ shopctl product option add 8856145494 -nSize -lxs -lsm -lxl

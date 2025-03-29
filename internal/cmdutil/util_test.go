@@ -381,3 +381,76 @@ func TestGetBackupIDFromName(t *testing.T) {
 		})
 	}
 }
+
+func TestSplitKeyVal(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		key   string
+		value string
+		err   bool
+	}{
+		{
+			name:  "Valid key-value",
+			input: "Key:Value",
+			key:   "Key",
+			value: "Value",
+			err:   false,
+		},
+		{
+			name:  "Extra whitespace",
+			input: "Key:  Value",
+			key:   "Key",
+			value: "Value",
+			err:   false,
+		},
+		{
+			name:  "Multiple colons",
+			input: "Key:Value:Extra",
+			key:   "Key",
+			value: "Value:Extra",
+			err:   false,
+		},
+		{
+			name:  "Value with colon wrapped in single quotes",
+			input: "Key:'Value:WithColon'",
+			key:   "Key",
+			value: "'Value:WithColon'",
+			err:   false,
+		},
+		{
+			name:  "Missing colon",
+			input: "KeyValue",
+			key:   "",
+			value: "",
+			err:   true,
+		},
+		{
+			name:  "Empty key",
+			input: ":Value",
+			key:   "",
+			value: "Value",
+			err:   false,
+		},
+		{
+			name:  "Empty value",
+			input: "Key:",
+			key:   "Key",
+			value: "",
+			err:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotKey, gotValue, err := SplitKeyVal(tc.input)
+			if tc.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.key, gotKey)
+				assert.Equal(t, tc.value, gotValue)
+			}
+		})
+	}
+}

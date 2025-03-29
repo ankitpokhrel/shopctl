@@ -114,6 +114,13 @@ type LinkedMetafieldUpdateInput struct {
 	Key       string `json:"key"`
 }
 
+type ProductVariantsBulkCreateStrategy string
+
+const (
+	ProductVariantsBulkCreateStrategyDefault                 ProductVariantsBulkCreateStrategy = "DEFAULT"
+	ProductVariantsBulkCreateStrategyRemoveStandaloneVariant ProductVariantsBulkCreateStrategy = "REMOVE_STANDALONE_VARIANT"
+)
+
 type ProductVariantsBulkInput struct {
 	Barcode             *string                        `json:"barcode,omitempty"`
 	CompareAtPrice      *string                        `json:"compareAtPrice,omitempty"`

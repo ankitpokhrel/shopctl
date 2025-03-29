@@ -243,6 +243,15 @@ func HelpErrorf(msg string, examples string) error {
 	return fmt.Errorf(msg+"\n\n\033[1mUsage:\033[0m\n\n%s", strings.Join(lines, "\n"))
 }
 
+// SplitKeyVal splits string input separated by a colon.
+func SplitKeyVal(items string) (string, string, error) {
+	parts := strings.SplitN(items, ":", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("values should be in the following format, Key:Value")
+	}
+	return parts[0], strings.TrimSpace(parts[1]), nil
+}
+
 // stripProtocol strips the http protocol from a URL.
 func stripProtocol(url string) string {
 	if len(url) < 8 /* Max protocol length */ { //nolint:mnd
