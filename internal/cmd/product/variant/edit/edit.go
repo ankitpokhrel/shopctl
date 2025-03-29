@@ -224,7 +224,7 @@ func run(cmd *cobra.Command, args []string, client *api.GQLClient) error {
 	if flag.variantID != "" {
 		variant, err = client.GetProductVariantByID(flag.variantID)
 	} else {
-		variant, err = client.GetProductVariantByTitle(flag.id, flag.title)
+		variant, err = client.GetProductVariantByTitle(flag.id, flag.title, true)
 	}
 	if err != nil {
 		return err

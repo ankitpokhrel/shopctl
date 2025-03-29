@@ -289,11 +289,20 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 	return out, nil
 }
 
+// CheckProductVariantByID returns product variant without fetching all fields.
+func (c GQLClient) CheckProductVariantByID(variantID string) (*schema.ProductVariant, error) {
+	return c.getProductVariantByID(variantID, "id\ntitle\n")
+}
+
 // GetProductVariantByID returns product variant by its id.
 func (c GQLClient) GetProductVariantByID(variantID string) (*schema.ProductVariant, error) {
+	return c.getProductVariantByID(variantID, fieldsVariant)
+}
+
+func (c GQLClient) getProductVariantByID(variantID string, fields string) (*schema.ProductVariant, error) {
 	var out struct {
 		Data struct {
-			Node schema.ProductVariant `json:"node"`
+			Node *schema.ProductVariant `json:"node"`
 		} `json:"data"`
 		Errors Errors `json:"errors,omitempty"`
 	}
@@ -304,7 +313,7 @@ func (c GQLClient) GetProductVariantByID(variantID string) (*schema.ProductVaria
         %s
     }
   }
-}`, fieldsVariant)
+}`, fields)
 
 	req := client.GQLRequest{
 		Query:     query,
@@ -316,14 +325,17 @@ func (c GQLClient) GetProductVariantByID(variantID string) (*schema.ProductVaria
 	if len(out.Errors) > 0 {
 		return nil, fmt.Errorf("%s", out.Errors)
 	}
-	return &out.Data.Node, nil
+	if out.Data.Node == nil {
+		return nil, fmt.Errorf("variant not found")
+	}
+	return out.Data.Node, nil
 }
 
 // GetProductVariantByTitle returns variant matching the given title.
 //
 // Shopify limits 100 variants per product so we should be good to fetch them all at once.
 // We will revisit this if we run into any issues even with the limit.
-func (c GQLClient) GetProductVariantByTitle(productID string, title string) (*schema.ProductVariant, error) {
+func (c GQLClient) GetProductVariantByTitle(productID string, title string, fetchAll bool) (*schema.ProductVariant, error) {
 	var out *ProductVariantsResponse
 
 	query := `query GetProductVariants($id: ID!) {
@@ -350,7 +362,10 @@ func (c GQLClient) GetProductVariantByTitle(productID string, title string) (*sc
 	}
 	for _, v := range out.Data.Product.Variants.Nodes {
 		if strings.EqualFold(v.Title, title) {
-			return c.GetProductVariantByID(v.ID)
+			if fetchAll {
+				return c.GetProductVariantByID(v.ID)
+			}
+			return &v, nil
 		}
 	}
 	return nil, fmt.Errorf("variant with the given title not found")
@@ -803,7 +818,7 @@ func (c GQLClient) UpdateProductVariants(productID string, variants []schema.Pro
 func (c GQLClient) DeleteProductVariants(productID string, variants []string) (*ProductVariantsSyncResponse, error) {
 	var out struct {
 		Data struct {
-			ProductVariantBulkDelete ProductVariantsSyncResponse `json:"productVariantsDelete"`
+			ProductVariantBulkDelete ProductVariantsSyncResponse `json:"productVariantsBulkDelete"`
 		} `json:"data"`
 		Errors Errors `json:"errors,omitempty"`
 	}
