@@ -7,6 +7,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/variant/add"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/variant/edit"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
@@ -31,6 +32,7 @@ func NewCmdVariant() *cobra.Command {
 
 	cmd.AddCommand(
 		add.NewCmdAdd(),
+		edit.NewCmdEdit(),
 	)
 	return &cmd
 }

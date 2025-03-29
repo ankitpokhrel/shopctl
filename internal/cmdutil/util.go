@@ -48,6 +48,18 @@ func ShopifyProductID(id string) string {
 	return fmt.Sprintf("%s/%s", prefix, id)
 }
 
+// ShopifyProductVariantID formats Shopify product ID.
+func ShopifyProductVariantID(id string) string {
+	prefix := "gid://shopify/ProductVariant"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return "" // Not an integer id.
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
 // ExtractNumericID extracts numeric part of a Shopify ID.
 // Ex: gid://shopify/Product/8737842954464 -> 8737842954464.
 func ExtractNumericID(shopifyID string) string {
