@@ -11,36 +11,37 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Table wraps bubble table and viewport.
-type Table struct {
+// InteractiveTable wraps bubble table and viewport.
+type InteractiveTable struct {
 	table       Model
 	viewport    viewport.Model
 	isAltScreen bool
 }
 
-// NewTable builds a new table.
-func NewTable(cols []Column, rows []Row) *Table {
+// NewInteractiveTable builds a new table.
+func NewInteractiveTable(cols []Column, rows []Row) *InteractiveTable {
+	height := min(len(rows)+1, 25)
 	t := New(
 		WithColumns(cols),
 		WithRows(rows),
 		WithFocused(true),
-		WithHeight(25),
+		WithHeight(height),
 	)
 
-	vp := viewport.New(200, 26)
+	vp := viewport.New(200, height+1)
 	vp.SetContent(t.View())
 
-	return &Table{
+	return &InteractiveTable{
 		table:    t,
 		viewport: vp,
 	}
 }
 
 // Init is required for initialization.
-func (t *Table) Init() tea.Cmd { return nil }
+func (t *InteractiveTable) Init() tea.Cmd { return nil }
 
 // Update is the Bubble Tea update loop.
-func (t *Table) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (t *InteractiveTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) { //nolint:gocritic
 	case tea.KeyMsg:
@@ -83,7 +84,7 @@ func (t *Table) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View renders the viewport into a string.
-func (t *Table) View() string {
+func (t *InteractiveTable) View() string {
 	baseStyle := lipgloss.NewStyle().
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
@@ -101,7 +102,7 @@ func (t *Table) View() string {
 }
 
 // Render renders the final table.
-func (t *Table) Render() error {
+func (t *InteractiveTable) Render() error {
 	s := DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.MarkdownBorder()).
