@@ -10,6 +10,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/delete"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/list"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/peek"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/update"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/variant"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
@@ -37,6 +38,7 @@ func NewCmdProduct() *cobra.Command {
 
 	cmd.AddCommand(
 		list.NewCmdList(),
+		peek.NewCmdPeek(),
 		create.NewCmdCreate(),
 		update.NewCmdUpdate(),
 		delete.NewCmdDelete(),
