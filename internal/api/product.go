@@ -137,11 +137,11 @@ func (c GQLClient) GetProductByHandle(handle string) (*schema.Product, error) {
 }
 
 // GetProducts fetches n number of products after a cursor.
-func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, error) {
+func (c GQLClient) GetProducts(limit int, after *string, query *string) (*ProductsResponse, error) {
 	var out *ProductsResponse
 
-	query := fmt.Sprintf(`query GetProducts($first: Int!, $after: String) {
-  products(first: $first, after: $after) {
+	productQuery := fmt.Sprintf(`query GetProducts($first: Int!, $after: String, $query: String) {
+products(first: $first, after: $after, query: $query) {
     edges {
       node {
       	%s
@@ -161,10 +161,11 @@ func (c GQLClient) GetProducts(limit int, after *string) (*ProductsResponse, err
 }`, fieldsProduct)
 
 	req := client.GQLRequest{
-		Query: query,
+		Query: productQuery,
 		Variables: client.QueryVars{
 			"first": limit,
 			"after": after,
+			"query": query,
 		},
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {

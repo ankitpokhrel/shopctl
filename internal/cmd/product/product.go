@@ -8,6 +8,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/create"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/delete"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/list"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/update"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/variant"
@@ -35,6 +36,7 @@ func NewCmdProduct() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		list.NewCmdList(),
 		create.NewCmdCreate(),
 		update.NewCmdUpdate(),
 		delete.NewCmdDelete(),

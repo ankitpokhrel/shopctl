@@ -87,6 +87,17 @@ func (q *Query) In(field string, values ...string) *Query {
 	return q
 }
 
+// InAnd is same as In() but groups conditions with AND instead of OR.
+func (q *Query) InAnd(field string, values ...string) *Query {
+	parts := make([]string, 0, len(values))
+	for _, v := range values {
+		parts = append(parts, fmt.Sprintf("%s:%s", field, escape(v)))
+	}
+	group := fmt.Sprintf("(%s)", strings.Join(parts, " AND "))
+	q.conditions = append(q.conditions, group)
+	return q
+}
+
 // And adds an explicit AND operator.
 func (q *Query) And() *Query {
 	q.conditions = append(q.conditions, "AND")

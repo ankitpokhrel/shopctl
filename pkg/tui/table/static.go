@@ -2,6 +2,8 @@ package table
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -12,6 +14,7 @@ type StaticTable struct {
 	table     *table.Table
 	colWidths []int
 	noHeaders bool
+	columns   []string
 }
 
 // StaticTableOption is a functional opt for StaticTable.
@@ -19,23 +22,34 @@ type StaticTableOption func(*StaticTable)
 
 // NewStaticTable builds a new static table.
 func NewStaticTable(cols []Column, rows []Row, opts ...StaticTableOption) *StaticTable {
-	headers := make([]string, len(cols))
-	widths := make([]int, len(cols))
+	var (
+		headers  []string
+		widths   []int
+		keepCols []int
+	)
+
+	t := StaticTable{noHeaders: true}
+	for _, o := range opts {
+		o(&t)
+	}
+
 	for i, c := range cols {
-		headers[i] = c.Title
-		widths[i] = c.Width
+		if slices.Contains(t.columns, keyme(c.Title)) {
+			headers = append(headers, c.Title)
+			widths = append(widths, c.Width)
+			keepCols = append(keepCols, i)
+		}
 	}
 
 	contents := make([][]string, len(rows))
 	for i, row := range rows {
-		for _, r := range row {
-			contents[i] = append(contents[i], r)
+		var newRow []string
+		for _, j := range keepCols {
+			if j < len(row) {
+				newRow = append(newRow, row[j])
+			}
 		}
-	}
-
-	t := StaticTable{colWidths: widths, noHeaders: true}
-	for _, o := range opts {
-		o(&t)
+		contents[i] = newRow
 	}
 
 	tbl := table.New().Rows(contents...)
@@ -43,6 +57,7 @@ func NewStaticTable(cols []Column, rows []Row, opts ...StaticTableOption) *Stati
 		tbl.Headers(headers...)
 	}
 	t.table = tbl
+	t.colWidths = widths
 
 	return &t
 }
@@ -51,6 +66,13 @@ func NewStaticTable(cols []Column, rows []Row, opts ...StaticTableOption) *Stati
 func WithNoHeaders(ok bool) StaticTableOption {
 	return func(t *StaticTable) {
 		t.noHeaders = ok
+	}
+}
+
+// WithTableColumns sets columns to display.
+func WithTableColumns(cols []string) StaticTableOption {
+	return func(t *StaticTable) {
+		t.columns = cols
 	}
 }
 
@@ -71,4 +93,9 @@ func (t *StaticTable) Render() error {
 
 	_, err := fmt.Println(t.table)
 	return err
+}
+
+func keyme(s string) string {
+	s = strings.ToLower(s)
+	return strings.ReplaceAll(s, " ", "_")
 }
