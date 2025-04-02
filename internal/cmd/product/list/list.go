@@ -11,9 +11,11 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/ankitpokhrel/shopctl/pkg/browser"
 	"github.com/ankitpokhrel/shopctl/pkg/search"
 	"github.com/ankitpokhrel/shopctl/pkg/tui/table"
 	"github.com/spf13/cobra"
+	"golang.design/x/clipboard"
 )
 
 const (
@@ -214,7 +216,7 @@ func NewCmdList() *cobra.Command {
 	return &cmd
 }
 
-func run(cmd *cobra.Command, args []string, _ *config.StoreContext, client *api.GQLClient) error {
+func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *api.GQLClient) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
 
@@ -287,7 +289,39 @@ func run(cmd *cobra.Command, args []string, _ *config.StoreContext, client *api.
 		)
 		return tbl.Render()
 	}
-	tbl := table.NewInteractiveTable(cols, rows)
+
+	helpTexts := []string{
+		"↑ k/j ↓: Navigate top & down",
+		"← h/l →: Navigate left & right",
+		"m: Toggle distraction free mode",
+		"c/C: Copy numeric or full product ID",
+		"q/CTRL+c/ESC: Quit",
+	}
+	footerTexts := []string{
+		fmt.Sprintf("Showing %d results for store %q", len(rows), ctx.Store),
+	}
+	if query != nil && *query != "" && *query != "()" {
+		footerTexts = append(footerTexts, fmt.Sprintf("Query: %s", *query))
+	}
+
+	tbl := table.NewInteractiveTable(
+		cols, rows,
+		table.WithHelpTexts(helpTexts),
+		table.WithFooterTexts(footerTexts),
+		table.WithEnterFunc(func(id string) error {
+			url := fmt.Sprintf("http://admin.shopify.com/store/%s/products/%s", ctx.Alias, id)
+			return browser.Browse(url)
+		}),
+		table.WithCopyFunc(func(id string, key string) error {
+			if key == "C" {
+				id = cmdutil.ShopifyProductID(id)
+			}
+			if err := clipboard.Init(); err == nil {
+				_ = clipboard.Write(clipboard.FmtText, []byte(id))
+			}
+			return nil
+		}),
+	)
 	return tbl.Render()
 }
 
