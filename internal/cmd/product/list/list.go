@@ -67,6 +67,7 @@ type flag struct {
 	plain       bool
 	noHeaders   bool
 	columns     []string
+	printQuery  bool
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
@@ -146,6 +147,9 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	columns, err := cmd.Flags().GetString("columns")
 	cmdutil.ExitOnErr(err)
 
+	printQuery, err := cmd.Flags().GetBool("print-query")
+	cmdutil.ExitOnErr(err)
+
 	f.status = func() []string {
 		if status != "" {
 			return strings.Split(status, ",")
@@ -169,13 +173,13 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		}
 		return []string{}
 	}()
-
 	for _, c := range f.columns {
 		if !slices.Contains(validColumns(), c) {
 			cmdutil.Fail("Error: column names should be one of: %s", strings.Join(validColumns(), ", "))
 			os.Exit(1)
 		}
 	}
+	f.printQuery = printQuery
 }
 
 // NewCmdList constructs a new product list command.
@@ -210,6 +214,7 @@ func NewCmdList() *cobra.Command {
 	cmd.Flags().Bool("plain", false, "Show output in plain text instead of TUI")
 	cmd.Flags().Bool("no-headers", false, "Don't print table headers (works only with --plain)")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to print (works only with --plain)")
+	cmd.Flags().Bool("print-query", false, "Print parsed raw Shopify search query")
 
 	cmd.Flags().SortFlags = false
 
@@ -221,6 +226,14 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 	flag.parse(cmd, args)
 
 	query := buildSearchQuery(flag)
+
+	if flag.printQuery {
+		if query != nil && *query != "()" {
+			fmt.Printf("%s", *query)
+		}
+		return nil
+	}
+
 	products, err := client.GetProducts(int(flag.limit), nil, query)
 	if err != nil {
 		return err
