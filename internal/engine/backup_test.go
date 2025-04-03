@@ -44,7 +44,7 @@ func TestBackup_Do(t *testing.T) {
 			Parent: func() *Resource {
 				r := NewResource(
 					Product,
-					"2024/11/6d/8737843216608",
+					"8737843216608",
 					&mockHandler{dataFile: "./testdata/product.json"},
 				)
 				return &r
@@ -52,12 +52,12 @@ func TestBackup_Do(t *testing.T) {
 			Children: []Resource{
 				NewResource(
 					ProductVariant,
-					"2024/11/6d/8737843216608",
+					"8737843216608",
 					&mockHandler{dataFile: "./testdata/variants.json"},
 				),
 				NewResource(
 					ProductMedia,
-					"2024/11/6d/8737843216608",
+					"8737843216608",
 					&mockHandler{dataFile: "./testdata/media.json"},
 				),
 			},
@@ -66,7 +66,7 @@ func TestBackup_Do(t *testing.T) {
 			Parent: func() *Resource {
 				r := NewResource(
 					Product,
-					"2024/11/6d/8737843347680",
+					"8737843347680",
 					&mockHandler{dataFile: "./testdata/empty.json"},
 				)
 				return &r
@@ -74,12 +74,12 @@ func TestBackup_Do(t *testing.T) {
 			Children: []Resource{
 				NewResource(
 					ProductVariant,
-					"2024/11/6d/8737843347680",
+					"8737843347680",
 					&mockHandler{dataFile: "./testdata/empty.json"},
 				),
 				NewResource(
 					ProductMedia,
-					"2024/11/6d/8737843347680",
+					"8737843347680",
 					&mockHandler{dataFile: "./testdata/empty.json"},
 				),
 			},
@@ -88,7 +88,7 @@ func TestBackup_Do(t *testing.T) {
 			Parent: func() *Resource {
 				r := NewResource(
 					ProductMedia,
-					"2024/12/ae/8773308023008",
+					"8773308023008",
 					&mockHandler{dataFile: "./testdata/empty.json"},
 				)
 				return &r
@@ -110,26 +110,20 @@ func TestBackup_Do(t *testing.T) {
 
 	// Assert that folder and files were created.
 	assert.DirExists(t, path+"/test")
-	assert.DirExists(t, root+"/2024/11")
-	assert.DirExists(t, root+"/2024/11/6d")
-	assert.DirExists(t, root+"/2024/11/6d/8737843216608")
-	assert.DirExists(t, root+"/2024/11/6d/8737843347680")
-	assert.DirExists(t, root+"/2024/12")
-	assert.DirExists(t, root+"/2024/12/ae")
-	assert.DirExists(t, root+"/2024/12/ae/8773308023008")
+	assert.DirExists(t, root+"/8773308023008")
 
-	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product_variants.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843216608/product_media.json")
+	assert.FileExists(t, root+"/8737843216608/product.json")
+	assert.FileExists(t, root+"/8737843216608/product_variants.json")
+	assert.FileExists(t, root+"/8737843216608/product_media.json")
 
-	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product_variants.json")
-	assert.FileExists(t, root+"/2024/11/6d/8737843347680/product_media.json")
+	assert.FileExists(t, root+"/8737843347680/product.json")
+	assert.FileExists(t, root+"/8737843347680/product_variants.json")
+	assert.FileExists(t, root+"/8737843347680/product_media.json")
 
-	assert.FileExists(t, root+"/2024/12/ae/8773308023008/product_media.json")
+	assert.FileExists(t, root+"/8773308023008/product_media.json")
 
 	// Assert file contents.
-	content, err := os.ReadFile(root + "/2024/11/6d/8737843216608/product.json")
+	content, err := os.ReadFile(root + "/8737843216608/product.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -137,14 +131,14 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/product_variants.json")
+	content, err = os.ReadFile(root + "/8737843216608/product_variants.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
 		`{"id":"gid://shopify/Product/8737843216608","variants":{"edges":[{"node":{"availableForSale":true,"createdAt":"2024-04-12T18:27:08Z","displayName":"Test Product"}}]}}`,
 		string(content))
 
-	content, err = os.ReadFile(root + "/2024/11/6d/8737843216608/product_media.json")
+	content, err = os.ReadFile(root + "/8737843216608/product_media.json")
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -152,7 +146,7 @@ func TestBackup_Do(t *testing.T) {
 		string(content),
 	)
 
-	content, err = os.ReadFile(root + "/2024/12/ae/8773308023008/product_media.json")
+	content, err = os.ReadFile(root + "/8773308023008/product_media.json")
 	assert.NoError(t, err)
 	assert.Equal(t, "{}", string(content))
 

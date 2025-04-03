@@ -2,32 +2,6 @@ package engine
 
 import "testing"
 
-func TestGetHashDir(t *testing.T) {
-	tests := []struct {
-		name string
-		of   string
-		want string
-	}{
-		{
-			name: "random string",
-			of:   "test",
-			want: "09",
-		},
-		{
-			name: "product id",
-			of:   "8737843085536",
-			want: "e1",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetHashDir(tt.of); got != tt.want {
-				t.Errorf("GetHashDir() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestExtractNumericID(t *testing.T) {
 	tests := []struct {
 		name string

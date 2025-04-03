@@ -116,7 +116,7 @@ func (b *Backup) Timestamp() time.Time {
 
 // Do starts the backup process.
 // Implements `engine.Doer` interface.
-func (b *Backup) Do(rs Resource, data any) (any, error) {
+func (b *Backup) Do(rs Resource, _ any) (any, error) {
 	dir := filepath.Join(b.root, rs.Path)
 	if err := os.MkdirAll(dir, modeDir); err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (b *Backup) saveJSON(path string, data any) error {
 }
 
 func genBackupID(store string, timestamp int64) string {
-	data := []byte(fmt.Sprintf("%s-%d", store, timestamp))
+	data := fmt.Appendf(nil, "%s-%d", store, timestamp)
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", hash[:5])
 }

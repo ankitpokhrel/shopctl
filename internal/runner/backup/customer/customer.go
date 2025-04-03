@@ -1,7 +1,6 @@
 package customer
 
 import (
-	"fmt"
 	"path/filepath"
 	"time"
 
@@ -93,14 +92,8 @@ func (r *Runner) backup(limit int, after *string) {
 
 		for _, customer := range customers.Data.Customers.Nodes {
 			cid := engine.ExtractNumericID(customer.ID)
-			hash := engine.GetHashDir(cid)
 
-			created, err := time.Parse(time.RFC3339, customer.CreatedAt)
-			if err != nil {
-				r.logger.Error("error when parsing created time", "customerId", cid, "error", err)
-				continue
-			}
-			path := filepath.Join(engine.Customer.RootDir(), fmt.Sprint(created.Year()), fmt.Sprintf("%d", created.Month()), hash, cid)
+			path := filepath.Join(engine.Customer.RootDir(), cid)
 			r.logger.V(tlog.VL2).Infof("Customer %s: registering backup to path %s/%s", cid, r.bkpEng.Dir(), path)
 
 			customerFn := &provider.Customer{Customer: &customer}
