@@ -6,6 +6,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/auth"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/export"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/ingest"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
 
@@ -32,6 +33,7 @@ func addChildCommands(cmd *cobra.Command) {
 		auth.NewCmdAuth(),
 		config.NewCmdConfig(),
 		export.NewCmdExport(),
+		ingest.NewCmdImport(),
 		version.NewCmdVersion(),
 	)
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
+	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 // CheckCustomerByEmailOrPhone fetches a customer by email or phone without additional details.
@@ -151,4 +152,80 @@ func (c GQLClient) GetAllCustomers(ch chan *CustomersResponse, limit int, after 
 		return c.GetAllCustomers(ch, limit, out.Data.Customers.PageInfo.EndCursor)
 	}
 	return nil
+}
+
+// CreateCustomer creates a customer.
+func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerCreate CustomerCreateResponse `json:"customerCreate"`
+		} `json:"data"`
+		Errors Errors `json:"errors"`
+	}
+
+	query := `
+	mutation customerCreate($input: CustomerInput!) {
+		customerCreate(input: $input) {
+			customer {
+				id
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"input": input},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("customerCreate: The operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.CustomerCreate.UserErrors) > 0 {
+		return nil, fmt.Errorf("customerCreate: The operation failed with user error: %s", out.Data.CustomerCreate.UserErrors.Error())
+	}
+	return &out.Data.CustomerCreate, nil
+}
+
+// UpdateCustomer updates a customer.
+func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerUpdate CustomerCreateResponse `json:"customerUpdate"`
+		} `json:"data"`
+		Errors Errors `json:"errors"`
+	}
+
+	query := `
+	mutation customerUpdate($input: CustomerInput!) {
+		customerUpdate(input: $input) {
+			customer {
+				id
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"input": input},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("customerUpdate: Customer %s: The operation failed with error: %s", *input.ID, out.Errors.Error())
+	}
+	if len(out.Data.CustomerUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("customerUpdate: Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerUpdate.UserErrors.Error())
+	}
+	return &out.Data.CustomerUpdate, nil
 }

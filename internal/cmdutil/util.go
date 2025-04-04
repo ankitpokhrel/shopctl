@@ -35,6 +35,46 @@ func ExitOnErr(err error) {
 	}
 }
 
+// ShopifyProductID formats Shopify product ID.
+func ShopifyProductID(id string) string {
+	prefix := "gid://shopify/Product"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return "" // Not an integer id.
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
+// ShopifyProductVariantID formats Shopify product ID.
+func ShopifyProductVariantID(id string) string {
+	prefix := "gid://shopify/ProductVariant"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return "" // Not an integer id.
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
+// ExtractNumericID extracts numeric part of a Shopify ID.
+// Ex: gid://shopify/Product/8737842954464 -> 8737842954464.
+func ExtractNumericID(shopifyID string) string {
+	parts := strings.Split(shopifyID, "/")
+	return parts[len(parts)-1]
+}
+
+// FormatDateTimeHuman formats date time in human readable format.
+func FormatDateTimeHuman(dt, format string) string {
+	t, err := time.Parse(format, dt)
+	if err != nil {
+		return dt
+	}
+	return t.Format("Mon, 02 Jan 06")
+}
+
 // GetStoreSlug gets the ID of a Shopify store given a store URL.
 func GetStoreSlug(store string) string {
 	store = stripProtocol(store)
@@ -45,6 +85,29 @@ func GetStoreSlug(store string) string {
 		slug = pieces[0]
 	}
 	return slug
+}
+
+// GetContext gets current context details from the config.
+func GetContext(cmd *cobra.Command, cfg *config.ShopConfig) (*config.StoreContext, error) {
+	usrCtx, err := cmd.Flags().GetString("context")
+	if err != nil {
+		return nil, err
+	}
+
+	if usrCtx == "" {
+		currCtx := cfg.CurrentContext()
+		if currCtx == "" {
+			return nil, fmt.Errorf("current-context is not set; either set a context with %q or use %q flag", "shopctl use-context context-name", "-c")
+		}
+		usrCtx = currCtx
+	}
+
+	ctx := cfg.GetContext(usrCtx)
+	if ctx == nil {
+		return nil, fmt.Errorf("no context exists with the name: %q", usrCtx)
+	}
+
+	return ctx, nil
 }
 
 // Archive archives the source and saves it to the destination.
@@ -88,6 +151,67 @@ func ParseBackupResource(resources []string) []config.BackupResource {
 	return bkpResources
 }
 
+// ParseRestoreFilters parses resource filters.
+func ParseRestoreFilters(input string) (map[string][]string, []string, error) {
+	grammar := regexp.MustCompile(`^(\w+:(?:'[^']*'|"[^"]*"|[\w,-]+))( (?i)(AND|OR) \w+:(?:'[^']*'|"[^"]*"|[\w,-]+))*$`)
+	if !grammar.MatchString(input) {
+		return nil, nil, fmt.Errorf("invalid input format: %s", input)
+	}
+
+	conditionRegex := regexp.MustCompile(`(\w+):(?:'([^']*)'|"([^"]*)"|([\w,-]+))`)
+	separatorRegex := regexp.MustCompile(` (?i)(AND|OR) `)
+
+	parts := separatorRegex.Split(input, -1)
+	separators := separatorRegex.FindAllString(input, -1)
+
+	result := make(map[string][]string)
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		matches := conditionRegex.FindStringSubmatch(part)
+		if len(matches) < 5 { //nolint:mnd
+			return nil, nil, fmt.Errorf("invalid filter format: %s", part)
+		}
+
+		key := matches[1]
+		var value string
+		switch {
+		case matches[2] != "":
+			// Single-quoted value.
+			value = matches[2]
+		case matches[3] != "":
+			// Double-quoted value.
+			value = matches[3]
+		default:
+			// Unquoted value.
+			value = matches[4]
+		}
+
+		values := strings.Split(value, ",")
+		for _, v := range values {
+			result[key] = append(result[key], strings.TrimSpace(v))
+		}
+	}
+
+	for i := range separators {
+		separators[i] = strings.ToUpper(strings.TrimSpace(separators[i]))
+	}
+	return result, separators, nil
+}
+
+// GetBackupIDFromName extracts backup id from the file name.
+func GetBackupIDFromName(name string) string {
+	name = strings.TrimSuffix(name, ".tar.gz")
+	pattern := regexp.MustCompile(`^.+_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+)$`)
+	matches := pattern.FindStringSubmatch(name)
+	if matches == nil {
+		return ""
+	}
+	if len(matches) < 3 {
+		return ""
+	}
+	return matches[2]
+}
+
 // HelpErrorf prepares error message by appending its usage.
 func HelpErrorf(msg string, examples string) error {
 	lines := strings.Split(examples, "\n")
@@ -95,6 +219,15 @@ func HelpErrorf(msg string, examples string) error {
 		lines[i] = "  " + line
 	}
 	return fmt.Errorf(msg+"\n\n\033[1mUsage:\033[0m\n\n%s", strings.Join(lines, "\n"))
+}
+
+// SplitKeyVal splits string input separated by a colon.
+func SplitKeyVal(items string) (string, string, error) {
+	parts := strings.SplitN(items, ":", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("values should be in the following format, Key:Value")
+	}
+	return parts[0], strings.TrimSpace(parts[1]), nil
 }
 
 // stripProtocol strips the http protocol from a URL.
