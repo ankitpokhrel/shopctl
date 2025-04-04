@@ -1,16 +1,13 @@
 package registry
 
 import (
-	"archive/tar"
 	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
-	"time"
 
 	"github.com/mholt/archives"
 )
@@ -83,48 +80,6 @@ func GetAllInDir(dir, ext string) (<-chan File, error) {
 	}()
 
 	return located, nil
-}
-
-// GetLatestInDir returns the latest .tar.gz file within a directory.
-func GetLatestInDir(dir string) (*File, string, error) {
-	var (
-		latest       *File
-		latestTime   time.Time
-		latestSuffix string
-	)
-
-	namePattern := regexp.MustCompile(`^.+_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})_(.+)\.tar\.gz$`)
-
-	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			latest = &File{Err: err}
-			return nil
-		}
-		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tar.gz") {
-			matches := namePattern.FindStringSubmatch(info.Name())
-			if matches == nil {
-				return nil
-			}
-			datetime := matches[1]
-			suffix := matches[2]
-
-			parsedTime, err := time.Parse("2006_01_02_15_04_05", datetime)
-			if err != nil {
-				return fmt.Errorf("failed to parse datetime: %v", err)
-			}
-
-			if parsedTime.After(latestTime) {
-				latest = &File{Path: path}
-				latestTime = parsedTime
-				latestSuffix = suffix
-			}
-		}
-		return nil
-	})
-	if latest != nil {
-		return latest, latestSuffix, nil
-	}
-	return nil, "", ErrNoTargetFound
 }
 
 // ExtractZipToTemp extracts .tar.gz file to a temp location.
@@ -240,41 +195,4 @@ func lookForDir(in string, cmpFn func(os.FileInfo) bool) (string, error) {
 		return "", ErrNoTargetFound
 	}
 	return loc, nil
-}
-
-// ReadFromTarGZ allow you to read a single file from the `.tar.gz` folder.
-func ReadFromTarGZ(tarGzFilePath string, targetFileName string) ([]byte, error) {
-	file, err := os.Open(tarGzFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open tar.gz file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	gzReader, err := gzip.NewReader(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	defer func() { _ = gzReader.Close() }()
-
-	tarReader := tar.NewReader(gzReader)
-
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("error reading tar archive: %w", err)
-		}
-
-		if header.Name == targetFileName {
-			fileContent, err := io.ReadAll(tarReader)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read file content: %w", err)
-			}
-			return fileContent, nil
-		}
-	}
-
-	return nil, fmt.Errorf("file %s not found in the tar.gz archive", targetFileName)
 }

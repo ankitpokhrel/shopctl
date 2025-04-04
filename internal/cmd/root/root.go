@@ -4,13 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/cmd/auth"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/backup"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/compare"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/config"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/export"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/ingest"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/restore"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
 
@@ -51,8 +49,6 @@ func addChildCommands(cmd *cobra.Command) {
 		product.NewCmdProduct(),
 		export.NewCmdExport(),
 		ingest.NewCmdImport(),
-		backup.NewCmdBackup(),
-		restore.NewCmdRestore(),
 		compare.NewCmdCompare(),
 		version.NewCmdVersion(),
 	)
