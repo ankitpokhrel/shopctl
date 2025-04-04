@@ -9,6 +9,8 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/ankitpokhrel/shopctl/internal/registry"
+	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 const (
@@ -22,6 +24,7 @@ Use this command to quickly look into the upstream or local product data.`
 // Flag wraps available command flags.
 type flag struct {
 	id   string
+	from string
 	json bool
 }
 
@@ -31,10 +34,14 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		cmdutil.ExitOnErr(fmt.Errorf("invalid product id"))
 	}
 
+	from, err := cmd.Flags().GetString("from")
+	cmdutil.ExitOnErr(err)
+
 	jsonOut, err := cmd.Flags().GetBool("json")
 	cmdutil.ExitOnErr(err)
 
 	f.id = id
+	f.from = from
 	f.json = jsonOut
 }
 
@@ -56,16 +63,31 @@ func NewCmdPeek() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringP("from", "f", "", "Direct path to the backup to look into")
 	cmd.Flags().Bool("json", false, "Output in JSON format")
 
 	return &cmd
 }
 
 func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *api.GQLClient) error {
+	var (
+		product *schema.Product
+		reg     *registry.Registry
+		err     error
+	)
+
 	flag := &flag{}
 	flag.parse(cmd, args)
 
-	product, err := client.GetProductByID(flag.id)
+	if flag.from != "" {
+		reg, err = registry.NewRegistry(flag.from)
+		if err != nil {
+			return err
+		}
+		product, err = reg.GetProductByID(cmdutil.ExtractNumericID(flag.id))
+	} else {
+		product, err = client.GetProductByID(flag.id)
+	}
 	if err != nil {
 		return err
 	}

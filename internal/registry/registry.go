@@ -100,7 +100,7 @@ func (r *Registry) getProductByIDFromZip(id string) (*schema.Product, error) {
 		productMedia   []any
 		format         archives.Tar
 
-		pattern = fmt.Sprintf(`products/.*/%s/.*\.json$`, regexp.QuoteMeta(id))
+		pattern = fmt.Sprintf(`products/%s/.*\.json$`, regexp.QuoteMeta(id))
 	)
 
 	matcher, err := regexp.Compile(pattern)
