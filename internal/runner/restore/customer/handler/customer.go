@@ -47,7 +47,6 @@ func (h *Customer) Handle(data any) (any, error) {
 			return nil, engine.ErrSkipChildren
 		}
 	}
-	println("processing")
 
 	if h.DryRun {
 		h.Logger.V(tlog.VL3).Warn("Skipping customer sync")

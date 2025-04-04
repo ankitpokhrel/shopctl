@@ -52,7 +52,11 @@ func FindFilesInDir(dir, name string) (<-chan File, error) {
 // GetAllInDir returns all files with given extension within a directory.
 // It returns all folders if the ext is empty.
 func GetAllInDir(dir, ext string) (<-chan File, error) {
-	located := make(chan File)
+	var (
+		located   = make(chan File)
+		maxDepth  = 3
+		baseDepth = strings.Count(filepath.Clean(dir), string(os.PathSeparator))
+	)
 
 	go func() {
 		defer close(located)
@@ -62,6 +66,11 @@ func GetAllInDir(dir, ext string) (<-chan File, error) {
 				located <- File{Err: err}
 				return nil
 			}
+			depth := strings.Count(filepath.Clean(path), string(os.PathSeparator)) - baseDepth
+			if depth > maxDepth {
+				return filepath.SkipDir
+			}
+
 			if ext != "" {
 				if !info.IsDir() && strings.HasSuffix(info.Name(), ext) {
 					located <- File{Path: path}

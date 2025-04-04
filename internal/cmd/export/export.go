@@ -78,10 +78,10 @@ func (f *flag) parse(cmd *cobra.Command) {
 func NewCmdExport() *cobra.Command {
 	cmd := cobra.Command{
 		Use:         "export",
-		Short:       "Export exports Shopify resources",
+		Short:       "Export Shopify resources",
 		Long:        helpText,
-		Annotations: map[string]string{"cmd:main": "true"},
 		Example:     examples,
+		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))
 			return nil
