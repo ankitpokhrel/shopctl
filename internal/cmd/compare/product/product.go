@@ -8,7 +8,6 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	cmputil "github.com/ankitpokhrel/shopctl/internal/cmdutil/compare"
-	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/pkg/structdiff"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -105,10 +104,9 @@ func NewCmdProduct() *cobra.Command {
 		Example: examples,
 		Aliases: []string{"products"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			strategy := cmd.Context().Value(cmdutil.KeyStrategy).(*config.BackupStrategy)
 			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 
-			cmdutil.ExitOnErr(compare(cmd, client, strategy))
+			cmdutil.ExitOnErr(compare(cmd, client))
 			return nil
 		},
 	}
@@ -121,7 +119,7 @@ func NewCmdProduct() *cobra.Command {
 	return &cmd
 }
 
-func compare(cmd *cobra.Command, client *api.GQLClient, strategy *config.BackupStrategy) error {
+func compare(cmd *cobra.Command, client *api.GQLClient) error {
 	var (
 		product *schema.Product
 		reg     *registry.Registry
@@ -145,7 +143,8 @@ func compare(cmd *cobra.Command, client *api.GQLClient, strategy *config.BackupS
 		return err
 	}
 
-	path, err := registry.LookForDirWithSuffix(flag.with, strategy.BkpDir)
+	// TODO: Fix compare cmd.
+	path, err := registry.LookForDirWithSuffix(flag.with, flag.from)
 	if err != nil {
 		return err
 	}

@@ -22,7 +22,6 @@ type ContextValue string
 
 const (
 	KeyContext    ContextValue = "context"
-	KeyStrategy   ContextValue = "strategy"
 	KeyGQLClient  ContextValue = "gqlClient"
 	KeyShopConfig ContextValue = "shopCfg"
 	KeyLogger     ContextValue = "logger"
@@ -109,39 +108,6 @@ func GetContext(cmd *cobra.Command, cfg *config.ShopConfig) (*config.StoreContex
 	}
 
 	return ctx, nil
-}
-
-// GetStrategy gets current backup strategy details from the config.
-func GetStrategy(cmd *cobra.Command, ctx *config.StoreContext, cfg *config.ShopConfig) (*config.BackupStrategy, error) {
-	usrStrategy, err := cmd.Flags().GetString("strategy")
-	if err != nil {
-		return nil, err
-	}
-
-	storeCfg, err := config.NewStoreConfig(ctx.Store, ctx.Alias)
-	if err != nil {
-		return nil, err
-	}
-
-	if usrStrategy == "" {
-		currStrategy := cfg.CurrentStrategy()
-		if currStrategy == "" {
-			return nil, fmt.Errorf(
-				"current-strategy is not set; either set a strategy with %q or use %q flag",
-				"shopctl config use-strategy strategy-name", "-s",
-			)
-		}
-		usrStrategy = currStrategy
-	}
-
-	strategy := storeCfg.GetBackupStrategy(usrStrategy)
-	if strategy == nil {
-		return nil, fmt.Errorf(
-			"strategy not found; please select a valid strategy with %q or use %q flag",
-			"shopctl config use-strategy strategy-name", "-s",
-		)
-	}
-	return strategy, nil
 }
 
 // Archive archives the source and saves it to the destination.

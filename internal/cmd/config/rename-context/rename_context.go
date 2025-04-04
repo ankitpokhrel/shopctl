@@ -57,12 +57,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if shopCfg.HasContext(flag.newName) {
 		return fmt.Errorf("context already exists with the name: %q", flag.newName)
 	}
-	ctx := shopCfg.GetContext(flag.oldName)
-
-	storeCfg, err := config.NewStoreConfig(ctx.Store, ctx.Alias)
-	if err != nil {
-		return err
-	}
 
 	shopCfg.RenameContext(flag.oldName, flag.newName)
 	if shopCfg.CurrentContext() == flag.oldName {
@@ -71,9 +65,6 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if err := shopCfg.Save(); err != nil {
-		return err
-	}
-	if err := storeCfg.Rename(flag.newName); err != nil {
 		return err
 	}
 

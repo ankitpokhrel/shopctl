@@ -53,10 +53,6 @@ func login(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	storeCfg, err := config.NewStoreConfig(store, alias)
-	if err != nil {
-		return err
-	}
 	storeCtx := config.StoreContext{
 		Alias: alias,
 		Store: store,
@@ -68,10 +64,6 @@ func login(cmd *cobra.Command, _ []string) error {
 		fmt.Printf("\n! Using insecure plain text storage\n")
 
 		storeCtx.Token = &authFlow.Token.AccessToken
-	}
-
-	if err := storeCfg.Save(); err != nil {
-		return err
 	}
 
 	shopCfg.SetStoreContext(&storeCtx)

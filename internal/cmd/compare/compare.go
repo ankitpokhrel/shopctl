@@ -30,11 +30,6 @@ func NewCmdCompare() *cobra.Command {
 		RunE: run,
 	}
 
-	cmd.PersistentFlags().StringP(
-		"strategy", "s", "",
-		"Override current-strategy",
-	)
-
 	cmd.AddCommand(
 		product.NewCmdProduct(),
 	)
@@ -53,14 +48,8 @@ func preRun(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	strategy, err := cmdutil.GetStrategy(cmd, ctx, cfg)
-	if err != nil {
-		return err
-	}
-
 	gqlClient := api.NewGQLClient(ctx.Store)
 	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyGQLClient, gqlClient))
-	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyStrategy, strategy))
 
 	return nil
 }

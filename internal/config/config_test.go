@@ -22,7 +22,6 @@ func TestConfigHome(t *testing.T) {
 
 func TestConfigSave(t *testing.T) {
 	alias := "teststore"
-	store := "store.myshopify.com"
 	root := "./testdata/.tmp/shopctl"
 
 	t.Setenv("SHOPIFY_CONFIG_HOME", "./testdata/.tmp/")
@@ -38,12 +37,6 @@ func TestConfigSave(t *testing.T) {
 	assert.Equal(t, "v0", c.writer.Get("ver"))
 	assert.Equal(t, "", c.writer.Get("currentContext"))
 	assert.Empty(t, GetToken(alias))
-
-	sc, _ := NewStoreConfig(store, alias)
-	assert.NoError(t, sc.Save())
-	assert.FileExists(t, fmt.Sprintf("%s/%s.yml", root, alias))
-	assert.Equal(t, "2025-01", sc.writer.Get("apiVer"))
-	assert.Equal(t, store, sc.writer.Get("store"))
 
 	assert.NoError(t, os.RemoveAll("./testdata/.tmp/"))
 }

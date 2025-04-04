@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -99,14 +98,6 @@ func loadConfig(cfgFile string) (*koanf.Koanf, error) {
 
 func writeYAML(cfgFile string, data any) error {
 	bytes, err := yamlv3.Marshal(data)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(cfgFile, bytes, modeFile)
-}
-
-func writeJSON(cfgFile string, data any) error {
-	bytes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}

@@ -28,12 +28,6 @@ const (
 # Restore some products on status DRAFT for the context from the latest backup
 $ shopctl import -r product="id:id1,id2,id3 AND status:DRAFT" --from /path/to/import/dir
 
-# Restore all products from the given context and backup id
-$ shopctl import -c mycontext --backup-id 3820045c0c -r product
-
-# Restore specific products from the latest backup of the given context and strategy
-$ shopctl import -c mycontext -s mystrategy --latest -r product="id:id1,id2,id3"
-
 # Restore specific products and verified customers from the latest backup
 $ shopctl import -r product="tags:premium,on-sale" -r customer="verifiedemail:true" --from /path/to/import/dir
 

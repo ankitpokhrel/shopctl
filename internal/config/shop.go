@@ -14,6 +14,12 @@ const (
 	shopConfig = ".shopconfig"
 )
 
+// BackupResource wraps resource type and query filter.
+type BackupResource struct {
+	Resource string `koanf:"resource" yaml:"resource"`
+	Query    string `koanf:"query" yaml:"query,omitempty"`
+}
+
 // StoreContext is a shopify store context.
 type StoreContext struct {
 	Alias string  `koanf:"alias" yaml:"alias"`
@@ -22,10 +28,9 @@ type StoreContext struct {
 }
 
 type shopItems struct {
-	Version         string         `koanf:"ver" yaml:"ver"`
-	Contexts        []StoreContext `koanf:"contexts" yaml:"contexts"`
-	CurrentCtx      string         `koanf:"currentContext" yaml:"currentContext"`
-	CurrentStrategy string         `koanf:"currentStrategy" yaml:"currentStrategy"`
+	Version    string         `koanf:"ver" yaml:"ver"`
+	Contexts   []StoreContext `koanf:"contexts" yaml:"contexts"`
+	CurrentCtx string         `koanf:"currentContext" yaml:"currentContext"`
 }
 
 // ShopConfig is a Shopify store config.
@@ -104,41 +109,9 @@ func (c *ShopConfig) SetCurrentContext(ctx string) error {
 	return nil
 }
 
-// SetCurrentStrategy updates current active strategy for the context.
-func (c *ShopConfig) SetCurrentStrategy(strategy string) error {
-	currentCtx := c.data.CurrentCtx
-	if currentCtx == "" {
-		return fmt.Errorf("current-context is not set")
-	}
-
-	ctx := c.GetContext(currentCtx)
-	if ctx == nil {
-		return fmt.Errorf("no context exists with the name: %q", currentCtx)
-	}
-
-	storeCfg, err := NewStoreConfig(ctx.Store, ctx.Alias)
-	if err != nil {
-		return fmt.Errorf("unable to build store config: %s", err)
-	}
-	if !exists(storeCfg.path) {
-		return fmt.Errorf("unable to locate config file for the context: %q", currentCtx)
-	}
-	if !storeCfg.HasBackupStrategy(strategy) {
-		return fmt.Errorf("no strategy exists with the name: %q", strategy)
-	}
-
-	c.data.CurrentStrategy = strategy
-	return nil
-}
-
 // CurrentContext returns current context.
 func (c *ShopConfig) CurrentContext() string {
 	return c.data.CurrentCtx
-}
-
-// CurrentStrategy returns current strategy.
-func (c *ShopConfig) CurrentStrategy() string {
-	return c.data.CurrentStrategy
 }
 
 // Contexts returns all available contexts.
@@ -149,11 +122,6 @@ func (c *ShopConfig) Contexts() []StoreContext {
 // UnsetCurrentContext unsets current context.
 func (c *ShopConfig) UnsetCurrentContext() {
 	c.data.CurrentCtx = ""
-}
-
-// UnsetCurrentStrategy unsets current strategy.
-func (c *ShopConfig) UnsetCurrentStrategy() {
-	c.data.CurrentStrategy = ""
 }
 
 // UnsetContext unsets given context.

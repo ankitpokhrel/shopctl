@@ -85,11 +85,6 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 func del(shopCfg *config.ShopConfig, ctx string) error {
-	storeCfg, err := config.NewStoreConfig("", ctx)
-	if err != nil {
-		return err
-	}
-
 	if shopCfg.CurrentContext() == ctx {
 		cmdutil.Warn("WARN: This removed your active context and strategies, use \"shopctl config use-context\" to select a different one")
 		shopCfg.UnsetCurrentContext()
@@ -97,9 +92,6 @@ func del(shopCfg *config.ShopConfig, ctx string) error {
 
 	shopCfg.UnsetContext(ctx)
 	if err := shopCfg.Save(); err != nil {
-		return err
-	}
-	if err := storeCfg.Delete(); err != nil {
 		return err
 	}
 
