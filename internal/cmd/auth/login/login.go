@@ -2,6 +2,8 @@ package login
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
@@ -18,7 +20,7 @@ const (
 
 // NewCmdLogin is a login command.
 func NewCmdLogin() *cobra.Command {
-	cmd := cobra.Command{
+	return &cobra.Command{
 		Use:         "login",
 		Short:       "Login to a Shopify account",
 		Long:        helpText,
@@ -26,10 +28,6 @@ func NewCmdLogin() *cobra.Command {
 		Annotations: map[string]string{"cmd:main": "true"},
 		RunE:        login,
 	}
-
-	cmd.Flags().StringP("alias", "a", "", "Store alias")
-
-	return &cmd
 }
 
 func login(cmd *cobra.Command, _ []string) error {
@@ -38,12 +36,12 @@ func login(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("please pass in the store you want to operate on")
 	}
 
-	alias, err := cmd.Flags().GetString("alias")
-	if err != nil || alias == "" {
-		return fmt.Errorf("please add a unique alias for the store")
+	host, alias, err := getHostAndAlias(store)
+	if err != nil {
+		return err
 	}
 
-	authFlow := oauth.NewFlow(store)
+	authFlow := oauth.NewFlow(host)
 	if err := authFlow.Initiate(); err != nil {
 		fmt.Printf("\n! Failed to authenticate with Shopify: %s\n", err)
 		return err
@@ -55,7 +53,7 @@ func login(cmd *cobra.Command, _ []string) error {
 	}
 	storeCtx := config.StoreContext{
 		Alias: alias,
-		Store: store,
+		Store: host,
 	}
 	service := fmt.Sprintf("shopctl:%s", cmdutil.GetStoreSlug(store))
 
@@ -73,4 +71,23 @@ func login(cmd *cobra.Command, _ []string) error {
 
 	fmt.Printf("\n! Successfully authenticated with Shopify\n")
 	return nil
+}
+
+func getHostAndAlias(store string) (string, string, error) {
+	if !strings.HasPrefix(store, "http://") && !strings.HasPrefix(store, "https://") {
+		store = "https://" + store
+	}
+
+	myshopifyURL, err := url.Parse(store)
+	if err != nil {
+		return "", "", err
+	}
+
+	host := myshopifyURL.Hostname()
+	suffix := ".myshopify.com"
+
+	if !strings.HasSuffix(host, suffix) {
+		return "", "", fmt.Errorf("URL is not a valid myshopify domain")
+	}
+	return host, strings.TrimSuffix(host, suffix), nil
 }
