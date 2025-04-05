@@ -12,8 +12,6 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
 
-var verbosity int
-
 // NewCmdRoot constructs a root command.
 func NewCmdRoot() *cobra.Command {
 	cmd := cobra.Command{
@@ -28,11 +26,6 @@ func NewCmdRoot() *cobra.Command {
 	cmd.PersistentFlags().StringP(
 		"context", "c", "",
 		"Override current-context",
-	)
-	cmd.PersistentFlags().CountVarP(
-		&verbosity,
-		"verbose", "v",
-		"Set the verbosity level (e.g., -v, -vv, -vvv)",
 	)
 
 	cmd.SetHelpFunc(helpFunc)

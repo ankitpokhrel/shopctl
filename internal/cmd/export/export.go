@@ -39,6 +39,8 @@ $ shopctl export run -r product="tag:on-sale" --dry-run
 `
 )
 
+var verbosity int
+
 type flag struct {
 	outDir    string
 	name      string
@@ -101,6 +103,7 @@ func NewCmdExport() *cobra.Command {
 	cmd.Flags().StringArrayP("resource", "r", []string{}, "Resources to export (accepts filters)")
 	cmd.Flags().Bool("dry-run", false, "Print logs without creating an actual backup file")
 	cmd.Flags().Bool("quiet", false, "Do not print anything to stdout")
+	cmd.Flags().CountVarP(&verbosity, "verbose", "v", "Set the verbosity level (e.g., -v, -vv, -vvv)")
 
 	cmd.Flags().SortFlags = false
 

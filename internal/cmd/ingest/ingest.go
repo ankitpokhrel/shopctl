@@ -39,6 +39,8 @@ $ shopctl import -r product --from /path/to/import/dir --dry-run -vvv
 `
 )
 
+var verbosity int
+
 type flag struct {
 	from      string
 	resources []config.BackupResource
@@ -97,6 +99,7 @@ func NewCmdImport() *cobra.Command {
 	cmd.Flags().StringArrayP("resource", "r", []string{}, "Resource types to restore")
 	cmd.Flags().Bool("dry-run", false, "Print logs without creating an actual backup file")
 	cmd.Flags().Bool("quiet", false, "Do not print anything to stdout")
+	cmd.Flags().CountVarP(&verbosity, "verbose", "v", "Set the verbosity level (e.g., -v, -vv, -vvv)")
 
 	cmd.Flags().SortFlags = false
 
