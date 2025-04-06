@@ -7,6 +7,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/media/attach"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/media/detach"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
@@ -31,6 +32,7 @@ func NewCmdMedia() *cobra.Command {
 
 	cmd.AddCommand(
 		attach.NewCmdAttach(),
+		detach.NewCmdDetach(),
 	)
 	return &cmd
 }

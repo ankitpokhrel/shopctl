@@ -52,7 +52,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	}
 	if mediaType != "" && !slices.Contains(validMediaTypes, mediaType) {
 		cmdutil.ExitOnErr(cmdutil.HelpErrorf(
-			fmt.Sprintf("Media type should be one of: %s", strings.Join(validMediaTypes, ", ")), examples),
+			fmt.Sprintf("Media type must be one of: %s", strings.Join(validMediaTypes, ", ")), examples),
 		)
 	}
 

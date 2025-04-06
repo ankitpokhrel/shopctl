@@ -32,17 +32,16 @@ var (
 	// See https://shopify.dev/docs/api/usage/access-scopes#authenticated-access-scopes for
 	// the list of available scopes. Scopes will be added as necessary.
 	scopes = []string{
-		// Article, Blog, Comment, Page.
-		"read_content",
-		"read_online_store_pages",
-
 		// Product, ProductVariant, Collection, Inventory.
-		"read_products",
+		"write_products",
 		"read_product_listings",
 		"read_inventory",
 
 		// Customer data.
-		"read_customers",
+		"write_customers",
+
+		// Files.
+		"write_files",
 	}
 )
 

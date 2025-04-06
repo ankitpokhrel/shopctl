@@ -200,3 +200,13 @@ type MailingAddressInput struct {
 	ProvinceCode *string      `json:"provinceCode,omitempty"`
 	Zip          *string      `json:"zip,omitempty"`
 }
+
+type FileUpdateInput struct {
+	ID                 string  `json:"id"`
+	Alt                *string `json:"alt,omitempty"`
+	OriginalSource     *string `json:"originalSource,omitempty"`
+	PreviewImageSource *string `json:"previewImageSource,omitempty"`
+	Filename           *string `json:"filename,omitempty"`
+	ReferencesToAdd    []any   `json:"referencesToAdd"`
+	ReferencesToRemove []any   `json:"referencesToRemove"`
+}

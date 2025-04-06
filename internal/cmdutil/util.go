@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/config"
+	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 // ContextValue is a string type to use as a key for `context.SetValue`.
@@ -47,11 +48,35 @@ func ShopifyProductID(id string) string {
 	return fmt.Sprintf("%s/%s", prefix, id)
 }
 
-// ShopifyProductVariantID formats Shopify product ID.
+// ShopifyProductVariantID formats Shopify product variant ID.
 func ShopifyProductVariantID(id string) string {
 	prefix := "gid://shopify/ProductVariant"
 	if strings.HasPrefix(id, prefix) {
 		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return "" // Not an integer id.
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
+// ShopifyMediaID formats Shopify product media ID.
+func ShopifyMediaID(id string, typ schema.MediaContentType) string {
+	validPrefixes := map[schema.MediaContentType]string{
+		schema.MediaContentTypeImage:         "gid://shopify/MediaImage",
+		schema.MediaContentTypeVideo:         "gid://shopify/Video",
+		schema.MediaContentTypeModel3d:       "gid://shopify/Model3d",
+		schema.MediaContentTypeExternalVideo: "gid://shopify/ExternalVideo",
+	}
+	for _, p := range validPrefixes {
+		if strings.HasPrefix(id, p) {
+			return id
+		}
+	}
+
+	prefix, ok := validPrefixes[typ]
+	if !ok {
+		return ""
 	}
 	if _, err := strconv.Atoi(id); err != nil {
 		return "" // Not an integer id.
