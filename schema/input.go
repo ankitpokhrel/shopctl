@@ -167,6 +167,14 @@ type WeightInput struct {
 	Unit  WeightUnit `json:"unit"`
 }
 
+type MetafieldInput struct {
+	ID        *string `json:"id,omitempty"`
+	Namespace *string `json:"namespace,omitempty"`
+	Key       *string `json:"key,omitempty"`
+	Value     *string `json:"value,omitempty"`
+	Type      *string `json:"type,omitempty"`
+}
+
 type MetafieldsSetInput struct {
 	OwnerID       string  `json:"ownerId"`
 	Namespace     *string `json:"namespace,omitempty"`
