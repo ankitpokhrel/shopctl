@@ -1,4 +1,4 @@
-package product
+package option
 
 import (
 	"context"
@@ -6,25 +6,22 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/create"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/delete"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/list"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/peek"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/product/update"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option/add"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option/edit"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/option/remove"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Product lets you interact with products on your store.`
+const helpText = `Option lets you interact with product options.`
 
-// NewCmdProduct builds a new product command.
-func NewCmdProduct() *cobra.Command {
+// NewCmdOption builds a new product option command.
+func NewCmdOption() *cobra.Command {
 	cmd := cobra.Command{
-		Use:         "product",
-		Short:       "Product lets you interact with products data",
-		Long:        helpText,
-		Annotations: map[string]string{"cmd:main": "true"},
+		Use:     "option",
+		Short:   "Option lets you interact with product options",
+		Long:    helpText,
+		Aliases: []string{"opt"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))
 			return nil
@@ -36,14 +33,10 @@ func NewCmdProduct() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		list.NewCmdList(),
-		peek.NewCmdPeek(),
-		create.NewCmdCreate(),
-		update.NewCmdUpdate(),
-		delete.NewCmdDelete(),
-		option.NewCmdOption(),
+		add.NewCmdAdd(),
+		edit.NewCmdEdit(),
+		remove.NewCmdRemove(),
 	)
-
 	return &cmd
 }
 
