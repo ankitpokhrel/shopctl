@@ -11,16 +11,28 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmd/version"
 )
 
+var verbosity int
+
 // NewCmdRoot constructs a root command.
 func NewCmdRoot() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "shopctl <cmd> <subcommand>",
-		Short: "Manage Shopify data directly from your terminal",
-		Long:  "shopctl helps you manage Shopify data directly from your terminal.",
+		Short: "CLI to manage Shopify backup, restore, migration and sync",
+		Long:  "shopctl controls the Shopify backup, restore, migration and sync",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
+
+	cmd.PersistentFlags().StringP(
+		"context", "c", "",
+		"Override current-context",
+	)
+	cmd.PersistentFlags().CountVarP(
+		&verbosity,
+		"verbose", "v",
+		"Set the verbosity level (e.g., -v, -vv, -vvv)",
+	)
 
 	cmd.SetHelpFunc(helpFunc)
 
@@ -33,9 +45,9 @@ func addChildCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		auth.NewCmdAuth(),
 		config.NewCmdConfig(),
+		product.NewCmdProduct(),
 		export.NewCmdExport(),
 		ingest.NewCmdImport(),
-		product.NewCmdProduct(),
 		version.NewCmdVersion(),
 	)
 }
