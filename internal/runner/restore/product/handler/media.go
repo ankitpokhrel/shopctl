@@ -111,10 +111,18 @@ func (h Media) handleProductMediaAdd(productID string, toAdd []*api.ProductMedia
 	return h.Client.UpdateProduct(input, createMediaInput)
 }
 
-func (h Media) handleProductMediaDelete(productID string, toDelete []string) (*api.ProductMediaDeleteResponse, error) {
+func (h Media) handleProductMediaDelete(productID string, toDelete []string) (*api.FileUpdateResponse, error) {
 	if len(toDelete) == 0 {
 		return nil, nil
 	}
+
+	input := make([]schema.FileUpdateInput, 0, len(toDelete))
+	for _, id := range toDelete {
+		input = append(input, schema.FileUpdateInput{
+			ID:                 id,
+			ReferencesToRemove: []any{productID},
+		})
+	}
 	h.Logger.V(tlog.VL2).Info("Attempting to detach product medias", "id", productID)
-	return h.Client.DeleteProductMedias(productID, toDelete)
+	return h.Client.DetachProductMedia(input)
 }

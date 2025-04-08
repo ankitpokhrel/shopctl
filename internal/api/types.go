@@ -92,12 +92,11 @@ type ProductMediaData struct {
 	} `json:"media"`
 }
 
-type ProductMediaDeleteResponse struct {
-	Product struct {
+type FileUpdateResponse struct {
+	Files []struct {
 		ID string `json:"id"`
-	} `json:"product"`
-	DeletedMediaIDs []string   `json:"deletedMediaIds"`
-	UserErrors      UserErrors `json:"mediaUserErrors"`
+	} `json:"files"`
+	UserErrors UserErrors `json:"userErrors"`
 }
 
 type ProductCreateResponse struct {
