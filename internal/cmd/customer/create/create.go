@@ -311,7 +311,9 @@ func parseAddress(input string) (*address, error) {
 		}
 	}
 
-	addr.address1 = strings.Join(addr1Tokens, " ")
+	if len(addr1Tokens) > 0 {
+		addr.address1 = strings.Join(addr1Tokens, " ")
+	}
 	return &addr, nil
 }
 

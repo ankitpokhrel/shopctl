@@ -9,6 +9,31 @@ import (
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
+// GetCustomerByID fetches customer data by ID.
+func (c GQLClient) GetCustomerByID(id string) (*schema.Customer, error) {
+	var (
+		query = fmt.Sprintf(`query GetCustomerByID($id: ID!) {
+          customer(id: $id) {
+            %s
+          }
+        }`, fieldsCustomer)
+
+		out *CustomerResponse
+	)
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": id},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return &out.Data.Customer, nil
+}
+
 // CheckCustomerByEmailOrPhone fetches a customer by email or phone without additional details.
 func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*CustomersResponse, error) {
 	var (
@@ -155,10 +180,10 @@ func (c GQLClient) GetAllCustomers(ch chan *CustomersResponse, limit int, after 
 }
 
 // CreateCustomer creates a customer.
-func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerSyncResponse, error) {
 	var out struct {
 		Data struct {
-			CustomerCreate CustomerCreateResponse `json:"customerCreate"`
+			CustomerCreate CustomerSyncResponse `json:"customerCreate"`
 		} `json:"data"`
 		Errors Errors `json:"errors"`
 	}
@@ -193,10 +218,10 @@ func (c GQLClient) CreateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 }
 
 // UpdateCustomer updates a customer.
-func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateResponse, error) {
+func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerSyncResponse, error) {
 	var out struct {
 		Data struct {
-			CustomerUpdate CustomerCreateResponse `json:"customerUpdate"`
+			CustomerUpdate CustomerSyncResponse `json:"customerUpdate"`
 		} `json:"data"`
 		Errors Errors `json:"errors"`
 	}
@@ -228,4 +253,47 @@ func (c GQLClient) UpdateCustomer(input schema.CustomerInput) (*CustomerCreateRe
 		return nil, fmt.Errorf("customerUpdate: Customer %s: The operation failed with user error: %s", *input.ID, out.Data.CustomerUpdate.UserErrors.Error())
 	}
 	return &out.Data.CustomerUpdate, nil
+}
+
+// UpdateCustomerAddress updates a customer address.
+func (c GQLClient) UpdateCustomerAddress(customerID string, addressID string, input schema.MailingAddressInput, isDefault bool) (*CustomerAddressUpdateResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerAddressUpdate CustomerAddressUpdateResponse `json:"customerAddressUpdate"`
+		} `json:"data"`
+		Errors Errors `json:"errors"`
+	}
+
+	query := `
+	mutation UpdateCustomerAddress($address: MailingAddressInput!, $addressId: ID!, $customerId: ID!, $setAsDefault: Boolean) {
+	    customerAddressUpdate(address: $address, addressId: $addressId, customerId: $customerId, setAsDefault: $setAsDefault) {
+			address {
+			    address1
+			}
+			userErrors {
+				field
+				message
+			}
+		}
+	}`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"address":      input,
+			"addressId":    addressID,
+			"customerId":   customerID,
+			"setAsDefault": isDefault,
+		},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("customerAddressUpdate: Customer %s: The operation failed with error: %s", customerID, out.Errors.Error())
+	}
+	if len(out.Data.CustomerAddressUpdate.UserErrors) > 0 {
+		return nil, fmt.Errorf("customerAddressUpdate: Customer %s: The operation failed with user error: %s", customerID, out.Data.CustomerAddressUpdate.UserErrors.Error())
+	}
+	return &out.Data.CustomerAddressUpdate, nil
 }

@@ -62,7 +62,7 @@ func (h *Customer) Handle(data any) (any, error) {
 	return res.Customer.ID, nil
 }
 
-func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lgr *tlog.Logger) (*api.CustomerCreateResponse, error) {
+func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lgr *tlog.Logger) (*api.CustomerSyncResponse, error) {
 	res, err := client.CheckCustomerByEmailOrPhone(customer.Email, customer.Phone)
 	if err != nil {
 		return nil, err

@@ -6,14 +6,11 @@ import (
 
 	"github.com/zalando/go-keyring"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/pkg/tlog"
-)
-
-const (
-	version = "2025-01"
 )
 
 // GQLClient is a GraphQL client.
@@ -32,7 +29,7 @@ func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
 		err     error
 		defined bool
 
-		server  = fmt.Sprintf("https://%s/admin/api/%s/graphql.json", store, version)
+		server  = fmt.Sprintf("https://%s/admin/api/%s/graphql.json", store, shopctl.ShopifyApiVersion)
 		service = fmt.Sprintf("shopctl:%s", cmdutil.GetStoreSlug(store))
 	)
 
