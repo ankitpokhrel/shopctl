@@ -63,7 +63,7 @@ func (h *Customer) Handle(data any) (any, error) {
 }
 
 func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lgr *tlog.Logger) (*api.CustomerSyncResponse, error) {
-	res, err := client.CheckCustomerByEmailOrPhone(customer.Email, customer.Phone)
+	cust, err := client.CheckCustomerByEmailOrPhone(customer.Email, customer.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +111,8 @@ func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lg
 		TaxExemptions:         customer.TaxExemptions,
 	}
 
-	if len(res.Data.Customers.Nodes) > 0 && res.Data.Customers.Nodes[0].ID != "" {
-		input.ID = &res.Data.Customers.Nodes[0].ID
+	if cust != nil && cust.ID != "" {
+		input.ID = &cust.ID
 
 		lgr.Warn("Customer already exists, updating", "oldID", customer.ID, "upstreamID", *input.ID)
 		return client.UpdateCustomer(input)

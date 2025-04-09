@@ -35,7 +35,7 @@ func (c GQLClient) GetCustomerByID(id string) (*schema.Customer, error) {
 }
 
 // CheckCustomerByEmailOrPhone fetches a customer by email or phone without additional details.
-func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*CustomersResponse, error) {
+func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*schema.Customer, error) {
 	var (
 		query = `query CheckCustomerByEmailOrPhone($query: String!) {
           customers(first: 1, query: $query) {
@@ -65,7 +65,13 @@ func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*C
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
-	return out, nil
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("checkCustomerByEmailOrPhone: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.Customers.Nodes) == 0 {
+		return nil, fmt.Errorf("customer not found")
+	}
+	return &out.Data.Customers.Nodes[0], nil
 }
 
 // GetCustomerMetaFields fetches metafields of a customer by its ID.
@@ -296,4 +302,44 @@ func (c GQLClient) UpdateCustomerAddress(customerID string, addressID string, in
 		return nil, fmt.Errorf("customerAddressUpdate: Customer %s: The operation failed with user error: %s", customerID, out.Data.CustomerAddressUpdate.UserErrors.Error())
 	}
 	return &out.Data.CustomerAddressUpdate, nil
+}
+
+func (c GQLClient) DeleteCustomer(customerID string) (*CustomerDeleteResponse, error) {
+	var out struct {
+		Data struct {
+			CustomerDelete CustomerDeleteResponse `json:"customerDelete"`
+		} `json:"data"`
+		Errors Errors `json:"errors,omitempty"`
+	}
+
+	query := `
+    mutation deleteCustomer($customerId: ID!) {
+      customerDelete(input: { id: $customerId }) {
+        shop {
+          id
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`
+
+	req := client.GQLRequest{
+		Query: query,
+		Variables: client.QueryVars{
+			"customerId": customerID,
+		},
+	}
+
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("customerDelete: the operation failed with error: %s", out.Errors.Error())
+	}
+	if len(out.Data.CustomerDelete.UserErrors) > 0 {
+		return nil, fmt.Errorf("customerDelete: the operation failed with user error: %s", out.Data.CustomerDelete.UserErrors.Error())
+	}
+	return &out.Data.CustomerDelete, nil
 }

@@ -169,6 +169,13 @@ type CustomersResponse struct {
 	Extensions Extensions `json:"extensions"`
 }
 
+type CustomerDeleteResponse struct {
+	Shop struct {
+		ID string `json:"id"`
+	} `json:"shop"`
+	UserErrors UserErrors `json:"userErrors"`
+}
+
 type CustomerData struct {
 	Nodes    []schema.Customer `json:"nodes"`
 	PageInfo schema.PageInfo   `json:"pageInfo"`

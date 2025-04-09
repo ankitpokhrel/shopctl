@@ -1,8 +1,6 @@
 package delete
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
@@ -38,10 +36,7 @@ func NewCmdDelete() *cobra.Command {
 }
 
 func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
-	productID := args[0]
-	if !strings.HasPrefix(productID, "gid://") {
-		productID = "gid://shopify/Product/" + productID
-	}
+	productID := cmdutil.ShopifyProductID(args[0])
 
 	_, err := client.DeleteProduct(productID)
 	if err != nil {
