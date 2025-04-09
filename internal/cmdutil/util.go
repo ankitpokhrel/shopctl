@@ -84,6 +84,18 @@ func ShopifyMediaID(id string, typ schema.MediaContentType) string {
 	return fmt.Sprintf("%s/%s", prefix, id)
 }
 
+// ShopifyCustomerID formats Shopify customer ID.
+func ShopifyCustomerID(id string) string {
+	prefix := "gid://shopify/Customer"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
 // ExtractNumericID extracts numeric part of a Shopify ID.
 // Ex: gid://shopify/Product/8737842954464 -> 8737842954464.
 func ExtractNumericID(shopifyID string) string {

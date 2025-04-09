@@ -140,6 +140,27 @@ type CustomerCreateResponse struct {
 	UserErrors UserErrors      `json:"userErrors"`
 }
 
+type CustomerSyncResponse struct {
+	Customer struct {
+		ID string `json:"id"`
+	} `json:"customer"`
+	UserErrors UserErrors `json:"userErrors"`
+}
+
+type CustomerAddressUpdateResponse struct {
+	Address struct {
+		Address1 string `json:"address1"`
+	} `json:"address"`
+	UserErrors UserErrors `json:"userErrors"`
+}
+
+type CustomerResponse struct {
+	Data struct {
+		Customer schema.Customer `json:"customer"`
+	} `json:"data"`
+	Errors Errors `json:"errors"`
+}
+
 type CustomersResponse struct {
 	Data struct {
 		Customers CustomerData `json:"customers"`
