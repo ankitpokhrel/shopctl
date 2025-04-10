@@ -117,7 +117,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 	flag := &flag{}
 	flag.parse(cmd, args)
 
-	product, err := client.GetProductByID(cmdutil.ShopifyProductID(flag.id))
+	product, err := client.GetProductByID(flag.id)
 	if err != nil {
 		return fmt.Errorf("product not found")
 	}

@@ -4,9 +4,9 @@ package version
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	v "github.com/ankitpokhrel/shopctl/internal/version"
+
+	"github.com/spf13/cobra"
 )
 
 // NewCmdVersion is a version command.

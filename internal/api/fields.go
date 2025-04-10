@@ -231,6 +231,20 @@ addressesV2(first: 100) {
     provinceCode
   }
 }
+defaultAddress {
+    id
+    address1
+    address2
+    zip
+    city
+    country
+    countryCodeV2
+    firstName
+    lastName
+    company
+    province
+    provinceCode
+}
 amountSpent {
   amount
   currencyCode
