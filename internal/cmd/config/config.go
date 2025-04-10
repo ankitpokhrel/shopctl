@@ -6,7 +6,6 @@ import (
 	cc "github.com/ankitpokhrel/shopctl/internal/cmd/config/current-context"
 	dc "github.com/ankitpokhrel/shopctl/internal/cmd/config/delete-context"
 	gc "github.com/ankitpokhrel/shopctl/internal/cmd/config/get-contexts"
-	rc "github.com/ankitpokhrel/shopctl/internal/cmd/config/rename-context"
 	uc "github.com/ankitpokhrel/shopctl/internal/cmd/config/use-context"
 )
 
@@ -28,7 +27,6 @@ func NewCmdConfig() *cobra.Command {
 		cc.NewCmdCurrentContext(),
 		dc.NewCmdDeleteContext(),
 		gc.NewCmdGetContexts(),
-		rc.NewCmdRenameContext(),
 	)
 
 	return &cmd
