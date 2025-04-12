@@ -91,8 +91,28 @@ func (t *StaticTable) Render() error {
 			return cellStyle.Width(t.colWidths[col])
 		})
 
-	_, err := fmt.Println(t.table)
+	out := t.table.String()
+	if t.noHeaders {
+		out = clean(out)
+	}
+	_, err := fmt.Println(out)
 	return err
+}
+
+func clean(input string) string {
+	lines := strings.Split(input, "\n")
+
+	// Remove first line if empty.
+	if len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+		lines = lines[1:]
+	}
+
+	// Remove last line if empty.
+	if len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func keyme(s string) string {
