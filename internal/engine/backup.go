@@ -10,23 +10,9 @@ import (
 )
 
 const (
-	BackupTypeFull        BackupType = "full"
-	BackupTypeIncremental BackupType = "incremental"
-
-	BackupStatusPending  BackupStatus = "pending"
-	BackupStatusRunning  BackupStatus = "running"
-	BackupStatusComplete BackupStatus = "complete"
-	BackupStatusFailed   BackupStatus = "failed"
-
 	modeDir  = 0o755
 	modeFile = 0o644
 )
-
-// BackupType represents the type of a backup.
-type BackupType string
-
-// BackupStatus is a current status of the initiated backup.
-type BackupStatus string
 
 // Backup is a backup engine.
 type Backup struct {
@@ -34,7 +20,6 @@ type Backup struct {
 	store     string
 	root      string
 	dir       string
-	prefix    string
 	timestamp time.Time
 }
 
@@ -57,11 +42,7 @@ func NewBackup(store string, opts ...Option) *Backup {
 	}
 
 	if bkp.dir == "" {
-		dir := fmt.Sprintf("%s_%s", bkp.timestamp.Format("2006_01_02_15_04_05"), id)
-		if bkp.prefix != "" {
-			dir = fmt.Sprintf("%s_%s", bkp.prefix, dir)
-		}
-		bkp.dir = dir
+		bkp.dir = fmt.Sprintf("%s_%s", bkp.timestamp.Format("2006_01_02_15_04_05"), id)
 	}
 	bkp.root = filepath.Join(bkp.root, bkp.dir)
 
@@ -82,18 +63,6 @@ func WithBackupDir(dir string) Option {
 	}
 }
 
-// WithBackupPrefix sets prefix for backup dir name.
-func WithBackupPrefix(prefix string) Option {
-	return func(b *Backup) {
-		b.prefix = prefix
-	}
-}
-
-// ID returns the backup ID.
-func (b *Backup) ID() string {
-	return b.id
-}
-
 // Store returns the store this backup will run for.
 func (b *Backup) Store() string {
 	return b.store
@@ -107,11 +76,6 @@ func (b *Backup) Root() string {
 // Dir returns backup directory name.
 func (b *Backup) Dir() string {
 	return b.dir
-}
-
-// Timestamp returns backup timestamp.
-func (b *Backup) Timestamp() time.Time {
-	return b.timestamp
 }
 
 // Do starts the backup process.
