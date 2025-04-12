@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -66,7 +67,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		strategy = schema.ProductOptionUpdateVariantStrategyManage
 	}
 
-	f.id = cmdutil.ShopifyProductID(id)
+	f.id = shopctl.ShopifyProductID(id)
 	f.toEdit = toEdit
 	f.name = name
 	f.position = position

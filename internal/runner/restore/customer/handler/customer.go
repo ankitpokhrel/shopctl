@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/internal/runner"
@@ -130,7 +130,7 @@ func matchesFilters(customer *schema.Customer, rf *runner.RestoreFilter) (bool, 
 	for key, values := range rf.Filters {
 		switch strings.ToLower(key) {
 		case "id":
-			matched := slices.Contains(values, cmdutil.ExtractNumericID(customer.ID))
+			matched := slices.Contains(values, shopctl.ExtractNumericID(customer.ID))
 			results = append(results, matched)
 		case "email":
 			matched := false

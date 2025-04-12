@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
@@ -154,7 +155,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	web, err := cmd.Flags().GetBool("web")
 	cmdutil.ExitOnErr(err)
 
-	f.id = cmdutil.ShopifyCustomerID(args[0])
+	f.id = shopctl.ShopifyCustomerID(args[0])
 	f.tags = strings.Split(tags, ",")
 	f.address = addr
 	f.metafields = metafields
@@ -233,7 +234,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 
 	adminURL := fmt.Sprintf(
 		"https://admin.shopify.com/store/%s/customers/%s",
-		ctx.Alias, cmdutil.ExtractNumericID(res.Customer.ID),
+		ctx.Alias, shopctl.ExtractNumericID(res.Customer.ID),
 	)
 	if flag.web {
 		_ = browser.Browse(adminURL)

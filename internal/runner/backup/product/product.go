@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/runner"
@@ -98,7 +99,7 @@ func (r *Runner) backup(limit int, after *string, query *string) {
 		r.stats[r.Kind()].Count += len(products.Data.Products.Edges)
 
 		for _, product := range products.Data.Products.Edges {
-			pid := engine.ExtractNumericID(product.Node.ID)
+			pid := shopctl.ExtractNumericID(product.Node.ID)
 
 			path := filepath.Join(engine.Product.RootDir(), pid)
 			r.logger.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, r.bkpEng.Dir(), path)

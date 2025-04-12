@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/engine"
 	"github.com/ankitpokhrel/shopctl/internal/runner"
@@ -91,7 +92,7 @@ func (r *Runner) backup(limit int, after *string) {
 		r.stats[r.Kind()].Count += len(customers.Data.Customers.Nodes)
 
 		for _, customer := range customers.Data.Customers.Nodes {
-			cid := engine.ExtractNumericID(customer.ID)
+			cid := shopctl.ExtractNumericID(customer.ID)
 
 			path := filepath.Join(engine.Customer.RootDir(), cid)
 			r.logger.V(tlog.VL2).Infof("Customer %s: registering backup to path %s/%s", cid, r.bkpEng.Dir(), path)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -31,7 +32,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		cmdutil.ExitOnErr(cmdutil.HelpErrorf("Name of options to delete is required", examples))
 	}
 
-	f.id = cmdutil.ShopifyProductID(args[0])
+	f.id = shopctl.ShopifyProductID(args[0])
 	f.options = options
 }
 

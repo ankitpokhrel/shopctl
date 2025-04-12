@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/fatih/color"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -184,7 +185,7 @@ func (f Formatter) header() string {
 		tracksInventory string
 	)
 
-	id = fmt.Sprintf("%s %s", iconID, cmdutil.ExtractNumericID(f.product.ID))
+	id = fmt.Sprintf("%s %s", iconID, shopctl.ExtractNumericID(f.product.ID))
 
 	switch f.product.Status {
 	case schema.ProductStatusDraft:
@@ -331,7 +332,7 @@ func (f Formatter) variants() string {
 			fmt.Sprintf(
 				"  %s  %s %s %s %s %s %s\n",
 				cmdutil.ColoredOut(
-					cmdutil.Pad(cmdutil.ExtractNumericID(v.ID), defaultIDLen), color.FgGreen, color.Bold,
+					cmdutil.Pad(shopctl.ExtractNumericID(v.ID), defaultIDLen), color.FgGreen, color.Bold,
 				),
 				cmdutil.ShortenAndPad(v.Title, maxTitleLen+spacing),
 				cmdutil.ShortenAndPad(sku, maxSkuLen+spacing),
@@ -414,7 +415,7 @@ func (f Formatter) media() string {
 			fmt.Sprintf(
 				"  %s  %s %s %s %s\n",
 				cmdutil.ColoredOut(
-					cmdutil.Pad(cmdutil.ExtractNumericID(m.id), defaultIDLen), color.FgGreen, color.Bold,
+					cmdutil.Pad(shopctl.ExtractNumericID(m.id), defaultIDLen), color.FgGreen, color.Bold,
 				),
 				cmdutil.Pad(m.mimeType, padSmall),
 				cmdutil.ShortenAndPad(getFileName(m.previewURL), maxFilenameLen+spacing),

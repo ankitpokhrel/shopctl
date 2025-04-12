@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -52,7 +53,7 @@ type flag struct {
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
-	f.id = cmdutil.ShopifyProductID(args[0])
+	f.id = shopctl.ShopifyProductID(args[0])
 
 	isset := func(item string) bool {
 		fl := cmd.Flags().Lookup(item)
@@ -61,7 +62,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 
 	variantID, err := cmd.Flags().GetString("id")
 	cmdutil.ExitOnErr(err)
-	f.variantID = cmdutil.ShopifyProductVariantID(variantID)
+	f.variantID = shopctl.ShopifyProductVariantID(variantID)
 
 	title, err := cmd.Flags().GetString("title")
 	cmdutil.ExitOnErr(err)

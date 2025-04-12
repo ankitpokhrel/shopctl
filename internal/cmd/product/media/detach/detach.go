@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -48,11 +49,11 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	}
 
 	f.mediaType = schema.MediaContentType(mediaType)
-	f.productID = cmdutil.ShopifyProductID(args[0])
+	f.productID = shopctl.ShopifyProductID(args[0])
 
 	f.mediaID = make([]string, 0, len(args[1:]))
 	for _, id := range args[1:] {
-		mid := cmdutil.ShopifyMediaID(id, f.mediaType)
+		mid := shopctl.ShopifyMediaID(id, f.mediaType)
 		f.mediaID = append(f.mediaID, mid)
 	}
 }

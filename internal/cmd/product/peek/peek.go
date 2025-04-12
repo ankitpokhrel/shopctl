@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
@@ -37,7 +38,7 @@ type flag struct {
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
-	id := cmdutil.ShopifyProductID(args[0])
+	id := shopctl.ShopifyProductID(args[0])
 	if id == "" {
 		cmdutil.ExitOnErr(fmt.Errorf("invalid product id"))
 	}
@@ -92,7 +93,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		if err != nil {
 			return err
 		}
-		product, err = reg.GetProductByID(cmdutil.ExtractNumericID(flag.id))
+		product, err = reg.GetProductByID(shopctl.ExtractNumericID(flag.id))
 	} else {
 		product, err = client.GetProductByID(flag.id)
 	}

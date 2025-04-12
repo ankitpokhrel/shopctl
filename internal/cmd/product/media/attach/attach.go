@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -56,7 +57,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		)
 	}
 
-	f.id = cmdutil.ShopifyProductID(id)
+	f.id = shopctl.ShopifyProductID(id)
 	f.url = url
 	f.alt = alt
 	f.typ = schema.MediaContentType(mediaType)

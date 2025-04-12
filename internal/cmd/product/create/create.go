@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
@@ -155,7 +156,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 
 	adminURL := fmt.Sprintf(
 		"https://admin.shopify.com/store/%s/products/%s",
-		ctx.Alias, cmdutil.ExtractNumericID(res.Product.ID),
+		ctx.Alias, shopctl.ExtractNumericID(res.Product.ID),
 	)
 	if flag.web {
 		_ = browser.Browse(adminURL)

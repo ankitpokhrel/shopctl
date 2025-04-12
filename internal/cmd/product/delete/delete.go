@@ -3,6 +3,7 @@ package delete
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 )
@@ -36,7 +37,7 @@ func NewCmdDelete() *cobra.Command {
 }
 
 func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
-	productID := cmdutil.ShopifyProductID(args[0])
+	productID := shopctl.ShopifyProductID(args[0])
 
 	_, err := client.DeleteProduct(productID)
 	if err != nil {

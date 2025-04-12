@@ -3,6 +3,7 @@ package delete
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 )
@@ -35,7 +36,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	cmdutil.ExitOnErr(err)
 
 	if len(args) > 0 {
-		f.id = cmdutil.ShopifyCustomerID(args[0])
+		f.id = shopctl.ShopifyCustomerID(args[0])
 	}
 	f.email = email
 	f.phone = phone

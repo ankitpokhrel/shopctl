@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
@@ -256,7 +257,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 
 	rows := make([]table.Row, 0)
 	for _, p := range products.Data.Products.Edges {
-		id := cmdutil.ExtractNumericID(p.Node.ID)
+		id := shopctl.ExtractNumericID(p.Node.ID)
 		options := make([]string, 0, len(p.Node.Options))
 		for _, o := range p.Node.Options {
 			options = append(options, o.Name)
@@ -327,7 +328,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		}),
 		table.WithCopyFunc(func(id string, key string) error {
 			if key == "C" {
-				id = cmdutil.ShopifyProductID(id)
+				id = shopctl.ShopifyProductID(id)
 			}
 			if err := clipboard.Init(); err == nil {
 				_ = clipboard.Write(clipboard.FmtText, []byte(id))

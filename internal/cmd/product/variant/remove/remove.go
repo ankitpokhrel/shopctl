@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 )
@@ -37,13 +38,13 @@ func NewCmdRemove() *cobra.Command {
 }
 
 func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
-	productID := cmdutil.ShopifyProductID(args[0])
+	productID := shopctl.ShopifyProductID(args[0])
 	variantIDs := args[1:]
 
 	variantsToDelete := make([]string, 0, len(variantIDs))
 	variantsSkipped := make([]string, 0)
 	for _, id := range variantIDs {
-		vid := cmdutil.ShopifyProductVariantID(id)
+		vid := shopctl.ShopifyProductVariantID(id)
 		if vid == "" {
 			parts := strings.Split(id, "/")
 			for i := range parts {
