@@ -59,11 +59,15 @@ type Flow struct {
 
 // NewFlow creates a new oAuth flow for the given store.
 func NewFlow(store string) *Flow {
+	redirectURL := os.Getenv("SHOPCTL_REDIRECT_URL")
+	if redirectURL == "" {
+		redirectURL = "http://127.0.0.1/shopctl/auth/callback"
+	}
 	return &Flow{
 		cfg: &oauth2.Config{
 			ClientID:     oauthClientID,
 			ClientSecret: oauthClientSecret,
-			RedirectURL:  "https://shopctl.app/api/auth/callback",
+			RedirectURL:  redirectURL,
 			Endpoint:     shopEndpoint(store),
 			Scopes:       scopes,
 		},
