@@ -71,14 +71,14 @@ func (r *Runner) Run() error {
 	for res := range r.eng.Run(engine.Product) {
 		if res.Err != nil {
 			r.stats[res.ResourceType].Failed += 1
-			r.logger.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
+			r.logger.Errorf("Failed to export resource %s: %v\n", res.ResourceType, res.Err)
 		} else if res.ResourceType == engine.Product {
 			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
 	r.logger.V(tlog.VL3).Infof(
-		"Product backup complete in %s",
+		"Product export complete in %s",
 		time.Since(backupStart),
 	)
 	return nil
@@ -102,7 +102,7 @@ func (r *Runner) backup(limit int, after *string, query *string) {
 			pid := shopctl.ExtractNumericID(product.Node.ID)
 
 			path := filepath.Join(engine.Product.RootDir(), pid)
-			r.logger.V(tlog.VL2).Infof("Product %s: registering backup to path %s/%s", pid, r.bkpEng.Dir(), path)
+			r.logger.V(tlog.VL2).Infof("Product %s: registering export to path %s/%s", pid, r.bkpEng.Dir(), path)
 
 			productFn := &provider.Product{Product: &product.Node}
 			variantFn := &provider.Variant{Client: r.client, Logger: r.logger, ProductID: product.Node.ID}

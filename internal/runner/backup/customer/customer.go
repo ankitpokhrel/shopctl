@@ -64,14 +64,14 @@ func (r *Runner) Run() error {
 	for res := range r.eng.Run(engine.Customer) {
 		if res.Err != nil {
 			r.stats[res.ResourceType].Failed += 1
-			r.logger.Errorf("Failed to backup resource %s: %v\n", res.ResourceType, res.Err)
+			r.logger.Errorf("Failed to export resource %s: %v\n", res.ResourceType, res.Err)
 		} else if res.ResourceType == engine.Customer {
 			r.stats[res.ResourceType].Passed += 1
 		}
 	}
 
 	r.logger.V(tlog.VL3).Infof(
-		"Customer backup complete in %s",
+		"Customer export complete in %s",
 		time.Since(backupStart),
 	)
 	return nil
@@ -95,7 +95,7 @@ func (r *Runner) backup(limit int, after *string) {
 			cid := shopctl.ExtractNumericID(customer.ID)
 
 			path := filepath.Join(engine.Customer.RootDir(), cid)
-			r.logger.V(tlog.VL2).Infof("Customer %s: registering backup to path %s/%s", cid, r.bkpEng.Dir(), path)
+			r.logger.V(tlog.VL2).Infof("Customer %s: registering export to path %s/%s", cid, r.bkpEng.Dir(), path)
 
 			customerFn := &provider.Customer{Customer: &customer}
 			metafieldFn := &provider.MetaField{Client: r.client, Logger: r.logger, CustomerID: customer.ID}

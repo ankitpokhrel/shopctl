@@ -205,9 +205,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, lo
 			}
 		}(rnr)
 	}
-
 	wg.Wait()
-	logger.V(tlog.VL1).Infof("We're done with fetching data. Processing results...")
 
 	for _, rnr := range runners {
 		stats := rnr.Stats()
