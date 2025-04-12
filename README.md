@@ -13,7 +13,9 @@ ShopCTL is a slightly opinionated, in-progress command-line utility for managing
 giving you a quick way to interact with your store's data straight from the terminal.
 
 ## Installation
-Create a dummy app from the [Shopify Partners Dashboard](https://partners.shopify.com/) and get the client ID and secret. Make sure you've [required scopes](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47).
+Create a dummy app from the [Shopify Partners Dashboard](https://partners.shopify.com/) and get the client ID and secret. 
+- Add `http://127.0.0.1/shopctl/auth/callback` to the list of Allowed redirection URL(s)
+- Make sure to request for [required scopes](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47)
 
 Install the runnable binary to your `$GOPATH/bin`.
 
