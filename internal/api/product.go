@@ -140,8 +140,8 @@ func (c GQLClient) GetProductByHandle(handle string) (*schema.Product, error) {
 func (c GQLClient) GetProducts(limit int, after *string, query *string) (*ProductsResponse, error) {
 	var out *ProductsResponse
 
-	productQuery := fmt.Sprintf(`query GetProducts($first: Int!, $after: String, $query: String) {
-products(first: $first, after: $after, query: $query) {
+	productQuery := fmt.Sprintf(`query GetProducts($first: Int!, $after: String, $query: String, $sortKey: ProductSortKeys!, $reverse: Boolean!) {
+products(first: $first, after: $after, query: $query, sortKey: $sortKey, reverse: $reverse) {
     edges {
       node {
       	%s
@@ -163,9 +163,11 @@ products(first: $first, after: $after, query: $query) {
 	req := client.GQLRequest{
 		Query: productQuery,
 		Variables: client.QueryVars{
-			"first": limit,
-			"after": after,
-			"query": query,
+			"first":   limit,
+			"after":   after,
+			"query":   query,
+			"sortKey": "CREATED_AT",
+			"reverse": true,
 		},
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
