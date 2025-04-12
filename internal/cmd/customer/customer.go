@@ -13,13 +13,13 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-const helpText = `Customer lets you interact with customers on your store.`
+const helpText = `Interact with the customers data on your store.`
 
 // NewCmdCustomer builds a new product command.
 func NewCmdCustomer() *cobra.Command {
 	cmd := cobra.Command{
 		Use:         "customer",
-		Short:       "Customer lets you interact with customer data",
+		Short:       "Interact with the customer data",
 		Long:        helpText,
 		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

@@ -19,7 +19,7 @@ const helpText = `Option lets you interact with product options.`
 func NewCmdOption() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "option",
-		Short:   "Option lets you interact with product options",
+		Short:   "Interact with product options",
 		Long:    helpText,
 		Aliases: []string{"opt"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

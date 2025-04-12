@@ -171,7 +171,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 func NewCmdUpdate() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "update CUSTOMER_ID",
-		Short:   "Update lets you update a customer",
+		Short:   "Update a customer",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),

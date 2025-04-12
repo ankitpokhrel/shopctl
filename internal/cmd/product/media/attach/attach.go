@@ -16,7 +16,7 @@ const (
 	helpText = `Attach product media from a publicly accessible source.`
 
 	examples = `$ shopctl product media attach 8856145494 --url "https://example.com/file.png" --alt "File attached from the CLI"
-    $ shopctl product media attach 8856145494 --url "https://youtu.be/dQw4w9WgXcQ" --media-type EXTERNAL_VIDEO`
+$ shopctl product media attach 8856145494 --url "https://youtu.be/dQw4w9WgXcQ" --media-type EXTERNAL_VIDEO`
 )
 
 // Flag wraps available command flags.

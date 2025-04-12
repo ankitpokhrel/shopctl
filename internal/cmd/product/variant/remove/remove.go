@@ -22,7 +22,7 @@ $ shopctl product variant remove 8856145494 471883718 "Black / XL"`
 func NewCmdRemove() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove PRODUCT_ID",
-		Short:   "Remove product variant",
+		Short:   "Remove product variants",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(2),

@@ -51,7 +51,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 func NewCmdDelete() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "delete [CUSTOMER_ID]",
-		Short:   "Delete lets you delete a customer",
+		Short:   "Delete a customer",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"del", "rm", "remove"},

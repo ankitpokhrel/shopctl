@@ -19,7 +19,7 @@ const helpText = `Variant lets you interact with product variants.`
 func NewCmdVariant() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "variant",
-		Short: "Variant lets you interact with product variants",
+		Short: "Interact with product variants",
 		Long:  helpText,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))

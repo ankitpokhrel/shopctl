@@ -18,7 +18,7 @@ const helpText = `Media lets you interact with product media.`
 func NewCmdMedia() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "media",
-		Short: "Media lets you interact with product media",
+		Short: "Interact with product media",
 		Long:  helpText,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))

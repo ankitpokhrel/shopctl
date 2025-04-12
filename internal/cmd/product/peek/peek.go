@@ -18,7 +18,15 @@ const (
 
 Use this command to quickly look into the upstream or local product data.`
 
-	examples = `$ shopctl peek product <product_id>`
+	examples = `# Peek by id
+$ shopctl peek product <product_id>
+
+# Peek a product from the import folder
+# Context and strategy is skipped for direct path
+$ shopctl peek product <product_id> --from </path/to/backup>
+
+# Render json output
+$ shopctl peek product <product_id> --json`
 )
 
 // Flag wraps available command flags.
@@ -50,7 +58,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 func NewCmdPeek() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "peek PRODUCT_ID",
-		Short:   "Peek lets you peek into product data",
+		Short:   "Peek into product data",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),

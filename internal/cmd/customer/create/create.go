@@ -153,7 +153,7 @@ func (f *flag) parse(cmd *cobra.Command, _ []string) {
 func NewCmdCreate() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "create",
-		Short:   "Create lets you create a customer",
+		Short:   "Create a customer",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"add"},

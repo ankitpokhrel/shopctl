@@ -18,7 +18,7 @@ $ shopctl product delete gid://shopify/Product/123456789`
 func NewCmdDelete() *cobra.Command {
 	return &cobra.Command{
 		Use:     "delete PRODUCT_ID",
-		Short:   "Delete lets you delete a product",
+		Short:   "Delete a product",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),
