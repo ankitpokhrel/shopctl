@@ -57,7 +57,7 @@ type flag struct {
 	categoryID  *string
 	tags        []string
 	vendor      *string
-	price       *float64
+	price       *string
 	barcode     *string
 	sku         *string
 	giftCard    *bool
@@ -121,7 +121,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		f.giftCard = &giftCard
 	}
 	if isset("price") {
-		price, err := cmd.Flags().GetFloat64("price")
+		price, err := cmd.Flags().GetString("price")
 		cmdutil.ExitOnErr(err)
 
 		f.price = &price
@@ -207,7 +207,7 @@ func NewCmdList() *cobra.Command {
 	cmd.Flags().StringP("category-id", "y", "", "Filter by category ID") // TODO: Check if we can use name instead of ID.
 	cmd.Flags().String("tags", "", "Filter by tags (comma separated)")
 	cmd.Flags().String("vendor", "", "Filter by vendor")
-	cmd.Flags().Float64("price", 0, "Filter by variant price")
+	cmd.Flags().String("price", "", "Filter by variant price")
 	cmd.Flags().String("barcode", "", "Filter by variant barcode")
 	cmd.Flags().String("sku", "", "Filter by variant sku")
 	cmd.Flags().Bool("gift-card", false, "Filter gift cards")
@@ -391,7 +391,7 @@ func buildSearchQuery(f *flag) *string {
 			}
 		}
 		if f.price != nil {
-			sub.Eq("price", fmt.Sprintf("%f", *f.price))
+			sub.Eq("price", *f.price)
 		}
 		if f.giftCard != nil {
 			sub.Eq("gift_card", fmt.Sprintf("%t", *f.giftCard))
