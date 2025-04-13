@@ -265,7 +265,7 @@ func (c GQLClient) GetProductOptions(productID string) (*ProductOptionsResponse,
 //
 // Shopify limits 100 variants per product so we should be good to fetch them all at once.
 // We will revisit this if we run into any issues even with the limit.
-func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsResponse, error) {
+func (c GQLClient) GetProductVariants(productID string) (*ProductVariantData, error) {
 	var out *ProductVariantsResponse
 
 	query := fmt.Sprintf(`query GetProductVariants($id: ID!) {
@@ -289,7 +289,7 @@ func (c GQLClient) GetProductVariants(productID string) (*ProductVariantsRespons
 	if len(out.Errors) > 0 {
 		return nil, fmt.Errorf("%s", out.Errors)
 	}
-	return out, nil
+	return &out.Data.Product, nil
 }
 
 // CheckProductVariantByID returns product variant without fetching all fields.

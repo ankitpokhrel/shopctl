@@ -34,6 +34,22 @@ func ExitOnErr(err error) {
 	}
 }
 
+// FormatDateTime formats date time string to RFC3339 format.
+func FormatDateTime(dt, tz string) string {
+	t, err := time.Parse(time.RFC3339, dt)
+	if err != nil {
+		return ""
+	}
+	if tz == "" {
+		return t.Format("2006-01-02 15:04:05")
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return dt
+	}
+	return t.In(loc).Format("2006-01-02 15:04:05")
+}
+
 // FormatDateTimeHuman formats date time in human readable format.
 func FormatDateTimeHuman(dt, format string) string {
 	t, err := time.Parse(format, dt)

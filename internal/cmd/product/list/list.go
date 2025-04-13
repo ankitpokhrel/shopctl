@@ -6,7 +6,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
@@ -50,7 +49,6 @@ $ shopctl product list --sku "" --type -
 $ shopctl product list "(title:Caramel Apple) OR (inventory_total:>500 inventory_total:<=1000)"`
 )
 
-// Flag wraps available command flags.
 type flag struct {
 	searchText  string
 	productType *string
@@ -281,8 +279,8 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 			fmt.Sprintf("%d", p.Node.VariantsCount.Count),
 			fmt.Sprintf("%d", p.Node.MediaCount.Count),
 			string(p.Node.Status),
-			formatDateTime(p.Node.CreatedAt, ""),
-			formatDateTime(p.Node.UpdatedAt, ""),
+			cmdutil.FormatDateTime(p.Node.CreatedAt, ""),
+			cmdutil.FormatDateTime(p.Node.UpdatedAt, ""),
 		})
 	}
 
@@ -455,19 +453,4 @@ func wrapEmpty(s string) string {
 		return s
 	}
 	return fmt.Sprintf("%q", s)
-}
-
-func formatDateTime(dt, tz string) string {
-	t, err := time.Parse(time.RFC3339, dt)
-	if err != nil {
-		return dt
-	}
-	if tz == "" {
-		return t.Format("2006-01-02 15:04:05")
-	}
-	loc, err := time.LoadLocation(tz)
-	if err != nil {
-		return dt
-	}
-	return t.In(loc).Format("2006-01-02 15:04:05")
 }

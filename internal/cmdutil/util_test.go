@@ -9,6 +9,56 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
+func TestFormatDateTime(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		format   func() string
+		dt       string
+		tz       string
+		expected string
+	}{
+		{
+			name: "returns original input on invalid datetime input",
+			format: func() string {
+				return FormatDateTime("not-a-date", "")
+			},
+			expected: "",
+		},
+		{
+			name: "returns original input on valid dt with invalid timezone",
+			format: func() string {
+				return FormatDateTime("2025-01-01T11:00:00Z", "Invalid/Timezone")
+			},
+			expected: "2025-01-01T11:00:00Z",
+		},
+		{
+			name: "formats valid dt with no timezone specified",
+			format: func() string {
+				return FormatDateTime("2025-01-01T11:00:00Z", "")
+			},
+			expected: "2025-01-01 11:00:00",
+		},
+		{
+			name: "formats valid dt with valid timezone",
+			format: func() string {
+				return FormatDateTime("2025-01-01T11:00:00Z", "Asia/Kathmandu")
+			},
+			expected: "2025-01-01 16:45:00",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.expected, tc.format())
+		})
+	}
+}
+
 func TestFormatDateTimeHuman(t *testing.T) {
 	t.Parallel()
 

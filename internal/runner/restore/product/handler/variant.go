@@ -44,8 +44,8 @@ func (h *Variant) Handle(data any) (any, error) {
 		return nil, err
 	}
 
-	currentVariantsMap := make(map[string]*schema.ProductVariant, len(currentVariants.Data.Product.Variants.Nodes))
-	for _, opt := range currentVariants.Data.Product.Variants.Nodes {
+	currentVariantsMap := make(map[string]*schema.ProductVariant, len(currentVariants.Variants.Nodes))
+	for _, opt := range currentVariants.Variants.Nodes {
 		currentVariantsMap[opt.ID] = &opt
 	}
 

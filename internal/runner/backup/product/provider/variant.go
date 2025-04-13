@@ -19,5 +19,5 @@ func (v *Variant) Handle(_ any) (any, error) {
 		v.Logger.Error("Error when fetching variants", "productId", v.ProductID, "error", err)
 		return nil, err
 	}
-	return variants.Data.Product, nil
+	return variants, nil
 }
