@@ -84,13 +84,13 @@ func run(cmd *cobra.Command, args []string, client *api.GQLClient) error {
 	case flag.id != "":
 		customerID = flag.id
 	case flag.email != "":
-		customer, err := client.CheckCustomerByEmailOrPhone(&flag.email, nil)
+		customer, err := client.CheckCustomerByEmailOrPhoneOrID(&flag.email, nil, "")
 		if err != nil {
 			return err
 		}
 		customerID = customer.ID
 	case flag.phone != "":
-		customer, err := client.CheckCustomerByEmailOrPhone(nil, &flag.phone)
+		customer, err := client.CheckCustomerByEmailOrPhoneOrID(nil, &flag.phone, "")
 		if err != nil {
 			return err
 		}

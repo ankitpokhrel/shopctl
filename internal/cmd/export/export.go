@@ -35,7 +35,7 @@ $ shopctl export -c mycontext -r product="$(shopctl product list --tags on-sale 
 
 # Dry run executes the export without creating final files. This will still create files in temporary location.
 # Use this option if you want to verify your export without the risk of saving data to the unintented location.
-$ shopctl export run -r product="tag:on-sale" --dry-run
+$ shopctl export -r product="tag:on-sale" --dry-run
 `
 )
 

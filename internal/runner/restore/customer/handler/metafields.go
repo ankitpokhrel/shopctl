@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
 	"github.com/ankitpokhrel/shopctl/internal/runner"
@@ -20,6 +21,13 @@ type Metafield struct {
 }
 
 func (h Metafield) Handle(data any) (any, error) {
+	var realCustomerID string
+	if id, ok := data.(string); ok {
+		realCustomerID = id
+	} else {
+		return nil, fmt.Errorf("unable to figure out real cusotmer ID")
+	}
+
 	metaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -33,45 +41,52 @@ func (h Metafield) Handle(data any) (any, error) {
 		h.Summary.Failed += 1
 		return nil, err
 	}
+	if len(meta.Metafields.Nodes) == 0 {
+		return nil, nil
+	}
 
 	keyme := func(namespace, key string) string {
 		return fmt.Sprintf("%s.%s", namespace, key)
 	}
 
-	// Get upstream metafields.
-	currentMetafields, err := h.Client.GetCustomerMetaFieldsByEmailOrPhone(&meta.Email, &meta.Phone)
-	if err != nil {
-		h.Summary.Failed += 1
-		return nil, err
-	}
-	currentMetaNode := currentMetafields.Data.Customers.Nodes[0]
-	updatedCustomerID := currentMetaNode.CustomerID
-
-	currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetaNode.Metafields.Nodes))
-	for _, m := range currentMetaNode.Metafields.Nodes {
-		key := keyme(m.Namespace, m.Key)
-		currentMetafieldsMap[key] = &m
-	}
-
-	backupMetafieldsMap := make(map[string]*schema.Metafield, len(meta.Metafields.Nodes))
-	for _, m := range meta.Metafields.Nodes {
-		key := keyme(m.Namespace, m.Key)
-		backupMetafieldsMap[key] = &m
-	}
-
 	toAdd := make([]*schema.Metafield, 0)
 	toDelete := make([]*schema.Metafield, 0)
 
-	for id, cm := range currentMetafieldsMap {
-		if m, ok := backupMetafieldsMap[id]; ok {
-			toAdd = append(toAdd, m)
-		} else {
-			toDelete = append(toDelete, cm)
+	// Get upstream metafields.
+	currentMetafields, _ := h.Client.GetCustomerMetaFieldsByEmailOrPhoneOrID(
+		&meta.Email, &meta.Phone,
+		shopctl.ExtractNumericID(realCustomerID),
+	)
+	if currentMetafields != nil {
+		currentMetaNode := currentMetafields.Data.Customers.Nodes[0]
+
+		currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetaNode.Metafields.Nodes))
+		for _, m := range currentMetaNode.Metafields.Nodes {
+			key := keyme(m.Namespace, m.Key)
+			currentMetafieldsMap[key] = &m
 		}
-	}
-	for id, m := range backupMetafieldsMap {
-		if _, ok := currentMetafieldsMap[id]; !ok {
-			toAdd = append(toAdd, m)
+
+		backupMetafieldsMap := make(map[string]*schema.Metafield, len(meta.Metafields.Nodes))
+		for _, m := range meta.Metafields.Nodes {
+			key := keyme(m.Namespace, m.Key)
+			backupMetafieldsMap[key] = &m
+		}
+
+		for id, cm := range currentMetafieldsMap {
+			if m, ok := backupMetafieldsMap[id]; ok {
+				toAdd = append(toAdd, m)
+			} else {
+				toDelete = append(toDelete, cm)
+			}
+		}
+		for id, m := range backupMetafieldsMap {
+			if _, ok := currentMetafieldsMap[id]; !ok {
+				toAdd = append(toAdd, m)
+			}
+		}
+	} else {
+		for _, m := range meta.Metafields.Nodes {
+			toAdd = append(toAdd, &m)
 		}
 	}
 
@@ -90,9 +105,9 @@ func (h Metafield) Handle(data any) (any, error) {
 		h.Summary.Passed += 1
 		return nil, nil
 	}
-	err = attemptSync(updatedCustomerID)
+	err = attemptSync(realCustomerID)
 	if err != nil {
-		h.Logger.Error("Failed to sync customer metafields", "oldID", meta.CustomerID, "upstreamID", updatedCustomerID)
+		h.Logger.Error("Failed to sync customer metafields", "oldID", meta.CustomerID, "upstreamID", realCustomerID)
 		h.Summary.Failed += 1
 		return nil, err
 	}

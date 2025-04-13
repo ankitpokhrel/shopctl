@@ -63,10 +63,11 @@ func (h *Customer) Handle(data any) (any, error) {
 }
 
 func createOrUpdateCustomer(customer *schema.Customer, client *api.GQLClient, lgr *tlog.Logger) (*api.CustomerSyncResponse, error) {
-	cust, err := client.CheckCustomerByEmailOrPhone(customer.Email, customer.Phone)
-	if err != nil {
-		return nil, err
-	}
+	cust, _ := client.CheckCustomerByEmailOrPhoneOrID(
+		customer.Email,
+		customer.Phone,
+		shopctl.ExtractNumericID(customer.ID),
+	)
 
 	var addresses []any
 	for _, address := range customer.AddressesV2.Nodes {

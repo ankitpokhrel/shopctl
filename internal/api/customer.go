@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/schema"
@@ -34,8 +33,8 @@ func (c GQLClient) GetCustomerByID(id string) (*schema.Customer, error) {
 	return &out.Data.Customer, nil
 }
 
-// CheckCustomerByEmailOrPhone fetches a customer by email or phone without additional details.
-func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*schema.Customer, error) {
+// CheckCustomerByEmailOrPhoneOrID fetches a customer by email or phone without additional details.
+func (c GQLClient) CheckCustomerByEmailOrPhoneOrID(email *string, phone *string, id string) (*schema.Customer, error) {
 	var (
 		query = `query CheckCustomerByEmailOrPhone($query: String!) {
           customers(first: 1, query: $query) {
@@ -47,20 +46,26 @@ func (c GQLClient) CheckCustomerByEmailOrPhone(email *string, phone *string) (*s
           }
         }`
 
-		exp []string
+		exp string
 		out *CustomersResponse
 	)
 
-	if email != nil {
-		exp = append(exp, fmt.Sprintf("email:%s", *email))
+	switch {
+	case email != nil && *email != "":
+		exp = fmt.Sprintf("email:%s", *email)
+	case phone != nil && *phone != "":
+		exp = fmt.Sprintf("phone:%s", *phone)
+	default:
+		exp = fmt.Sprintf("id:%s", id)
 	}
-	if phone != nil {
-		exp = append(exp, fmt.Sprintf("phone:%s", *phone))
+
+	if exp == "" {
+		return nil, fmt.Errorf("invalid email, phone or id")
 	}
 
 	req := client.GQLRequest{
 		Query:     query,
-		Variables: client.QueryVars{"query": strings.Join(exp, " OR ")},
+		Variables: client.QueryVars{"query": exp},
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
@@ -105,8 +110,8 @@ func (c GQLClient) GetCustomerMetaFields(customerID string) (*CustomerMetaFields
 	return out, nil
 }
 
-// GetCustomerMetaFieldsByEmailOrPhone fetches metafields of a customer by email or phone.
-func (c GQLClient) GetCustomerMetaFieldsByEmailOrPhone(email *string, phone *string) (*CustomersMetaFieldsResponse, error) {
+// GetCustomerMetaFieldsByEmailOrPhoneOrID fetches metafields of a customer by email or phone.
+func (c GQLClient) GetCustomerMetaFieldsByEmailOrPhoneOrID(email *string, phone *string, id string) (*CustomersMetaFieldsResponse, error) {
 	var (
 		query = fmt.Sprintf(`query GetCustomerMetaFieldsByEmailOrPhone($query: String!) {
       customers(first: 1, query: $query) {
@@ -123,20 +128,26 @@ func (c GQLClient) GetCustomerMetaFieldsByEmailOrPhone(email *string, phone *str
       }
 }`, fieldsMetafields)
 
-		exp []string
+		exp string
 		out *CustomersMetaFieldsResponse
 	)
 
-	if email != nil {
-		exp = append(exp, fmt.Sprintf("email:%s", *email))
+	switch {
+	case email != nil && *email != "":
+		exp = fmt.Sprintf("email:%s", *email)
+	case phone != nil && *phone != "":
+		exp = fmt.Sprintf("phone:%s", *phone)
+	default:
+		exp = fmt.Sprintf("id:%s", id)
 	}
-	if phone != nil {
-		exp = append(exp, fmt.Sprintf("phone:%s", *phone))
+
+	if exp == "" {
+		return nil, fmt.Errorf("invalid email, phone or id")
 	}
 
 	req := client.GQLRequest{
 		Query:     query,
-		Variables: client.QueryVars{"query": strings.Join(exp, " OR ")},
+		Variables: client.QueryVars{"query": exp},
 	}
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
