@@ -2,8 +2,16 @@
     <h1 align="center">ShopCTL</h1>
 </div>
 
-<div>
-    <p align="center">
+<div align="center">
+    <p>
+        <a href="https://goreportcard.com/report/github.com/ankitpokhrel/shopctl">
+            <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/shopctl?style=flat-square" />
+        </a>
+        <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a>
+        <a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a>
+        <a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-%E2%9C%93WSL-dark--green?logo=windows&style=flat-square" /></a>
+    </p>
+    <p>
         <i>[WiP] Command line Utility for Shopify Data Management</i>
     </p>
     <img align="center" alt="ShopCTL Demo" src=".github/assets/demo.gif" /><br/><br/>
@@ -13,17 +21,27 @@ ShopCTL is a slightly opinionated, in-progress command-line utility for managing
 giving you a quick way to interact with your store's data straight from the terminal.
 
 ## Installation
-Create a dummy app from the [Shopify Partners Dashboard](https://partners.shopify.com/) and get the client ID and secret. 
-- Add `http://127.0.0.1/shopctl/auth/callback` to the list of Allowed redirection URL(s)
-- Make sure to request for [required scopes](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47)
+1. Create a dummy app from the [Shopify Partners Dashboard](https://partners.shopify.com/) and get the client ID and secret.
+   - Add `http://127.0.0.1/shopctl/auth/callback` to the list of Allowed redirection URL(s)
+   - Make sure to request for [required scopes](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47)
 
-Install the runnable binary to your `$GOPATH/bin`.
+   See https://github.com/ankitpokhrel/shopctl/discussions/3 for detailed instructions on how to setup an app for client ID and secret.
 
-```go
-SHOPCTL_CLIENT_ID=<id> SHOPCTL_CLIENT_SECRET=<secret> go install github.com/ankitpokhrel/shopctl/cmd/shopctl@main
-```
+2. Export client ID and secret from the first step to your shell.
+   ```sh
+   export SHOPCTL_CLIENT_ID=<client-id>
+   export SHOPCTL_CLIENT_SECRET=<client-secret>
+   ```
 
-`shopctl` will be available as a packaged downloadable binary for different platforms later.
+3. Install the runnable binary to your `$GOPATH/bin`.
+
+   ```sh
+   go install github.com/ankitpokhrel/shopctl/cmd/shopctl@main
+   ```
+
+<br/>
+
+The `shopctl` will be available as a packaged downloadable binary for different platforms later.
 
 ## Getting started
 
@@ -75,12 +93,14 @@ Check `shopctl completion --help` for details on setting up a bash/zsh shell com
 
 ## Usage
 The tool currently comes with product and customer related commands. The flags are [POSIX-compliant](https://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html).
-You can combine available flags in any order to create a unique query. For example, the command below will give you all gift cards on status DRAFT that were created in after
+You can combine available flags in any order to create a unique query. For example, the command below will give you all gift cards on status DRAFT that were created after
 2025 and has tags on-sale and premium.
 
 ```sh
 shopctl product list --gift-card -sDRAFT --tags on-sale,premium --created ">=2025-01-01"
 ```
+
+Check [this article](https://medium.com/@ankitpokhrel/shopctl-a-developer-first-toolkit-for-shopify-automation-d4800f1662bf) for some real life automation and scripting use-cases.
 
 ## Commands
 

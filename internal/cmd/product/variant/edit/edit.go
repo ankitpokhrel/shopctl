@@ -160,7 +160,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 		unit, val, err := cmdutil.SplitKeyVal(weight)
 		if err != nil {
 			cmdutil.ExitOnErr(
-				cmdutil.HelpErrorf("Weight should be in the folowing format Unit:Value, eg: GRAMS:3.14", examples),
+				cmdutil.HelpErrorf("Weight should be in the following format Unit:Value, eg: GRAMS:3.14", examples),
 			)
 		}
 		unit = strings.ToUpper(unit)

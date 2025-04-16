@@ -69,7 +69,7 @@ func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
 	}
 
 	if len(variantsSkipped) > 0 {
-		cmdutil.Warn("Some varaints were skipped: %s", strings.Join(variantsSkipped, ", "))
+		cmdutil.Warn("Some variants were skipped: %s", strings.Join(variantsSkipped, ", "))
 	}
 	if len(variantsToDelete) == 0 {
 		cmdutil.Warn("Nothing to delete")
