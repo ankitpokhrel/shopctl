@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -22,7 +23,10 @@ func (h Option) Handle(data any) (any, error) {
 	var realProductID string
 	if id, ok := data.(string); ok {
 		realProductID = id
+	} else {
+		return nil, fmt.Errorf("unable to figure out real product ID")
 	}
+
 	productRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -35,36 +39,40 @@ func (h Option) Handle(data any) (any, error) {
 		return nil, err
 	}
 
-	// Get upstream options.
-	currentOptions, err := h.Client.GetProductOptions(realProductID)
-	if err != nil {
-		return nil, err
-	}
-
-	currentOptionsMap := make(map[string]*schema.ProductOption, len(currentOptions.Data.Product.Options))
-	for _, opt := range currentOptions.Data.Product.Options {
-		currentOptionsMap[opt.ID] = &opt
-	}
-
-	backupOptionsMap := make(map[string]*schema.ProductOption, len(product.Options))
-	for _, opt := range product.Options {
-		backupOptionsMap[opt.ID] = &opt
-	}
-
 	toAdd := make([]*schema.ProductOption, 0)
 	toUpdate := make([]*schema.ProductOption, 0)
 	toDelete := make([]string, 0)
 
-	for id := range currentOptionsMap {
-		if opt, ok := backupOptionsMap[id]; ok {
-			toUpdate = append(toUpdate, opt)
-		} else {
-			toDelete = append(toDelete, id)
+	// Get upstream options.
+	currentOptions, _ := h.Client.GetProductOptions(realProductID)
+	currentOptionsMap := make(map[string]*schema.ProductOption, 0)
+	if currentOptions != nil {
+		for _, opt := range currentOptions.Data.Product.Options {
+			currentOptionsMap[keyme(opt.Name)] = &opt
 		}
-	}
-	for id, opt := range backupOptionsMap {
-		if _, ok := currentOptionsMap[id]; !ok {
-			toAdd = append(toAdd, opt)
+
+		backupOptionsMap := make(map[string]*schema.ProductOption, len(product.Options))
+		for _, opt := range product.Options {
+			backupOptionsMap[keyme(opt.Name)] = &opt
+		}
+
+		for k := range currentOptionsMap {
+			id := currentOptionsMap[k].ID
+			if opt, ok := backupOptionsMap[k]; ok {
+				opt.ID = id
+				toUpdate = append(toUpdate, opt)
+			} else {
+				toDelete = append(toDelete, id)
+			}
+		}
+		for k, opt := range backupOptionsMap {
+			if _, ok := currentOptionsMap[k]; !ok {
+				toAdd = append(toAdd, opt)
+			}
+		}
+	} else {
+		for _, m := range product.Options {
+			toAdd = append(toAdd, &m)
 		}
 	}
 
@@ -130,7 +138,7 @@ func (h Option) handleProductOptionAdd(productID string, toAdd []*schema.Product
 		}
 	}
 	h.Logger.V(tlog.VL2).Info("Attempting to create product options", "id", productID)
-	return h.Client.CreateProductOptions(productID, options, schema.ProductOptionCreateVariantStrategyLeaveAsIs)
+	return h.Client.CreateProductOptions(productID, options, schema.ProductOptionCreateVariantStrategyCreate)
 }
 
 func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map[string]*schema.ProductOption, toUpdate []*schema.ProductOption) (*api.ProductOptionSyncResponse, error) {
@@ -150,7 +158,7 @@ func (h Option) handlProductOptionUpdate(productID string, currentOptionsMap map
 			Name:     &opt.Name,
 			Position: &opt.Position,
 		}
-		currentOptionValues := currentOptionsMap[opt.ID].OptionValues
+		currentOptionValues := currentOptionsMap[keyme(opt.Name)].OptionValues
 		newOptionValues := opt.OptionValues
 
 		currentOptionValuesMap := make(map[string]*schema.ProductOptionValue, 0)

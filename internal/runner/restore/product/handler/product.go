@@ -189,3 +189,8 @@ func matchesFilters(product *schema.Product, rf *runner.RestoreFilter) (bool, er
 	}
 	return finalResult, nil
 }
+
+func keyme(s string) string {
+	s = strings.ToLower(s)
+	return strings.ReplaceAll(s, " ", "_")
+}

@@ -220,7 +220,7 @@ func run(cmd *cobra.Command, client *api.GQLClient, ctx *config.StoreContext, lo
 	}
 
 	if !flag.quiet && counter > 0 {
-		summarize(ctx.Store, dirPath, runners)
+		summarize(ctx.Store, flag.from, runners)
 	} else if counter == 0 {
 		logger.Info("No matching records found for the given criteria")
 	}

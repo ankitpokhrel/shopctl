@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -22,6 +23,8 @@ func (h *Media) Handle(data any) (any, error) {
 	var realProductID string
 	if id, ok := data.(string); ok {
 		realProductID = id
+	} else {
+		return nil, fmt.Errorf("unable to figure out real product ID")
 	}
 	mediaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
@@ -37,34 +40,35 @@ func (h *Media) Handle(data any) (any, error) {
 		return nil, err
 	}
 
-	// Get upstream medias.
-	currentMedias, err := h.Client.GetProductMedias(realProductID)
-	if err != nil {
-		h.Summary.Failed += 1
-		return nil, err
-	}
-
-	currentMediasMap := make(map[string]*api.ProductMediaNode, len(currentMedias.Data.Product.Media.Nodes))
-	for _, opt := range currentMedias.Data.Product.Media.Nodes {
-		currentMediasMap[opt.ID] = &opt
-	}
-
-	backupMediasMap := make(map[string]*api.ProductMediaNode, len(media.Media.Nodes))
-	for _, opt := range media.Media.Nodes {
-		backupMediasMap[opt.ID] = &opt
-	}
-
 	toAdd := make([]*api.ProductMediaNode, 0)
 	toDelete := make([]string, 0)
 
-	for id := range currentMediasMap {
-		if _, ok := backupMediasMap[id]; !ok {
-			toDelete = append(toDelete, id)
+	// Get upstream medias.
+	currentMedia, _ := h.Client.GetProductMedias(realProductID)
+	currentMediaMap := make(map[string]*api.ProductMediaNode, 0)
+	if currentMedia != nil {
+		for _, m := range currentMedia.Data.Product.Media.Nodes {
+			currentMediaMap[m.ID] = &m
 		}
-	}
-	for id, m := range backupMediasMap {
-		if _, ok := currentMediasMap[id]; !ok {
-			toAdd = append(toAdd, m)
+
+		backupMediaMap := make(map[string]*api.ProductMediaNode, len(media.Media.Nodes))
+		for _, m := range media.Media.Nodes {
+			backupMediaMap[m.ID] = &m
+		}
+
+		for id := range currentMediaMap {
+			if _, ok := backupMediaMap[id]; !ok {
+				toDelete = append(toDelete, id)
+			}
+		}
+		for id, m := range backupMediaMap {
+			if _, ok := currentMediaMap[id]; !ok {
+				toAdd = append(toAdd, m)
+			}
+		}
+	} else {
+		for _, m := range media.Media.Nodes {
+			toAdd = append(toAdd, &m)
 		}
 	}
 

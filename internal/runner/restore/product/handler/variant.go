@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -22,6 +23,8 @@ func (h *Variant) Handle(data any) (any, error) {
 	var realProductID string
 	if id, ok := data.(string); ok {
 		realProductID = id
+	} else {
+		return nil, fmt.Errorf("unable to figure out real product ID")
 	}
 	variantsRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
@@ -37,37 +40,40 @@ func (h *Variant) Handle(data any) (any, error) {
 		return nil, err
 	}
 
-	// Get upstream variants.
-	currentVariants, err := h.Client.GetProductVariants(realProductID)
-	if err != nil {
-		h.Summary.Failed += 1
-		return nil, err
-	}
-
-	currentVariantsMap := make(map[string]*schema.ProductVariant, len(currentVariants.Variants.Nodes))
-	for _, opt := range currentVariants.Variants.Nodes {
-		currentVariantsMap[opt.ID] = &opt
-	}
-
-	backupVariantsMap := make(map[string]*schema.ProductVariant, len(product.Variants.Nodes))
-	for _, opt := range product.Variants.Nodes {
-		backupVariantsMap[opt.ID] = &opt
-	}
-
 	toAdd := make([]*schema.ProductVariant, 0)
 	toUpdate := make([]*schema.ProductVariant, 0)
 	toDelete := make([]string, 0)
 
-	for id := range currentVariantsMap {
-		if opt, ok := backupVariantsMap[id]; ok {
-			toUpdate = append(toUpdate, opt)
-		} else {
-			toDelete = append(toDelete, id)
+	// Get upstream variants.
+	currentVariants, _ := h.Client.GetProductVariants(realProductID)
+	if currentVariants != nil {
+		currentVariantsMap := make(map[string]*schema.ProductVariant, len(currentVariants.Variants.Nodes))
+		for _, v := range currentVariants.Variants.Nodes {
+			currentVariantsMap[keyme(v.Title)] = &v
 		}
-	}
-	for id, opt := range backupVariantsMap {
-		if _, ok := currentVariantsMap[id]; !ok {
-			toAdd = append(toAdd, opt)
+
+		backupVariantsMap := make(map[string]*schema.ProductVariant, len(product.Variants.Nodes))
+		for _, v := range product.Variants.Nodes {
+			backupVariantsMap[keyme(v.Title)] = &v
+		}
+
+		for k := range currentVariantsMap {
+			id := currentVariantsMap[k].ID
+			if v, ok := backupVariantsMap[k]; ok {
+				v.ID = id
+				toUpdate = append(toUpdate, v)
+			} else {
+				toDelete = append(toDelete, id)
+			}
+		}
+		for k, v := range backupVariantsMap {
+			if _, ok := currentVariantsMap[k]; !ok {
+				toAdd = append(toAdd, v)
+			}
+		}
+	} else {
+		for _, v := range product.Variants.Nodes {
+			toAdd = append(toAdd, &v)
 		}
 	}
 
@@ -148,10 +154,9 @@ func (h Variant) createOrUpdateProductVariants(productID string, variants []*sch
 		}
 
 		input := schema.ProductVariantsBulkInput{
-			Barcode:         v.Barcode,
-			CompareAtPrice:  v.CompareAtPrice,
-			InventoryPolicy: &v.InventoryPolicy,
-			// InventoryQuantities: v.InventoryQuantities,
+			Barcode:            v.Barcode,
+			CompareAtPrice:     v.CompareAtPrice,
+			InventoryPolicy:    &v.InventoryPolicy,
 			InventoryItem:      inventoryItem,
 			OptionValues:       getOptions(v.SelectedOptions),
 			Price:              &v.Price,

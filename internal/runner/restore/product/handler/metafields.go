@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/registry"
@@ -22,7 +23,10 @@ func (h Metafield) Handle(data any) (any, error) {
 	var realProductID string
 	if id, ok := data.(string); ok {
 		realProductID = id
+	} else {
+		return nil, fmt.Errorf("unable to figure out real product ID")
 	}
+
 	metaRaw, err := registry.ReadFileContents(h.File.Path)
 	if err != nil {
 		h.Logger.Error("Unable to read contents", "file", h.File.Path, "error", err)
@@ -37,36 +41,37 @@ func (h Metafield) Handle(data any) (any, error) {
 		return nil, err
 	}
 
-	// Get upstream metafields.
-	currentMetafields, err := h.Client.GetProductMetaFields(realProductID)
-	if err != nil {
-		h.Summary.Failed += 1
-		return nil, err
-	}
-
-	currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetafields.Data.Product.Metafields.Nodes))
-	for _, opt := range currentMetafields.Data.Product.Metafields.Nodes {
-		currentMetafieldsMap[opt.ID] = &opt
-	}
-
-	backupMetafieldsMap := make(map[string]*schema.Metafield, len(meta.Metafields.Nodes))
-	for _, m := range meta.Metafields.Nodes {
-		backupMetafieldsMap[m.ID] = &m
-	}
-
 	toAdd := make([]*schema.Metafield, 0)
 	toDelete := make([]*schema.Metafield, 0)
 
-	for id, cm := range currentMetafieldsMap {
-		if m, ok := backupMetafieldsMap[id]; ok {
-			toAdd = append(toAdd, m)
-		} else {
-			toDelete = append(toDelete, cm)
+	// Get upstream metafields.
+	currentMetafields, _ := h.Client.GetProductMetaFields(realProductID)
+	if currentMetafields != nil {
+		currentMetafieldsMap := make(map[string]*schema.Metafield, len(currentMetafields.Data.Product.Metafields.Nodes))
+		for _, opt := range currentMetafields.Data.Product.Metafields.Nodes {
+			currentMetafieldsMap[opt.ID] = &opt
 		}
-	}
-	for id, m := range backupMetafieldsMap {
-		if _, ok := currentMetafieldsMap[id]; !ok {
-			toAdd = append(toAdd, m)
+
+		backupMetafieldsMap := make(map[string]*schema.Metafield, len(meta.Metafields.Nodes))
+		for _, m := range meta.Metafields.Nodes {
+			backupMetafieldsMap[m.ID] = &m
+		}
+
+		for id, cm := range currentMetafieldsMap {
+			if m, ok := backupMetafieldsMap[id]; ok {
+				toAdd = append(toAdd, m)
+			} else {
+				toDelete = append(toDelete, cm)
+			}
+		}
+		for id, m := range backupMetafieldsMap {
+			if _, ok := currentMetafieldsMap[id]; !ok {
+				toAdd = append(toAdd, m)
+			}
+		}
+	} else {
+		for _, m := range meta.Metafields.Nodes {
+			toAdd = append(toAdd, &m)
 		}
 	}
 
