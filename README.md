@@ -4,9 +4,12 @@
 
 <div align="center">
     <p>
+        <a href="https://github.com/ankitpokhrel/shopctl/actions?query=workflow%3Abuild+branch%3Amain">
+            <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ankitpokhrel/shopctl/ci.yml?branch=main&style=flat-square" />
+        </a>
         <a href="https://goreportcard.com/report/github.com/ankitpokhrel/shopctl">
             <img alt="GO Report-card" src="https://goreportcard.com/badge/github.com/ankitpokhrel/shopctl?style=flat-square" />
-        </a>
+        </a><br/>
         <a href="#"><img alt="Linux" src="https://img.shields.io/badge/Linux-%E2%9C%93-dark--green?logo=linux&logoColor=white&style=flat-square" /></a>
         <a href="#"><img alt="macOS" src="https://img.shields.io/badge/macOS-%E2%9C%93-dark--green?logo=apple&style=flat-square" /></a>
         <a href="#"><img alt="Windows" src="https://img.shields.io/badge/Windows-%E2%9C%93WSL-dark--green?logo=windows&style=flat-square" /></a>
@@ -287,8 +290,8 @@ $ shopctl customer delete --phone +1234567890
 
 2. Setup a dummy Shopify App since we need app tokens for development.
    ```sh
-   export SHOPCTL_CLIENT_ID=<id>
-   export SHOPCTL_CLIENT_SECRET=<secret>
+   export SHOPCTL_CLIENT_ID=<client-id>
+   export SHOPCTL_CLIENT_SECRET=<client-secret>
    ```
 
 4. Make changes, build the binary, and test your changes.

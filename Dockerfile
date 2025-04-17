@@ -2,7 +2,7 @@
 #   $ docker build -t shopctl:latest .
 #   $ docker run --rm -it -v ~/.config/shopctl:/root/.config/shopctl shopctl
 
-FROM golang:1.23-alpine3.20 as builder
+FROM golang:1.24-alpine3.21 as builder
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
@@ -17,7 +17,7 @@ RUN set -eux; \
     apk add -U --no-cache make git ; \
     make deps install
 
-FROM alpine:3.20
+FROM alpine:3.21
 
 RUN apk --no-cache add ca-certificates
 

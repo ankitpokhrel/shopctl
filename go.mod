@@ -1,6 +1,6 @@
 module github.com/ankitpokhrel/shopctl
 
-go 1.23.3
+go 1.24.1
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.3.1
