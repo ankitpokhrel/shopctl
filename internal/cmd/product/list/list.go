@@ -62,6 +62,7 @@ type flag struct {
 	status      []string
 	created     string
 	updated     string
+	published   string
 	limit       int16
 	plain       bool
 	noHeaders   bool
@@ -134,6 +135,9 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	updated, err := cmd.Flags().GetString("updated")
 	cmdutil.ExitOnErr(err)
 
+	published, err := cmd.Flags().GetString("published")
+	cmdutil.ExitOnErr(err)
+
 	limit, err := cmd.Flags().GetInt16("limit")
 	cmdutil.ExitOnErr(err)
 
@@ -163,6 +167,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	}()
 	f.created = created
 	f.updated = updated
+	f.published = published
 	f.limit = min(limit, 250)
 	f.plain = plain
 	f.noHeaders = noHeaders
@@ -201,6 +206,7 @@ func NewCmdList() *cobra.Command {
 	cmd.Flags().StringP("status", "s", "", "Filter products by status (ACTIVE, DRAFT or ARCHIVED)")
 	cmd.Flags().String("created", "", "Filter by created date")
 	cmd.Flags().String("updated", "", "Filter by updated date")
+	cmd.Flags().String("published", "", "Filter by published date")
 	cmd.Flags().String("type", "", "Filter by product type")
 	cmd.Flags().StringP("category-id", "y", "", "Filter by category ID") // TODO: Check if we can use name instead of ID.
 	cmd.Flags().String("tags", "", "Filter by tags (comma separated)")
@@ -418,6 +424,9 @@ func buildSearchQuery(f *flag) *string {
 		}
 		if f.updated != "" {
 			sub.Eq("updated_at", f.updated)
+		}
+		if f.published != "" {
+			sub.Eq("published_at", f.published)
 		}
 	})
 	query := q.Build()
