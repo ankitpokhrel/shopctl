@@ -30,7 +30,6 @@ $ shopctl product update 8856145494 -tTitle -d"Product description" --tags tag1,
 $ shopctl product update 8856145494 -c store2 -tTitle -d"Product description" --type Bags`
 )
 
-// Flag wraps available command flags.
 type flag struct {
 	id       string
 	handle   string
@@ -106,7 +105,7 @@ func NewCmdUpdate() *cobra.Command {
 	cmd.Flags().StringP("desc", "d", "", "Product description")
 	cmd.Flags().String("type", "", "Product type")
 	cmd.Flags().StringP("category", "y", "", "Product category id")
-	cmd.Flags().String("tags", "", "Comma separated product tags")
+	cmd.Flags().String("tags", "", "Comma separated list of product tags")
 	cmd.Flags().String("vendor", "", "Product vendor")
 	cmd.Flags().String("status", "", "Product status (ACTIVE, ARCHIVED, DRAFT)")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")

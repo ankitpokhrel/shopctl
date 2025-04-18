@@ -29,7 +29,6 @@ $ shopctl product create -tTitle -d"Product description" --tags tag1,tag2
 $ shopctl product create -c store2 -tTitle -d"Product description" --type Bags`
 )
 
-// Flag wraps available command flags.
 type flag struct {
 	handle     string
 	title      string
@@ -111,7 +110,7 @@ func NewCmdCreate() *cobra.Command {
 	cmd.Flags().StringP("desc", "d", "", "Product description")
 	cmd.Flags().String("type", "", "Product type")
 	cmd.Flags().StringP("category", "y", "", "Product category id")
-	cmd.Flags().String("tags", "", "Comma separated product tags")
+	cmd.Flags().String("tags", "", "Comma separated list of product tags")
 	cmd.Flags().String("vendor", "", "Product vendor")
 	cmd.Flags().String("status", string(schema.ProductStatusDraft), "Product status (ACTIVE, ARCHIVED, DRAFT)")
 	cmd.Flags().Bool("gift-card", false, "Is gift card?")

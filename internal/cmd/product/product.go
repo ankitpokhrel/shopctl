@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/product/clone"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/create"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/delete"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/product/list"
@@ -46,6 +47,7 @@ func NewCmdProduct() *cobra.Command {
 		option.NewCmdOption(),
 		variant.NewCmdVariant(),
 		media.NewCmdMedia(),
+		clone.NewCmdClone(),
 	)
 
 	return &cmd
