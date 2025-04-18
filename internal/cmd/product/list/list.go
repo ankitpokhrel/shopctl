@@ -204,9 +204,6 @@ func NewCmdList() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("status", "s", "", "Filter products by status (ACTIVE, DRAFT or ARCHIVED)")
-	cmd.Flags().String("created", "", "Filter by created date")
-	cmd.Flags().String("updated", "", "Filter by updated date")
-	cmd.Flags().String("published", "", "Filter by published date")
 	cmd.Flags().String("type", "", "Filter by product type")
 	cmd.Flags().StringP("category-id", "y", "", "Filter by category ID") // TODO: Check if we can use name instead of ID.
 	cmd.Flags().String("tags", "", "Filter by tags (comma separated)")
@@ -215,6 +212,9 @@ func NewCmdList() *cobra.Command {
 	cmd.Flags().String("barcode", "", "Filter by variant barcode")
 	cmd.Flags().String("sku", "", "Filter by variant sku")
 	cmd.Flags().Bool("gift-card", false, "Filter gift cards")
+	cmd.Flags().String("created", "", "Filter by the created date")
+	cmd.Flags().String("updated", "", "Filter by the updated date")
+	cmd.Flags().String("published", "", "Filter by the published date")
 	cmd.Flags().Int16("limit", 50, "Number of entries to fetch")
 	cmd.Flags().Bool("plain", false, "Show output in plain text instead of TUI")
 	cmd.Flags().Bool("no-headers", false, "Don't print table headers (works only with --plain)")
@@ -347,7 +347,6 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 func buildSearchQuery(f *flag) *string {
 	q := search.New()
 
-	// TODO: AND is missing
 	q.Group(func(sub *search.Query) {
 		if f.searchText != "" {
 			sub.Add(f.searchText)

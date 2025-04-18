@@ -173,6 +173,9 @@ products(first: $first, after: $after, query: $query, sortKey: $sortKey, reverse
 	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
 		return nil, err
 	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
 	return out, nil
 }
 

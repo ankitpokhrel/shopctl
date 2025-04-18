@@ -158,6 +158,41 @@ func (c GQLClient) GetCustomerMetaFieldsByEmailOrPhoneOrID(email *string, phone 
 	return out, nil
 }
 
+// GetCustomers fetches n number of customers after a cursor.
+func (c GQLClient) GetCustomers(limit int, after *string, query *string) ([]schema.Customer, error) {
+	var out *CustomersResponse
+
+	customersQuery := fmt.Sprintf(`query GetCustomers($first: Int!, $after: String, $query: String, $sortKey: CustomerSortKeys!, $reverse: Boolean!) {
+  customers(first: $first, after: $after, query: $query, sortKey: $sortKey, reverse: $reverse) {
+    nodes {
+      %s
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}`, fieldsCustomer)
+
+	req := client.GQLRequest{
+		Query: customersQuery,
+		Variables: client.QueryVars{
+			"first":   limit,
+			"after":   after,
+			"query":   query,
+			"sortKey": "UPDATED_AT",
+			"reverse": true,
+		},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return out.Data.Customers.Nodes, nil
+}
+
 // GetAllCustomers fetches customers in a batch and streams the response to a channel.
 func (c GQLClient) GetAllCustomers(ch chan *CustomersResponse, limit int, after *string) error {
 	var out *CustomersResponse
