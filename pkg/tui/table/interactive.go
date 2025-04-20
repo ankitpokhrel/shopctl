@@ -36,7 +36,7 @@ func NewInteractiveTable(cols []Column, rows []Row, opts ...InteractiveTableOpti
 		WithHeight(height),
 	)
 
-	vp := viewport.New(200, height+1)
+	vp := viewport.New(min(200, len(cols)*20), height+1)
 	vp.SetContent(t.View())
 
 	it := InteractiveTable{

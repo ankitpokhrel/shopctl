@@ -12,6 +12,7 @@ import (
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 	"github.com/ankitpokhrel/shopctl/pkg/browser"
+	"github.com/ankitpokhrel/shopctl/pkg/fmtout"
 	"github.com/ankitpokhrel/shopctl/pkg/search"
 	"github.com/ankitpokhrel/shopctl/pkg/tui/table"
 	"github.com/spf13/cobra"
@@ -31,6 +32,12 @@ $ shopctl customer list --orders-count ">0"
 
 # List customers from Germany with who spent min 100 and agreed to receive marketing email
 $ shopctl customer list --total-spent ">=100" --country Germany --accepts-marketing
+
+# List customers as a csv
+$ shopctl customer list --csv
+
+# List customers in a plain table view without headers
+$ shopctl customer list --plain --no-headers
 
 # List customers using raw query
 # See https://shopify.dev/docs/api/usage/search-syntax
@@ -55,6 +62,7 @@ type flag struct {
 	updated                string
 	limit                  int16
 	plain                  bool
+	csv                    bool
 	noHeaders              bool
 	columns                []string
 	printQuery             bool
@@ -147,6 +155,9 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	plain, err := cmd.Flags().GetBool("plain")
 	cmdutil.ExitOnErr(err)
 
+	csv, err := cmd.Flags().GetBool("csv")
+	cmdutil.ExitOnErr(err)
+
 	noHeaders, err := cmd.Flags().GetBool("no-headers")
 	cmdutil.ExitOnErr(err)
 
@@ -171,6 +182,7 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	f.updated = updated
 	f.limit = min(limit, 250)
 	f.plain = plain
+	f.csv = csv
 	f.noHeaders = noHeaders
 	f.columns = func() []string {
 		if columns != "" {
@@ -220,7 +232,8 @@ func NewCmdList() *cobra.Command {
 	cmd.Flags().String("created", "", "Filter by the created date")
 	cmd.Flags().String("updated", "", "Filter by the updated date")
 	cmd.Flags().Int16("limit", 50, "Number of entries to fetch (max 250)")
-	cmd.Flags().Bool("plain", false, "Show output in plain text instead of TUI")
+	cmd.Flags().Bool("plain", false, "Show output in properly formatted plain text")
+	cmd.Flags().Bool("csv", false, "Print output in csv")
 	cmd.Flags().Bool("no-headers", false, "Don't print table headers (works only with --plain)")
 	cmd.Flags().String("columns", "", "Comma separated list of columns to print (works only with --plain)")
 	cmd.Flags().Bool("print-query", false, "Print parsed raw Shopify search query")
@@ -231,6 +244,7 @@ func NewCmdList() *cobra.Command {
 	return &cmd
 }
 
+//nolint:gocyclo
 func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *api.GQLClient) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
@@ -320,17 +334,28 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		os.Exit(0)
 	}
 
-	if flag.plain {
+	if flag.plain || flag.csv {
+		defaultCols := []string{"id", "first_name", "country", "valid_email", "created"}
 		if len(flag.columns) == 0 {
-			// Default columns in plain mode.
-			flag.columns = []string{"id", "first_name", "country", "valid_email", "created"}
+			flag.columns = defaultCols
 		}
+	}
+	if flag.plain {
 		tbl := table.NewStaticTable(
 			cols, rows,
 			table.WithNoHeaders(flag.noHeaders),
 			table.WithTableColumns(flag.columns),
 		)
 		return tbl.Render()
+	}
+	if flag.csv {
+		csvfmt := fmtout.NewCSV(
+			table.ColsToString(cols),
+			table.RowsToString(rows),
+			fmtout.WithNoHeaders(flag.noHeaders),
+			fmtout.WithColumns(flag.columns),
+		)
+		return csvfmt.Format(os.Stdout)
 	}
 
 	helpTexts := []string{
