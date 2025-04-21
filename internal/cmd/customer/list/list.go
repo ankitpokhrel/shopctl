@@ -280,7 +280,9 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		[]table.Column{
 			{Title: "Country", Width: 25},
 			{Title: "Tags", Width: 25},
+			{Title: "Note", Width: 40},
 			{Title: "Valid Email", Width: 15},
+			{Title: "Amount Spent", Width: 15},
 			{Title: "Created", Width: 25},
 			{Title: "Updated", Width: 25},
 		}...,
@@ -315,6 +317,10 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 				getStr(c.Phone),
 			)
 		}
+		note := ""
+		if c.Note != nil {
+			note = *c.Note
+		}
 		validEmail := "No"
 		if c.ValidEmailAddress {
 			validEmail = "Yes"
@@ -322,7 +328,9 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		row = append(row,
 			country,
 			strings.Join(tags, ","),
+			note,
 			validEmail,
+			fmt.Sprintf("%.2f", c.AmountSpent.Amount),
 			cmdutil.FormatDateTime(c.CreatedAt, ""),
 			cmdutil.FormatDateTime(c.UpdatedAt, ""),
 		)
@@ -478,7 +486,9 @@ func validColumns() []string {
 		"phone",
 		"country",
 		"tags",
+		"note",
 		"valid_email",
+		"amount_spent",
 		"created",
 		"updated",
 	}
