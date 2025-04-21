@@ -46,6 +46,11 @@ giving you a quick way to interact with your store's data straight from the term
 
 The `shopctl` will be available as a packaged downloadable binary for different platforms later.
 
+## Resources
+- Check [this post](https://medium.com/@ankitpokhrel/shopctl-a-developer-first-toolkit-for-shopify-automation-d4800f1662bf) for some real life automation and scripting use-cases.
+- The [scripts](./scripts/) directory contains examples of how to automate tasks using ShopCTL.
+- Learn how to use [ShopCTL in the GitHub CI](https://github.com/ankitpokhrel/shopctl/discussions/6).
+
 ## Getting started
 
 ### Authentication
@@ -102,8 +107,6 @@ You can combine available flags in any order to create a unique query. For examp
 ```sh
 shopctl product list --gift-card -sDRAFT --tags on-sale,premium --created ">=2025-01-01"
 ```
-
-Check [this article](https://medium.com/@ankitpokhrel/shopctl-a-developer-first-toolkit-for-shopify-automation-d4800f1662bf) for some real life automation and scripting use-cases.
 
 ## Commands
 
