@@ -34,8 +34,8 @@ type flag struct {
 	id       string
 	handle   string
 	title    string
-	descHtml string
-	typ      string
+	descHtml *string
+	typ      *string
 	category string
 	tags     []string
 	vendor   string
@@ -46,17 +46,30 @@ type flag struct {
 }
 
 func (f *flag) parse(cmd *cobra.Command, args []string) {
+	isset := func(item string) bool {
+		fl := cmd.Flags().Lookup(item)
+		return fl != nil && fl.Changed
+	}
+
 	handle, err := cmd.Flags().GetString("handle")
 	cmdutil.ExitOnErr(err)
 
 	title, err := cmd.Flags().GetString("title")
 	cmdutil.ExitOnErr(err)
 
-	desc, err := cmd.Flags().GetString("desc")
-	cmdutil.ExitOnErr(err)
+	if isset("desc") {
+		desc, err := cmd.Flags().GetString("desc")
+		cmdutil.ExitOnErr(err)
 
-	typ, err := cmd.Flags().GetString("type")
-	cmdutil.ExitOnErr(err)
+		f.descHtml = &desc
+	}
+
+	if isset("type") {
+		typ, err := cmd.Flags().GetString("type")
+		cmdutil.ExitOnErr(err)
+
+		f.typ = &typ
+	}
 
 	category, err := cmd.Flags().GetString("category")
 	cmdutil.ExitOnErr(err)
@@ -70,11 +83,19 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	status, err := cmd.Flags().GetString("status")
 	cmdutil.ExitOnErr(err)
 
-	seoTitle, err := cmd.Flags().GetString("seo-title")
-	cmdutil.ExitOnErr(err)
+	if isset("seo-title") {
+		seoTitle, err := cmd.Flags().GetString("seo-title")
+		cmdutil.ExitOnErr(err)
 
-	seoDesc, err := cmd.Flags().GetString("seo-desc")
-	cmdutil.ExitOnErr(err)
+		f.seoTitle = &seoTitle
+	}
+
+	if isset("seo-desc") {
+		seoDesc, err := cmd.Flags().GetString("seo-desc")
+		cmdutil.ExitOnErr(err)
+
+		f.seoDesc = &seoDesc
+	}
 
 	web, err := cmd.Flags().GetBool("web")
 	cmdutil.ExitOnErr(err)
@@ -82,14 +103,10 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	f.id = shopctl.ShopifyProductID(args[0])
 	f.handle = handle
 	f.title = title
-	f.descHtml = desc
-	f.typ = typ
 	f.category = category
 	f.tags = strings.Split(tags, ",")
 	f.vendor = vendor
 	f.status = status
-	f.seoTitle = &seoTitle
-	f.seoDesc = &seoDesc
 	f.web = web
 }
 
@@ -128,6 +145,11 @@ func NewCmdUpdate() *cobra.Command {
 func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *api.GQLClient) error {
 	flag := &flag{}
 	flag.parse(cmd, args)
+
+	if !hasAnythingToUpdate(cmd) {
+		cmdutil.Warn("Nothing to update")
+		os.Exit(0)
+	}
 
 	product, err := client.GetProductByID(flag.id)
 	if err != nil {
@@ -184,11 +206,11 @@ func getInput(f flag, p *schema.Product) *schema.ProductInput {
 	if f.title != "" {
 		input.Title = &f.title
 	}
-	if f.descHtml != "" {
-		input.DescriptionHtml = &f.descHtml
+	if f.descHtml != nil {
+		input.DescriptionHtml = f.descHtml
 	}
-	if f.typ != "" {
-		input.ProductType = &f.typ
+	if f.typ != nil {
+		input.ProductType = f.typ
 	}
 	if f.category != "" {
 		input.Category = &f.category
@@ -210,22 +232,18 @@ func getInput(f flag, p *schema.Product) *schema.ProductInput {
 		input.Seo.Description = f.seoDesc
 	}
 
-	if !hasAnythingToUpdate(f, input) {
-		cmdutil.Warn("Nothing to update")
-		os.Exit(0)
-	}
 	return &input
 }
 
-func hasAnythingToUpdate(f flag, input schema.ProductInput) bool {
-	return input.Handle != nil ||
-		input.Title != nil ||
-		input.DescriptionHtml != nil ||
-		input.ProductType != nil ||
-		input.Category != nil ||
-		len(input.Tags) != 0 ||
-		input.Vendor != nil ||
-		input.Status != nil ||
-		f.seoTitle != nil ||
-		f.seoDesc != nil
+func hasAnythingToUpdate(cmd *cobra.Command) bool {
+	return cmd.Flags().Changed("handle") ||
+		cmd.Flags().Changed("title") ||
+		cmd.Flags().Changed("desc") ||
+		cmd.Flags().Changed("type") ||
+		cmd.Flags().Changed("category") ||
+		cmd.Flags().Changed("tags") ||
+		cmd.Flags().Changed("vendor") ||
+		cmd.Flags().Changed("status") ||
+		cmd.Flags().Changed("seo-title") ||
+		cmd.Flags().Changed("seo-desc")
 }
