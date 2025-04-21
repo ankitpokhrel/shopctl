@@ -40,6 +40,8 @@ type flag struct {
 	tags     []string
 	vendor   string
 	status   string
+	seoTitle *string
+	seoDesc  *string
 	web      bool
 }
 
@@ -68,6 +70,12 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	status, err := cmd.Flags().GetString("status")
 	cmdutil.ExitOnErr(err)
 
+	seoTitle, err := cmd.Flags().GetString("seo-title")
+	cmdutil.ExitOnErr(err)
+
+	seoDesc, err := cmd.Flags().GetString("seo-desc")
+	cmdutil.ExitOnErr(err)
+
 	web, err := cmd.Flags().GetBool("web")
 	cmdutil.ExitOnErr(err)
 
@@ -80,6 +88,8 @@ func (f *flag) parse(cmd *cobra.Command, args []string) {
 	f.tags = strings.Split(tags, ",")
 	f.vendor = vendor
 	f.status = status
+	f.seoTitle = &seoTitle
+	f.seoDesc = &seoDesc
 	f.web = web
 }
 
@@ -107,6 +117,8 @@ func NewCmdUpdate() *cobra.Command {
 	cmd.Flags().StringP("category", "y", "", "Product category id")
 	cmd.Flags().String("tags", "", "Comma separated list of product tags")
 	cmd.Flags().String("vendor", "", "Product vendor")
+	cmd.Flags().String("seo-title", "", "SEO title of the product")
+	cmd.Flags().String("seo-desc", "", "SEO description of the product")
 	cmd.Flags().String("status", "", "Product status (ACTIVE, ARCHIVED, DRAFT)")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 
@@ -161,7 +173,10 @@ func getInput(f flag, p *schema.Product) *schema.ProductInput {
 		tags = append(tags, t)
 	}
 
-	input := schema.ProductInput{ID: &id}
+	input := schema.ProductInput{ID: &id, Seo: &schema.SEOInput{
+		Title:       p.Seo.Title,
+		Description: p.Seo.Description,
+	}}
 
 	if f.handle != "" {
 		input.Handle = &f.handle
@@ -188,15 +203,21 @@ func getInput(f flag, p *schema.Product) *schema.ProductInput {
 		status := schema.ProductStatus(strings.ToTitle(f.status))
 		input.Status = &status
 	}
+	if f.seoTitle != nil {
+		input.Seo.Title = f.seoTitle
+	}
+	if f.seoDesc != nil {
+		input.Seo.Description = f.seoDesc
+	}
 
-	if !hasAnythingToUpdate(input) {
+	if !hasAnythingToUpdate(f, input) {
 		cmdutil.Warn("Nothing to update")
 		os.Exit(0)
 	}
 	return &input
 }
 
-func hasAnythingToUpdate(input schema.ProductInput) bool {
+func hasAnythingToUpdate(f flag, input schema.ProductInput) bool {
 	return input.Handle != nil ||
 		input.Title != nil ||
 		input.DescriptionHtml != nil ||
@@ -204,5 +225,7 @@ func hasAnythingToUpdate(input schema.ProductInput) bool {
 		input.Category != nil ||
 		len(input.Tags) != 0 ||
 		input.Vendor != nil ||
-		input.Status != nil
+		input.Status != nil ||
+		f.seoTitle != nil ||
+		f.seoDesc != nil
 }
