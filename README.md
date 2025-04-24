@@ -229,7 +229,6 @@ See `shopctl product -h` for details on all available commands.
 The `update` command follows same structure as the create command. Check `shopctl product update -h` for more details.
 
 #### Peek
-
 The `peek` command gives you a quick glance into Shopify product right from your terminal. The source could either be upstream or local imports.
 
 ```sh
@@ -242,6 +241,26 @@ $ shopctl peek product <product_id> --from </path/to/backup>
 
 # Render json output
 $ shopctl peek product <product_id> --json
+```
+
+#### Clone
+The `clone` command let's you duplicate a product. You can update fields like handle, title, tags and status when cloning the issue. 
+The command also allows you to replace a part of the string (case-sensitive) in title and description using `--replace/-H` option.
+
+```sh
+$ shopctl product clone 8856145494
+
+# Clone product with custom title and handle
+$ shopctl product clone 8856145494 --title "Cloned product" --handle "cloned-product"
+
+# Clone product along with its variants and media and set status to DRAFT
+$ shopctl product clone 8856145494 --variants --media --status draft
+
+# Clone product and replace some strings in title and description
+$ shopctl product clone 8856145494 -H "find-me:replace-me" -H "also-find-me:and-replace-me"
+
+# Clone product to another store and add tag 'cloned' and 'store1'
+$ shopctl product clone 8856145494 --to store2 --tags cloned,store1
 ```
 
 ### Customer
