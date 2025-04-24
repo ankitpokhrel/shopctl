@@ -1,0 +1,5 @@
+ver: v0
+contexts:
+    - alias: store1
+      store: store1.myshopify.com
+currentContext: store1

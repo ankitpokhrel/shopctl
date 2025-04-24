@@ -1,0 +1,17 @@
+name: Setup ShopCTL
+description: Installs Go and ShopCTL CLI
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: "1.24"
+
+    - name: Install ShopCTL
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libx11-dev
+        go install github.com/ankitpokhrel/shopctl/cmd/shopctl@main
+        echo "$HOME/go/bin" >> "$GITHUB_PATH"

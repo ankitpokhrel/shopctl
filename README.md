@@ -48,7 +48,7 @@ The `shopctl` will be available as a packaged downloadable binary for different 
 
 ## Resources
 - Check [this post](https://medium.com/@ankitpokhrel/shopctl-a-developer-first-toolkit-for-shopify-automation-d4800f1662bf) for some real life automation and scripting use-cases.
-- The [scripts](./scripts/) directory contains examples of how to automate tasks using ShopCTL.
+- The [examples](./examples/) directory contains examples of how to automate tasks using ShopCTL.
 - Learn how to use [ShopCTL in the GitHub CI](https://github.com/ankitpokhrel/shopctl/discussions/6).
 
 ## Getting started

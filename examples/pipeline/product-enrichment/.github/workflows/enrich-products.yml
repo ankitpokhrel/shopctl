@@ -1,0 +1,212 @@
+name: Shopify Product Enrichment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  export-products:
+    runs-on: ubuntu-latest
+    env:
+      SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+      SHOPIFY_CONFIG_HOME: ${{ github.workspace }}
+    outputs:
+      has-data: ${{ steps.check.outputs.has_data }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup ShopCTL
+        uses: ./.github/workflows/actions/setup-shopctl
+
+      - name: Export products
+        run: |
+          mkdir -p data
+          shopctl export -r product="created_at:>=$(date -v -7d +%Y-%m-%d)" -o data/ -n latest_products -vvv
+
+      - name: Check if export has data
+        id: check
+        run: |
+          if [ -s data/latest_products.tar.gz ]; then
+            echo "has_data=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_data=false" >> "$GITHUB_OUTPUT"
+            echo "No products found to process"
+          fi
+
+      - name: Upload exported products
+        if: steps.check.outputs.has_data == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: exported-products
+          path: data/latest_products.tar.gz
+
+  review-catalog:
+    needs: export-products
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download product export
+        uses: actions/download-artifact@v4
+        with:
+          name: exported-products
+          path: data/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install openai
+
+      - name: Run catalog review script
+        run: |
+          python scripts/review_catalog.py \
+            data/latest_products.tar.gz \
+            data/review_summary.md
+
+      - name: Upload catalog summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-review-summary
+          path: data/review_summary.md
+
+      - name: Final summary
+        run: echo "✅ Shopify product catalog review completed!"
+
+  enrich-products:
+    needs: export-products
+    if: ${{ always() && needs.export-products.outputs.has-data == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+      SHOPIFY_CONFIG_HOME: ${{ github.workspace }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download exported products
+        uses: actions/download-artifact@v4
+        with:
+          name: exported-products
+          path: data/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run enrichment script
+        run: |
+          python scripts/enrich_products.py \
+            data/latest_products.tar.gz \
+            data/enriched_products.csv
+
+      - name: Upload enriched data
+        uses: actions/upload-artifact@v4
+        with:
+          name: enriched-products
+          path: data/enriched_products.csv
+
+  update-products:
+    needs: enrich-products
+    runs-on: ubuntu-latest
+    env:
+      SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+      SHOPIFY_CONFIG_HOME: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup ShopCTL
+        uses: ./.github/workflows/actions/setup-shopctl
+
+      - name: Download enriched products
+        uses: actions/download-artifact@v4
+        with:
+          name: enriched-products
+          path: data/
+
+      - name: Apply updates using shopctl
+        run: |
+          mkdir -p logs
+          touch logs/audit.txt
+
+          while IFS=, read -r pid new_title seo_title seo_desc; do
+            # Strip leading/trailing quotes
+            seo_desc="${seo_desc%\"}"
+            seo_desc="${seo_desc#\"}"
+
+            if output=$(shopctl product update "$pid" \
+                --title "$new_title" \
+                --seo-title "$seo_title" \
+                --seo-desc "$seo_desc" 2>&1); then
+                echo "$pid,success" >> logs/audit.txt
+            else
+              sanitized_error=$(echo "$output" | tr '\n' ' ' | sed 's/,/ /g')
+              echo "$pid,failure,$sanitized_error" >> logs/audit.txt
+            fi
+          done < <(tail -n +2 data/enriched_products.csv)
+
+      - name: Upload audit log
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-audit-log
+          path: logs/audit.txt
+
+      - name: Final summary
+        run: echo "✅ Shopify product enrichment and updates completed!"
+
+  notify:
+    needs: [review-catalog, update-products]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download audit log
+        uses: actions/download-artifact@v4
+        with:
+          name: product-audit-log
+          path: logs/
+
+      - name: Download catalog review
+        uses: actions/download-artifact@v4
+        with:
+          name: catalog-review-summary
+          path: data/
+
+      - name: Print audit summary
+        run: |
+          ls -lah logs/
+          ls -lah data/
+          echo "🧾 Shopify Product Update Audit"
+          echo "-------------------------------"
+
+          total=$(wc -l < logs/audit.txt)
+          updated=$(grep -c ',success' logs/audit.txt || true)
+          failed=$(grep -c ',failure' logs/audit.txt || true)
+
+          echo "✅ Success: $updated"
+          echo "❌ Failed: $failed"
+          echo "📦 Total Processed: $total"
+          echo ""
+          echo "📋 Detailed Audit:"
+          cat logs/audit.txt
+
+      - name: Print catalog review summary
+        run: |
+          echo ""
+          echo "🧠 Catalog Review Summary"
+          echo "-------------------------"
+          cat data/review_summary.md
