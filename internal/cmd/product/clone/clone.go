@@ -218,7 +218,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 	alias := ctx.Alias
 	if flag.to != "" {
 		alias = flag.to
-		client = api.NewGQLClient(fmt.Sprintf("%s.myshopify.com", alias))
+		client = api.NewGQLClient(ctx)
 	}
 
 	res, err := client.CreateProduct(input)

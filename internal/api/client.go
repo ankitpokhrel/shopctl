@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/zalando/go-keyring"
 
@@ -23,23 +24,26 @@ type GQLClient struct {
 type GQLClientFunc func(*GQLClient)
 
 // NewGQLClient constructs new GraphQL client for a store.
-func NewGQLClient(store string, opts ...GQLClientFunc) *GQLClient {
+func NewGQLClient(ctx *config.StoreContext, opts ...GQLClientFunc) *GQLClient {
 	var (
 		token   string
 		err     error
 		defined bool
 
+		store   = ctx.Store
 		server  = fmt.Sprintf("https://%s/admin/api/%s/graphql.json", store, shopctl.ShopifyApiVersion)
 		service = fmt.Sprintf("shopctl:%s", cmdutil.GetStoreSlug(store))
 	)
 
-	// The `SHOPIFY_ACCESS_TOKEN` env has the highest priority when looking for a token.
-	// We will then look into other secure storages like system's keyring/keychain.
-	// Finally, we'll fallback to read from insecure storage like config files.
-	if token, defined = os.LookupEnv("SHOPIFY_ACCESS_TOKEN"); !defined {
-		token, err = keyring.Get(service, store)
-		if err != nil || token == "" {
-			token = config.GetToken(store)
+	// The `SHOPIFY_ACCESS_TOKEN_{CURRENT_CONTEXt}` env has the highest priority when looking for a token.
+	// Second, we check for `SHOPIFY_ACCESS_TOKEN` env. We will then look into other secure storages like
+	// system's keyring/keychain. Finally, we'll fallback to read from insecure storage like config files.
+	if token, defined = os.LookupEnv(fmt.Sprintf("SHOPIFY_ACCESS_TOKEN_%s", strings.ToUpper(ctx.Alias))); !defined {
+		if token, defined = os.LookupEnv("SHOPIFY_ACCESS_TOKEN"); !defined {
+			token, err = keyring.Get(service, store)
+			if err != nil || token == "" {
+				token = config.GetToken(store)
+			}
 		}
 	}
 

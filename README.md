@@ -61,9 +61,16 @@ You can either directly use the access token or login to your store using the oA
 #### Direct Access Token
 If you already have an access token you can set it directly to your shell session. Note that your token needs to have [access to resources](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47) you're trying to backup/restore.
 
-```
+```sh
 SHOPIFY_ACCESS_TOKEN=<token>
 ```
+
+You can set access token env for each store you want to work with. For instance, to add an access token for store with alias `store1`, you can do:
+
+```sh
+SHOPIFY_ACCESS_TOKEN_STORE1=<token>
+```
+The above will take priority over the `SHOPIFY_ACCESS_TOKEN` env.
 
 #### OAuth
 You can log in to your Shopify store using the store's MyShopify URL and would need to assign a unique alias (context name) for that store.

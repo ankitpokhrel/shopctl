@@ -132,7 +132,7 @@ func preRun(cmd *cobra.Command, _ []string) error {
 	}
 	lgr := tlog.New(tlog.VerboseLevel(v), quiet)
 
-	gqlClient := api.NewGQLClient(ctx.Store)
+	gqlClient := api.NewGQLClient(ctx)
 	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyContext, ctx))
 	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyGQLClient, gqlClient))
 	cmd.SetContext(context.WithValue(cmd.Context(), cmdutil.KeyLogger, lgr))
