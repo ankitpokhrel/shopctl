@@ -38,7 +38,7 @@ build: deps
 
 .PHONY: install
 install:
-	go install -ldflags='$(LDFLAGS)' ./cmd/...
+	CGO_ENABLED=1 go install -ldflags='$(LDFLAGS)' ./cmd/...
 
 .PHONY: lint
 lint:

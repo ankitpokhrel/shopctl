@@ -7,6 +7,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"golang.design/x/clipboard"
+
 	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
@@ -15,8 +18,6 @@ import (
 	"github.com/ankitpokhrel/shopctl/pkg/fmtout"
 	"github.com/ankitpokhrel/shopctl/pkg/search"
 	"github.com/ankitpokhrel/shopctl/pkg/tui/table"
-	"github.com/spf13/cobra"
-	"golang.design/x/clipboard"
 )
 
 const (

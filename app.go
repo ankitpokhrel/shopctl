@@ -10,7 +10,7 @@ import (
 
 const (
 	AppConfigVersion  = "v0"
-	ShopifyApiVersion = "2025-01"
+	ShopifyApiVersion = "2025-04"
 )
 
 // ShopifyProductID formats Shopify product ID.
@@ -64,6 +64,18 @@ func ShopifyMediaID(id string, typ schema.MediaContentType) string {
 // ShopifyCustomerID formats Shopify customer ID.
 func ShopifyCustomerID(id string) string {
 	prefix := "gid://shopify/Customer"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
+// ShopifyWebhookSubscriptionID formats Shopify product variant ID.
+func ShopifyWebhookSubscriptionID(id string) string {
+	prefix := "gid://shopify/WebhookSubscription"
 	if strings.HasPrefix(id, prefix) {
 		return id
 	}

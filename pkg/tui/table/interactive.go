@@ -117,6 +117,9 @@ func (t *InteractiveTable) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			t.table.GetViewport().ScrollRight(5)
 			t.viewport.ScrollRight(5)
 		case "enter":
+			if t.enterFunc == nil {
+				return t, nil
+			}
 			cmd := func() tea.Msg {
 				id := t.table.SelectedRow()[0]
 				return t.enterFunc(id)

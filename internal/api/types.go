@@ -207,3 +207,8 @@ type CustomersMetaFieldsResponse struct {
 	Errors     Errors     `json:"errors"`
 	Extensions Extensions `json:"extensions"`
 }
+
+type WebhookData struct {
+	Nodes    []schema.WebhookSubscription `json:"nodes"`
+	PageInfo schema.PageInfo              `json:"pageInfo"`
+}

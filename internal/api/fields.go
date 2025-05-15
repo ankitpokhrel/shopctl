@@ -259,4 +259,17 @@ productSubscriberStatus
 unsubscribeUrl
 createdAt
 updatedAt`
+
+	fieldsWebhook = `id
+topic
+format
+apiVersion { handle }
+endpoint {
+  __typename
+    ... on WebhookHttpEndpoint { callbackUrl }
+    ... on WebhookEventBridgeEndpoint { arn }
+    ... on WebhookPubSubEndpoint { pubSubProject pubSubTopic }
+}
+createdAt
+updatedAt`
 )
