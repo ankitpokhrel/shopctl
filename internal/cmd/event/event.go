@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/event/delete"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/event/list"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/event/listen"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
@@ -33,6 +34,7 @@ func NewCmdEvent() *cobra.Command {
 	cmd.AddCommand(
 		list.NewCmdList(),
 		listen.NewCmdListen(),
+		delete.NewCmdDelete(),
 	)
 
 	return &cmd

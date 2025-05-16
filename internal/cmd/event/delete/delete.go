@@ -9,23 +9,23 @@ import (
 )
 
 const (
-	helpText = `Delete lets you delete a product.`
+	helpText = `Delete lets you delete a webhook subscription.`
 
-	examples = `$ shopctl product delete 123456789
-$ shopctl product delete gid://shopify/Product/123456789`
+	examples = `$ shopctl event delete 123456789
+$ shopctl event delete gid://shopify/WebhookSubscription/123456789`
 )
 
-// NewCmdDelete constructs a new product delete command.
+// NewCmdDelete constructs a new webhook subscription delete command.
 func NewCmdDelete() *cobra.Command {
 	return &cobra.Command{
-		Use:     "delete PRODUCT_ID",
-		Short:   "Delete a product",
+		Use:     "delete WEBHOOK_ID",
+		Short:   "Delete a webhook subscription",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),
 		Aliases: []string{"del", "rm", "remove"},
 		Annotations: map[string]string{
-			"help:args": `PRODUCT_ID full or numeric Product ID, eg: 88561444456 or gid://shopify/Product/88561444456`,
+			"help:args": `WEBHOOK_ID full or numeric webhook subscription ID, eg: 88561444456 or gid://shopify/WebhookSubscription/88561444456`,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
@@ -37,13 +37,13 @@ func NewCmdDelete() *cobra.Command {
 }
 
 func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
-	productID := shopctl.ShopifyProductID(args[0])
+	subID := shopctl.ShopifyWebhookSubscriptionID(args[0])
 
-	_, err := client.DeleteProduct(productID)
+	_, err := client.DeleteWebhook(subID)
 	if err != nil {
 		return err
 	}
 
-	cmdutil.Success("Product deleted successfully")
+	cmdutil.Success("Webhook subscription deleted successfully")
 	return nil
 }
