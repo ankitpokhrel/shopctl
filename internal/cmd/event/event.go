@@ -7,6 +7,7 @@ import (
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/event/list"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/event/listen"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
@@ -17,7 +18,7 @@ func NewCmdEvent() *cobra.Command {
 		Use:         "event",
 		Short:       "Interact with the Shopify webhooks",
 		Long:        "Interact with the webhook topics provided by the Shopify.",
-		Aliases:     []string{"events"},
+		Aliases:     []string{"ev", "events", "webhook", "webhooks", "wh"},
 		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))
@@ -31,6 +32,7 @@ func NewCmdEvent() *cobra.Command {
 
 	cmd.AddCommand(
 		list.NewCmdList(),
+		listen.NewCmdListen(),
 	)
 
 	return &cmd

@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	helpText = `List registered webhooks in a store.`
+	helpText = `List registered events/webhooks in a store.`
 
-	examples = `$ shopctl webhook list`
+	examples = `$ shopctl event list`
 )
 
 type flag struct {

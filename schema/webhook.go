@@ -225,3 +225,11 @@ const (
 	WebhookSubscriptionFormatJson WebhookSubscriptionFormat = "JSON"
 	WebhookSubscriptionFormatXml  WebhookSubscriptionFormat = "XML"
 )
+
+type WebhookSubscriptionInput struct {
+	CallbackURL         *string                    `json:"callbackUrl,omitempty"`
+	Format              *WebhookSubscriptionFormat `json:"format,omitempty"`
+	IncludeFields       []any                      `json:"includeFields"`
+	Filter              *string                    `json:"filter,omitempty"`
+	MetafieldNamespaces []any                      `json:"metafieldNamespaces"`
+}

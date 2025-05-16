@@ -212,3 +212,13 @@ type WebhookData struct {
 	Nodes    []schema.WebhookSubscription `json:"nodes"`
 	PageInfo schema.PageInfo              `json:"pageInfo"`
 }
+
+type WebhookSyncResponse struct {
+	WebhookSubscription schema.WebhookSubscription `json:"webhookSubscription"`
+	UserErrors          UserErrors                 `json:"userErrors"`
+}
+
+type WebhookDeleteResponse struct {
+	DeletedWebhookSubscriptionID string     `json:"deletedWebhookSubscriptionId"`
+	UserErrors                   UserErrors `json:"userErrors"`
+}
