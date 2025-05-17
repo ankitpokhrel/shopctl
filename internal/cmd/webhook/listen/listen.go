@@ -123,7 +123,7 @@ func run(cmd *cobra.Command, args []string, client *api.GQLClient) error {
 		fmt.Printf("Webhook ID %q is registerd for topic %q with endpoint %q\n", sub.ID, sub.Topic, cbURL)
 	} else {
 		// Register webhook to Shopify.
-		sub, err = client.RegisterWebhook(flag.topic, flag.url)
+		sub, err = client.SubscribeWebhook(flag.topic, flag.url)
 		if err != nil && !errors.Is(err, api.ErrAddrTaken) {
 			return err
 		}

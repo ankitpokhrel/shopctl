@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/delete"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/list"
 	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/listen"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/register"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/subscribe"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/unsubscribe"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
@@ -34,9 +34,9 @@ func NewCmdWebhook() *cobra.Command {
 
 	cmd.AddCommand(
 		list.NewCmdList(),
-		register.NewCmdRegister(),
+		subscribe.NewCmdSubscribe(),
 		listen.NewCmdListen(),
-		delete.NewCmdDelete(),
+		unsubscribe.NewCmdUnsubscribe(),
 	)
 
 	return &cmd

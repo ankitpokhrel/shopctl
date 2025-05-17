@@ -1,4 +1,4 @@
-package delete
+package unsubscribe
 
 import (
 	"github.com/spf13/cobra"
@@ -9,21 +9,21 @@ import (
 )
 
 const (
-	helpText = `Delete lets you delete a webhook subscription.`
+	helpText = `Unsubscribe lets you delete a webhook subscription.`
 
-	examples = `$ shopctl webhook delete 123456789
-$ shopctl webhook delete gid://shopify/WebhookSubscription/123456789`
+	examples = `$ shopctl webhook unsubscribe 123456789
+$ shopctl webhook unsubscribe gid://shopify/WebhookSubscription/123456789`
 )
 
-// NewCmdDelete constructs a new webhook subscription delete command.
-func NewCmdDelete() *cobra.Command {
+// NewCmdUnsubscribe constructs a new webhook subscription delete command.
+func NewCmdUnsubscribe() *cobra.Command {
 	return &cobra.Command{
-		Use:     "delete WEBHOOK_ID",
+		Use:     "unsubscribe WEBHOOK_ID",
 		Short:   "Delete a webhook subscription",
 		Long:    helpText,
 		Example: examples,
 		Args:    cobra.MinimumNArgs(1),
-		Aliases: []string{"del", "rm", "remove"},
+		Aliases: []string{"unsub", "delete", "del"},
 		Annotations: map[string]string{
 			"help:args": `WEBHOOK_ID full or numeric webhook subscription ID, eg: 88561444456 or gid://shopify/WebhookSubscription/88561444456`,
 		},
@@ -44,6 +44,6 @@ func run(_ *cobra.Command, args []string, client *api.GQLClient) error {
 		return err
 	}
 
-	cmdutil.Success("Webhook subscription deleted successfully")
+	cmdutil.Success("Webhook unsubscribed successfully")
 	return nil
 }

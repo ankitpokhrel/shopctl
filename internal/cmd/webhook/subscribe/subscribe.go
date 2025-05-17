@@ -1,4 +1,4 @@
-package register
+package subscribe
 
 import (
 	"github.com/spf13/cobra"
@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	helpText = `Register lets you register a webhook subscription.`
+	helpText = `Subscribe lets you subscribe to a webhook event.`
 
-	examples = `$ shopctl webhook register --topic PRODUCTS_CREATE --url https://example.com/products/create
+	examples = `$ shopctl webhook subscribe --topic PRODUCTS_CREATE --url https://example.com/products/create
 
-# Register webhook subscription for customers update event
-$ shopctl webhook register --topic CUSTOMERS_UPDATE --url https://example.com:8080/products/update`
+# Subscribe webhook for customers update event
+$ shopctl webhook subscribe --topic CUSTOMERS_UPDATE --url https://example.com:8080/products/update`
 )
 
 type flag struct {
@@ -32,14 +32,14 @@ func (f *flag) parse(cmd *cobra.Command) {
 	f.url = url
 }
 
-// NewCmdRegister constructs a new webhook register command.
-func NewCmdRegister() *cobra.Command {
+// NewCmdSubscribe constructs a new webhook subscription command.
+func NewCmdSubscribe() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "register",
-		Short:   "Register a webhook subscription event",
+		Use:     "subscribe",
+		Short:   "Subscribe to a webhook event",
 		Long:    helpText,
 		Example: examples,
-		Aliases: []string{"reg", "create", "add"},
+		Aliases: []string{"sub", "create"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 
@@ -60,11 +60,11 @@ func run(cmd *cobra.Command, _ []string, client *api.GQLClient) error {
 	flag := &flag{}
 	flag.parse(cmd)
 
-	res, err := client.RegisterWebhook(flag.topic, flag.url)
+	res, err := client.SubscribeWebhook(flag.topic, flag.url)
 	if err != nil {
 		return err
 	}
 
-	cmdutil.Success("Webhook subscription created successfully: %s", res.ID)
+	cmdutil.Success("Webhook subscribed successfully: %s", res.ID)
 	return nil
 }

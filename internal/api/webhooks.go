@@ -53,8 +53,8 @@ func (c GQLClient) GetWebhooks(limit int, after *string, topics []schema.Webhook
 	return out.Data.WebhookSubscriptions.Nodes, nil
 }
 
-// RegisterWebhook registers a Webhook.
-func (c GQLClient) RegisterWebhook(topic string, endpoint string) (*schema.WebhookSubscription, error) {
+// SubscribeWebhook subscribes to a webhook.
+func (c GQLClient) SubscribeWebhook(topic string, endpoint string) (*schema.WebhookSubscription, error) {
 	var out struct {
 		Data struct {
 			WebhookSubscriptionCreate WebhookSyncResponse `json:"webhookSubscriptionCreate"`
