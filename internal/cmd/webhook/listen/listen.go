@@ -13,8 +13,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ankitpokhrel/shopctl"
 	"github.com/ankitpokhrel/shopctl/internal/api"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
+	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 const (
@@ -27,17 +29,25 @@ $ shopctl webhook listen --topic PRODUCTS_UPDATE --exec "python sync.py" --url h
 
 # Execute a curl directly
 $ shopctl webhook listen --topic PRODUCTS_CREATE --exec "curl -X POST http://httpbin.org/post -H 'Content-Type:application/json' -d @-" --url https://example.com/products/create
+
+# Listen to webhook by its ID
+$ shopctl webhook listen --id 1434973307104 --exec "./process.sh"
 `
 )
 
 type flag struct {
+	id    string
 	topic string
 	exec  string
 	url   string
 	port  uint
 }
 
-func (f *flag) parse(cmd *cobra.Command) {
+func (f *flag) parse(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		f.id = shopctl.ShopifyWebhookSubscriptionID(args[0])
+	}
+
 	topic, err := cmd.Flags().GetString("topic")
 	cmdutil.ExitOnErr(err)
 
@@ -49,6 +59,17 @@ func (f *flag) parse(cmd *cobra.Command) {
 
 	port, err := cmd.Flags().GetUint("port")
 	cmdutil.ExitOnErr(err)
+
+	if f.id == "" && (topic == "" || url == "") {
+		cmdutil.ExitOnErr(
+			cmdutil.HelpErrorf("Either webhook subscription id or topic and url is required", examples),
+		)
+	}
+	if handler == "" {
+		cmdutil.ExitOnErr(
+			cmdutil.HelpErrorf("Flag '--exec' is required", examples),
+		)
+	}
 
 	f.topic = topic
 	f.exec = handler
@@ -72,36 +93,49 @@ func NewCmdListen() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().String("id", "", "Registered webhook id")
 	cmd.Flags().StringP("topic", "t", "", "Webhook topic to listen to")
 	cmd.Flags().StringP("exec", "e", "", "Handler to execute")
 	cmd.Flags().String("url", "", "Endpoint for the webhook registration")
 	cmd.Flags().Uint("port", 4726, "Port to use for local webhook server") //nolint:mnd
-
-	cmdutil.ExitOnErr(cmd.MarkFlagRequired("topic"))
-	cmdutil.ExitOnErr(cmd.MarkFlagRequired("exec"))
 
 	cmd.Flags().SortFlags = false
 
 	return &cmd
 }
 
-func run(cmd *cobra.Command, _ []string, client *api.GQLClient) error {
+func run(cmd *cobra.Command, args []string, client *api.GQLClient) error {
 	flag := &flag{}
-	flag.parse(cmd)
+	flag.parse(cmd, args)
 
-	// Register webhook to Shopify.
-	sub, err := client.RegisterWebhook(flag.topic, flag.url)
-	if err != nil && !errors.Is(err, api.ErrAddrTaken) {
-		return err
-	}
-	if err != nil && errors.Is(err, api.ErrAddrTaken) {
-		fmt.Printf("Webhook for topic %q exists with endpoint %q\n", flag.topic, flag.url)
+	var (
+		sub *schema.WebhookSubscription
+		err error
+	)
+
+	if flag.id != "" {
+		sub, err = client.GetWebhookByID(flag.id)
+		if err != nil {
+			return err
+		}
+		endpoint := sub.Endpoint.(map[string]any)
+		cbURL := endpoint["callbackUrl"].(string)
+		fmt.Printf("Webhook ID %q is registerd for topic %q with endpoint %q\n", sub.ID, sub.Topic, cbURL)
 	} else {
-		fmt.Printf("Webhook registered for topic %q with endpoint %q on api version %q\n", sub.Topic, flag.url, sub.ApiVersion.Handle)
+		// Register webhook to Shopify.
+		sub, err = client.RegisterWebhook(flag.topic, flag.url)
+		if err != nil && !errors.Is(err, api.ErrAddrTaken) {
+			return err
+		}
+		if err != nil && errors.Is(err, api.ErrAddrTaken) {
+			fmt.Printf("Webhook for topic %q exists with endpoint %q\n", flag.topic, flag.url)
+		} else {
+			fmt.Printf("Webhook registered for topic %q with endpoint %q on api version %q\n", sub.Topic, flag.url, sub.ApiVersion.Handle)
+		}
 	}
 
 	// Listen to the event.
-	listen(flag.topic, flag.port, func(payload map[string]any) error {
+	listen(sub.Topic, flag.port, func(payload map[string]any) error {
 		data, err := json.Marshal(payload)
 		if err != nil {
 			return fmt.Errorf("failed to marshal payload: %w", err)
@@ -116,9 +150,9 @@ func run(cmd *cobra.Command, _ []string, client *api.GQLClient) error {
 	return nil
 }
 
-func listen(topic string, port uint, handler func(map[string]any) error) {
-	topic = strings.ToLower(strings.ReplaceAll(topic, "_", "/"))
-	http.HandleFunc("/"+topic, func(w http.ResponseWriter, r *http.Request) {
+func listen(topic schema.WebhookSubscriptionTopic, port uint, handler func(map[string]any) error) {
+	whTopic := strings.ToLower(strings.ReplaceAll(string(topic), "_", "/"))
+	http.HandleFunc("/"+whTopic, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -131,7 +165,7 @@ func listen(topic string, port uint, handler func(map[string]any) error) {
 		}
 
 		receivedTopic := r.Header.Get("X-Shopify-Topic")
-		if receivedTopic != topic {
+		if receivedTopic != whTopic {
 			http.Error(w, "Topic does not match", http.StatusForbidden)
 			return
 		}

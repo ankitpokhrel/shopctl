@@ -101,11 +101,39 @@ func (c GQLClient) RegisterWebhook(topic string, endpoint string) (*schema.Webho
 	if len(out.Data.WebhookSubscriptionCreate.UserErrors) > 0 {
 		usrErr := out.Data.WebhookSubscriptionCreate.UserErrors.Error()
 		if usrErr == ErrAddrTaken.Error() {
-			return nil, ErrAddrTaken
+			return &out.Data.WebhookSubscriptionCreate.WebhookSubscription, ErrAddrTaken
 		}
 		return nil, fmt.Errorf("webhookSubscriptionCreate: The operation failed with user error: %s", usrErr)
 	}
 	return &out.Data.WebhookSubscriptionCreate.WebhookSubscription, nil
+}
+
+// GetWebhookByID fetches webhook by its ID.
+func (c GQLClient) GetWebhookByID(id string) (*schema.WebhookSubscription, error) {
+	var out struct {
+		Data struct {
+			WebhookSubscription schema.WebhookSubscription `json:"webhookSubscription"`
+		} `json:"data"`
+		Errors Errors `json:"errors"`
+	}
+
+	query := fmt.Sprintf(`query WebhookSubscription($id: ID!) {
+        webhookSubscription(id: $id) {
+          %s
+      }
+    }`, fieldsWebhook)
+
+	req := client.GQLRequest{
+		Query:     query,
+		Variables: client.QueryVars{"id": id},
+	}
+	if err := c.Execute(context.Background(), req, nil, &out); err != nil {
+		return nil, err
+	}
+	if len(out.Errors) > 0 {
+		return nil, fmt.Errorf("%s", out.Errors)
+	}
+	return &out.Data.WebhookSubscription, nil
 }
 
 // DeleteWebhook deletes a Webhook by ID.
