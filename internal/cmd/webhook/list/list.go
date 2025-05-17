@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	helpText = `List registered events/webhooks in a store.`
+	helpText = `List registered webhooks/events in a store.`
 
-	examples = `$ shopctl event list`
+	examples = `$ shopctl webhook list`
 )
 
 type flag struct {
@@ -207,7 +207,7 @@ func run(cmd *cobra.Command, args []string, ctx *config.StoreContext, client *ap
 		"↑ k/j ↓: Navigate top & down",
 		"← h/l →: Navigate left & right",
 		"m: Toggle distraction free mode",
-		"c/C: Copy numeric or full event ID",
+		"c/C: Copy numeric or full webhook event ID",
 		"q/CTRL+c/ESC: Quit",
 	}
 	footerTexts := []string{

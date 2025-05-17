@@ -17,15 +17,15 @@ import (
 )
 
 const (
-	helpText = `Listen to the events as per the user config.`
+	helpText = `Listen to the webhook events as per the user config.`
 	examples = `# Run a js script to enrich products on creation
-$ shopctl event listen --topic PRODUCTS_CREATE --exec "node enrich.js" --url https://example.com/products/create
+$ shopctl webhook listen --topic PRODUCTS_CREATE --exec "node enrich.js" --url https://example.com/products/create
 
 # Run a python script to sync changes to marketplaces on product update
-$ shopctl event listen --topic PRODUCTS_UPDATE --exec "python sync.py" --url https://example.com/products/update --port 8080
+$ shopctl webhook listen --topic PRODUCTS_UPDATE --exec "python sync.py" --url https://example.com/products/update --port 8080
 
 # Execute a curl directly
-$ shopctl event listen --topic PRODUCTS_CREATE --exec "curl -X POST http://httpbin.org/post -H 'Content-Type:application/json' -d @-" --url https://example.com/products/create
+$ shopctl webhook listen --topic PRODUCTS_CREATE --exec "curl -X POST http://httpbin.org/post -H 'Content-Type:application/json' -d @-" --url https://example.com/products/create
 `
 )
 
@@ -59,9 +59,10 @@ func (f *flag) parse(cmd *cobra.Command) {
 func NewCmdListen() *cobra.Command {
 	cmd := cobra.Command{
 		Use:     "listen",
-		Short:   "Listen to the configured events",
+		Short:   "Listen to the configured webhook events",
 		Long:    helpText,
 		Example: examples,
+		Aliases: []string{"lsn"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client := cmd.Context().Value(cmdutil.KeyGQLClient).(*api.GQLClient)
 

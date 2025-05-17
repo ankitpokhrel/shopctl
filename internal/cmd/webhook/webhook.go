@@ -1,4 +1,4 @@
-package event
+package webhook
 
 import (
 	"context"
@@ -6,20 +6,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/shopctl/internal/api"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/event/delete"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/event/list"
-	"github.com/ankitpokhrel/shopctl/internal/cmd/event/listen"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/delete"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/list"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/listen"
+	"github.com/ankitpokhrel/shopctl/internal/cmd/webhook/register"
 	"github.com/ankitpokhrel/shopctl/internal/cmdutil"
 	"github.com/ankitpokhrel/shopctl/internal/config"
 )
 
-// NewCmdEvent responds to the Shopify webhooks.
-func NewCmdEvent() *cobra.Command {
+// NewCmdWebhook responds to the Shopify webhooks.
+func NewCmdWebhook() *cobra.Command {
 	cmd := cobra.Command{
-		Use:         "event",
+		Use:         "webhook",
 		Short:       "Interact with the Shopify webhooks",
 		Long:        "Interact with the webhook topics provided by the Shopify.",
-		Aliases:     []string{"ev", "events", "webhook", "webhooks", "wh"},
+		Aliases:     []string{"wh", "hook", "event"},
 		Annotations: map[string]string{"cmd:main": "true"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmdutil.ExitOnErr(preRun(cmd, args))

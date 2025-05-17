@@ -11,8 +11,8 @@ import (
 const (
 	helpText = `Delete lets you delete a webhook subscription.`
 
-	examples = `$ shopctl event delete 123456789
-$ shopctl event delete gid://shopify/WebhookSubscription/123456789`
+	examples = `$ shopctl webhook delete 123456789
+$ shopctl webhook delete gid://shopify/WebhookSubscription/123456789`
 )
 
 // NewCmdDelete constructs a new webhook subscription delete command.
