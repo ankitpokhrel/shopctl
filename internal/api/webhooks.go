@@ -3,13 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ankitpokhrel/shopctl/pkg/gql/client"
 	"github.com/ankitpokhrel/shopctl/schema"
 )
 
 // ErrAddrTaken is thrown if the webhook subscription address is already registered.
-var ErrAddrTaken = fmt.Errorf("Address for this topic has already been taken") //nolint:staticcheck
+var ErrAddrTaken = fmt.Errorf("address for this topic has already been taken")
 
 // GetWebhooks fetches n number of webhooks after a cursor.
 func (c GQLClient) GetWebhooks(limit int, after *string, topics []schema.WebhookSubscriptionTopic, query *string) ([]schema.WebhookSubscription, error) {
@@ -100,7 +101,7 @@ func (c GQLClient) SubscribeWebhook(topic string, endpoint string) (*schema.Webh
 	}
 	if len(out.Data.WebhookSubscriptionCreate.UserErrors) > 0 {
 		usrErr := out.Data.WebhookSubscriptionCreate.UserErrors.Error()
-		if usrErr == ErrAddrTaken.Error() {
+		if strings.EqualFold(usrErr, ErrAddrTaken.Error()) {
 			return &out.Data.WebhookSubscriptionCreate.WebhookSubscription, ErrAddrTaken
 		}
 		return nil, fmt.Errorf("webhookSubscriptionCreate: The operation failed with user error: %s", usrErr)

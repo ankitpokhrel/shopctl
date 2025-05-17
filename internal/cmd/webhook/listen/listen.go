@@ -1,9 +1,13 @@
 package listen
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -158,8 +162,19 @@ func listen(topic schema.WebhookSubscriptionTopic, port uint, handler func(map[s
 			return
 		}
 
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if err := verifyWebhookSignature(r, body); err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		var payload map[string]any
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		if err := json.Unmarshal(body, &payload); err != nil {
 			http.Error(w, "Invalid payload", http.StatusBadRequest)
 			return
 		}
@@ -186,6 +201,23 @@ func listen(topic schema.WebhookSubscriptionTopic, port uint, handler func(map[s
 			fmt.Printf("Error starting webhook listener: %v\n", err)
 		}
 	}()
+}
+
+func verifyWebhookSignature(r *http.Request, body []byte) error {
+	shopifyHmac := r.Header.Get("X-Shopify-Hmac-SHA256")
+	if shopifyHmac == "" {
+		return fmt.Errorf("invalid hmac")
+	}
+
+	secret := os.Getenv("SHOPCTL_CLIENT_SECRET")
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write(body)
+	computedHmac := base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	if computedHmac != shopifyHmac {
+		return fmt.Errorf("invalid hmac")
+	}
+	return nil
 }
 
 func handle(h string, payload []byte) error {
