@@ -2,6 +2,7 @@ package listen
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -89,18 +90,15 @@ func run(cmd *cobra.Command, _ []string, client *api.GQLClient) error {
 	flag.parse(cmd)
 
 	// Register webhook to Shopify.
-	fmt.Println("Registering webhook...")
 	sub, err := client.RegisterWebhook(flag.topic, flag.url)
-	if err != nil {
+	if err != nil && !errors.Is(err, api.ErrAddrTaken) {
 		return err
 	}
-	fmt.Printf("Webhook registered for topic %q with endpoint %q on api version %q\n", sub.Topic, flag.url, sub.ApiVersion.Handle)
-
-	// Delete webhook once done.
-	defer func() {
-		// We don't really care about error here.
-		_, _ = client.DeleteWebhook(sub.ID)
-	}()
+	if err != nil && errors.Is(err, api.ErrAddrTaken) {
+		fmt.Printf("Webhook for topic %q exists with endpoint %q\n", flag.topic, flag.url)
+	} else {
+		fmt.Printf("Webhook registered for topic %q with endpoint %q on api version %q\n", sub.Topic, flag.url, sub.ApiVersion.Handle)
+	}
 
 	// Listen to the event.
 	listen(flag.topic, flag.port, func(payload map[string]any) error {
@@ -149,7 +147,7 @@ func listen(topic string, port uint, handler func(map[string]any) error) {
 
 	go func() {
 		addr := fmt.Sprintf(":%d", port)
-		fmt.Printf("Listening for webhooks on %s\n", addr)
+		fmt.Printf("Listening for events on %s\n", addr)
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			fmt.Printf("Error starting webhook listener: %v\n", err)
 		}

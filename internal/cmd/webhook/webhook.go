@@ -34,6 +34,7 @@ func NewCmdWebhook() *cobra.Command {
 
 	cmd.AddCommand(
 		list.NewCmdList(),
+		register.NewCmdRegister(),
 		listen.NewCmdListen(),
 		delete.NewCmdDelete(),
 	)
