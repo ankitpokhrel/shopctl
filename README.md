@@ -59,7 +59,7 @@ Before you begin using ShopCTL, you need to configure your store(s). ShopCTL sup
 You can either directly use the access token or login to your store using the oAuth flow.
 
 #### Direct Access Token
-If you already have an access token you can set it directly to your shell session. Note that your token needs to have [access to resources](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47) you're trying to backup/restore.
+If you already have an access token you can set it directly to your shell session. Note that your token needs to have [access to resources](https://github.com/ankitpokhrel/shopctl/blob/main/internal/oauth/oauth.go#L35-L47) you're trying to work with.
 
 ```sh
 SHOPIFY_ACCESS_TOKEN=<token>
@@ -73,8 +73,7 @@ SHOPIFY_ACCESS_TOKEN_STORE1=<token>
 The above will take priority over the `SHOPIFY_ACCESS_TOKEN` env.
 
 #### OAuth
-You can log in to your Shopify store using the store's MyShopify URL and would need to assign a unique alias (context name) for that store.
-This will generate the config and create a new context in your configuration file.
+You can log in to your Shopify store using the store's MyShopify URL. This process will generate the config and create a new context in your configuration file.
 
 ```sh
 # Login to first store
@@ -309,6 +308,55 @@ $ shopctl customer delete --email example@domain.com
 
 # Delete customer by its phone number
 $ shopctl customer delete --phone +1234567890
+```
+
+### Webhook
+
+The `webhook` command lets you interact with the [Shopify GraphQL Webhooks](https://shopify.dev/docs/api/webhooks?reference=graphql#list-of-topics).
+
+#### Listen
+Listen sets up an event listener. It lets you execute any arbitrary scripts when messages are received. The command checks if the specified topic is already subscribed to the given endpoint. If not, it subscribes to the event and starts the consumer script.
+
+```sh
+# Run a js script to enrich products on creation
+$ shopctl webhook listen --topic PRODUCTS_CREATE --exec "node enrich.js" --url https://example.com/products/create
+
+# Run a python script to sync changes to marketplaces on product update
+$ shopctl webhook listen --topic PRODUCTS_UPDATE --exec "python sync.py" --url https://example.com/products/update --port 8080
+
+# Execute a curl directly
+$ shopctl webhook listen --topic PRODUCTS_CREATE --exec "curl -X POST http://httpbin.org/post -H 'Content-Type:application/json' -d @-" --url https://example.com/products/create
+
+# Listen to webhook by its ID
+$ shopctl webhook listen --id 1434973307104 --exec "./process.sh"
+```
+
+#### Subscribe
+You can subscribe to a webhook topic with the `subscribe` command. This command registers the webhook to Shopify but doesn't run the consumer. Use `listen` to run the consumer.
+
+```sh
+$ shopctl webhook subscribe --topic PRODUCTS_CREATE --url https://example.com/products/create
+
+# Subscribe webhook for customers update event
+$ shopctl webhook subscribe --topic CUSTOMERS_UPDATE --url https://example.com:8080/products/update
+```
+
+#### Unsubscribe
+You can unsubscribe registered webhook with the `unsubscribe` command.
+
+```sh
+$ shopctl webhook unsubscribe 123456789
+$ shopctl webhook unsubscribe gid://shopify/WebhookSubscription/123456789
+```
+
+#### List
+You can search and navigate registered webhooks using the `list` command. Note that Shopify doesn't return webhooks created from the UI via the API.
+
+```sh
+$ shopctl webhook list
+
+# List all webhooks created in 2025
+$ shopctl wh list --created ">=2025-01-01"
 ```
 
 ## Development
