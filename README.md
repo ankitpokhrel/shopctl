@@ -23,6 +23,24 @@
 ShopCTL is a slightly opinionated, in-progress command-line utility for managing your Shopify store data. It comes with a handful of easy-to-compose commands,
 giving you a quick way to interact with your store's data straight from the terminal.
 
+## Table of Contents
+- [Installation](#installation)
+- [Resources](#resources)
+- [Getting started](#getting-started)
+  - [Authentication](#authentication)
+    - [Direct Access Token](#direct-access-token)
+    - [OAuth](#oauth)
+  - [Config Management](#config-management)
+  - [Shell completion](#shell-completion)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [Export](#export)
+  - [Import](#import)
+  - [Product](#product)
+  - [Customer](#customer)
+  - [Webhook](#webhook)
+- [Development](#development)
+
 ## Installation
 1. Create a dummy app from the [Shopify Partners Dashboard](https://partners.shopify.com/) and get the client ID and secret.
    - Add `http://127.0.0.1/shopctl/auth/callback` to the list of Allowed redirection URL(s)
@@ -250,7 +268,7 @@ $ shopctl peek product <product_id> --json
 ```
 
 #### Clone
-The `clone` command let's you duplicate a product. You can update fields like handle, title, tags and status when cloning the issue. 
+The `clone` command lets you duplicate a product. You can update fields like handle, title, tags and status when cloning the issue.
 The command also allows you to replace a part of the string (case-sensitive) in title and description using `--replace/-H` option.
 
 ```sh
@@ -270,6 +288,22 @@ $ shopctl product clone 8856145494 --to store2 --tags cloned,store1
 ```
 
 ### Customer
+
+### List
+You can search and navigate customers using the `list` command.
+
+```sh
+$ shopctl customer list
+
+# Search for customers with specific case-insensitive text
+$ shopctl customer list "text from multiple fields" --limit 20
+
+# List customers with atleast 1 order
+$ shopctl customer list --orders-count ">0"
+
+# List customers from Germany with who spent min 100 and agreed to receive marketing email
+$ shopctl customer list --total-spent ">=100" --country Germany --accepts-marketing
+```
 
 #### Create
 The `create` command lets you create a customer. You can add multiple addresses when creating a customer. The `address` and `meta` flag accepts tagged fields
