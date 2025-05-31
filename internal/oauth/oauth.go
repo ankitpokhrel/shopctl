@@ -41,6 +41,9 @@ var (
 		// Customer data.
 		"write_customers",
 
+		// Order.
+		"write_orders",
+
 		// Files.
 		"write_files",
 	}

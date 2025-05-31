@@ -73,6 +73,18 @@ func ShopifyCustomerID(id string) string {
 	return fmt.Sprintf("%s/%s", prefix, id)
 }
 
+// ShopifyOrderID formats Shopify order ID.
+func ShopifyOrderID(id string) string {
+	prefix := "gid://shopify/Order"
+	if strings.HasPrefix(id, prefix) {
+		return id
+	}
+	if _, err := strconv.Atoi(id); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s", prefix, id)
+}
+
 // ShopifyWebhookSubscriptionID formats Shopify product variant ID.
 func ShopifyWebhookSubscriptionID(id string) string {
 	prefix := "gid://shopify/WebhookSubscription"

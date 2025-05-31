@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	helpText = `List products in a store.`
+	helpText = `List product variants in a store.`
 
 	examples = `$ shopctl product variant list
 
