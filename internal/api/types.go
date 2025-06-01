@@ -208,6 +208,19 @@ type CustomersMetaFieldsResponse struct {
 	Extensions Extensions `json:"extensions"`
 }
 
+type OrdersResponse struct {
+	Data struct {
+		Orders OrderData `json:"orders"`
+	} `json:"data"`
+	Errors     Errors     `json:"errors"`
+	Extensions Extensions `json:"extensions"`
+}
+
+type OrderData struct {
+	Nodes    []schema.Order  `json:"nodes"`
+	PageInfo schema.PageInfo `json:"pageInfo"`
+}
+
 type WebhookData struct {
 	Nodes    []schema.WebhookSubscription `json:"nodes"`
 	PageInfo schema.PageInfo              `json:"pageInfo"`

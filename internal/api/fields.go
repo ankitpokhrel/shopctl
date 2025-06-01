@@ -260,6 +260,39 @@ unsubscribeUrl
 createdAt
 updatedAt`
 
+	fieldsOrder = `id
+name
+email
+createdAt
+updatedAt
+processedAt
+cancelledAt
+closedAt
+customer {
+  id
+  firstName
+  lastName
+  email
+}
+shippingAddress {
+  country
+}
+totalPriceSet {
+  presentmentMoney {
+    amount
+    currencyCode
+  }
+  shopMoney {
+    amount
+    currencyCode
+  }
+}
+currencyCode
+displayFinancialStatus
+displayFulfillmentStatus
+tags
+note`
+
 	fieldsWebhook = `id
 topic
 format
